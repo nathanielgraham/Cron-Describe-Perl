@@ -1,3 +1,4 @@
+# ABSTRACT: Abstract base class for parsing and validating cron expressions
 package Cron::Describe;
 
 use strict;
@@ -68,9 +69,9 @@ Cron::Describe - Abstract base class for parsing and validating cron expressions
 
 =head1 SYNOPSIS
 
-  use Cron::Describe;
-  my $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?');
-  if ($cron->is_valid) { ... }
+use Cron::Describe;
+my $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?');
+if ($cron->is_valid) { ... }
 
 =head1 DESCRIPTION
 
@@ -85,5 +86,13 @@ Base class for cron parsers. Use subclasses via factory.
 Factory constructor. Args: C<cron_str> (required), C<timezone> (default 'UTC'), C<type> (optional: 'standard' or 'quartz').
 
 =back
+
+=head1 AUTHOR
+
+Nathaniel Graham <ngraham@cpan.org>
+
+=head1 LICENSE
+
+This is released under the Artistic License 2.0.
 
 =cut

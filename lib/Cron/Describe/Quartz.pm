@@ -1,3 +1,4 @@
+# ABSTRACT: Parser and validator for Quartz Scheduler cron expressions
 package Cron::Describe::Quartz;
 
 use strict;
@@ -48,7 +49,7 @@ sub is_valid {
     }
 
     # Check for impossible nth day (e.g., 5th Monday in Feb)
-    if ($dow =~ /#5/ && $self->fields->[4]->value == 2) {
+    if ($dow =~ /#5/ && $self->fields->[4]->value eq '2') {
         $errors{impossible} = "Invalid: Fifth weekday in February is impossible";
     }
 
@@ -67,6 +68,14 @@ Cron::Describe::Quartz - Parser and validator for Quartz Scheduler cron expressi
 
 =head1 DESCRIPTION
 
-Parses and validates 6-7 field Quartz cron expressions.
+Parses and validates 6-7 field Quartz cron expressions (seconds, minutes, hours, day of month, month, day of week, optional year).
+
+=head1 AUTHOR
+
+Nathaniel Graham <ngraham@cpan.org>
+
+=head1 LICENSE
+
+This is released under the Artistic License 2.0.
 
 =cut

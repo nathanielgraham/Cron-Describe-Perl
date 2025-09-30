@@ -1,3 +1,4 @@
+# ABSTRACT: Parser and validator for standard UNIX cron expressions
 package Cron::Describe::Standard;
 
 use strict;
@@ -57,6 +58,14 @@ Cron::Describe::Standard - Parser and validator for standard UNIX cron expressio
 
 =head1 DESCRIPTION
 
-Parses and validates 5-field UNIX cron expressions.
+Parses and validates 5-field UNIX cron expressions (minutes, hours, day of month, month, day of week).
+
+=head1 AUTHOR
+
+Nathaniel Graham <ngraham@cpan.org>
+
+=head1 LICENSE
+
+This is released under the Artistic License 2.0.
 
 =cut

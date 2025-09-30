@@ -1,3 +1,4 @@
+# ABSTRACT: Base class for validating cron expression fields
 package Cron::Describe::Field;
 
 use strict;
@@ -8,7 +9,7 @@ use Carp qw(croak);
 has 'value'       => (is => 'ro', required => 1);
 has 'min'         => (is => 'ro', required => 1);
 has 'max'         => (is => 'ro', required => 1);
-has 'allowed_specials' => (is => 'ro', default => sub { [qw(* , - /)] });
+has 'allowed_specials' => (is => 'ro', default => sub { ['*', ',', '-', '/'] });
 
 sub is_valid {
     my ($self) = @_;
@@ -57,7 +58,7 @@ Cron::Describe::Field - Base class for validating cron expression fields
 
 =head1 DESCRIPTION
 
-Handles generic field validation for cron expressions.
+Handles generic field validation for cron expressions (e.g., minutes, hours).
 
 =head1 METHODS
 
@@ -68,5 +69,13 @@ Handles generic field validation for cron expressions.
 Returns (boolean, \%errors) indicating if the field is valid.
 
 =back
+
+=head1 AUTHOR
+
+Nathaniel Graham <ngraham@cpan.org>
+
+=head1 LICENSE
+
+This is released under the Artistic License 2.0.
 
 =cut
