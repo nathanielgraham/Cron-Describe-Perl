@@ -1,4 +1,4 @@
-# ABSTRACT: Base class for validating cron expression fields
+# ABSTRACT: Base class for validating and describing cron expression fields
 package Cron::Describe::Field;
 
 use strict;
@@ -10,24 +10,29 @@ has 'value'       => (is => 'ro', required => 1);
 has 'min'         => (is => 'ro', required => 1);
 has 'max'         => (is => 'ro', required => 1);
 has 'allowed_specials' => (is => 'ro', default => sub { ['*', ',', '-', '/'] });
+has 'allowed_names' => (is => 'ro', default => sub { {} });  # For month/day names
 
 sub is_valid {
     my ($self) = @_;
     my $val = $self->value;
     my %errors;
 
-    # Validate against allowed specials
-    my $specials = join '', map { quotemeta } @{$self->allowed_specials};
+    # Validate against allowed specials and names
+    my $specials = join '|', map { quotemeta } @{$self->allowed_specials};
+    my $names = join '|', keys %{$self->allowed_names};
     my $num_regex = qr/\d+/;
-    my $range_regex = qr/$num_regex-$num_regex/;
-    my $list_regex = qr/$num_regex(?:,$num_regex)*/;
-    my $step_regex = qr/(?:\*|$num_regex|$range_regex)\/\d+/;
+    my $range_regex = qr/(?:$num_regex|$names)-(?:$num_regex|$names)/;
+    my $list_regex = qr/(?:$num_regex|$names)(?:,(?:$num_regex|$names))*/;
+    my $step_regex = qr/(?:\*|$num_regex|$range_regex|$names)\/(\d+)/;
+    my $special_regex = qr/$specials/;
 
     unless ($val =~ m{
         ^ (?: \* (?: / \d+ )? 
           | $range_regex (?: / \d+ )? 
           | $list_regex 
           | $num_regex
+          | $names
+          | $special_regex
         ) $
     }x) {
         $errors{syntax} = "Invalid syntax in field: $val";
@@ -41,9 +46,40 @@ sub is_valid {
                 }
             }
         }
+        # Check step values
+        if ($val =~ $step_regex) {
+            my $step = $1;
+            if ($step == 0) {
+                $errors{step} = "Step value cannot be zero: $val";
+            }
+        }
     }
 
     return (scalar keys %errors == 0, \%errors);
+}
+
+sub describe {
+    my ($self, $unit) = @_;
+    my $val = $self->value;
+
+    if ($val eq '*') {
+        return 'every';
+    } elsif ($val =~ /^(\d+)$/) {
+        return "at $1";
+    } elsif ($val =~ /^(\d+)-(\d+)$/) {
+        return "from $1 to $2";
+    } elsif ($val =~ /^(\d+)(?:,(\d+))+$/) {
+        my @nums = ($val =~ /(\d+)/g);
+        return "at " . join(', ', @nums);
+    } elsif ($val =~ /^(.*?)(?:\/(\d+))$/) {
+        my ($base, $step) = ($1, $2);
+        my $base_desc = $base eq '*' ? 'every' : $self->new(value => $base)->describe($unit);
+        return "every $step ${unit}" . ($step == 1 ? '' : 's') . ($base eq '*' ? '' : " $base_desc");
+    } elsif ($self->allowed_names->{$val}) {
+        return lc $val;
+    }
+
+    return $val;  # Fallback for special characters
 }
 
 1;
@@ -54,11 +90,11 @@ __END__
 
 =head1 NAME
 
-Cron::Describe::Field - Base class for validating cron expression fields
+Cron::Describe::Field - Base class for validating and describing cron expression fields
 
 =head1 DESCRIPTION
 
-Handles generic field validation for cron expressions (e.g., minutes, hours).
+Handles generic field validation and description for cron expressions.
 
 =head1 METHODS
 
@@ -67,6 +103,10 @@ Handles generic field validation for cron expressions (e.g., minutes, hours).
 =item is_valid
 
 Returns (boolean, \%errors) indicating if the field is valid.
+
+=item describe($unit)
+
+Returns a concise English description of the field value (e.g., 'every minute', 'at 5 minutes', 'from 1 to 5 hours').
 
 =back
 
