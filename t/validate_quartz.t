@@ -7,146 +7,183 @@ use Try::Tiny;
 use Cron::Describe;
 
 subtest 'Constructor dispatch' => sub {
-    plan tests => 3;
+    plan tests => 4;
 
     my $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?');
     isa_ok($cron, 'Cron::Describe::Quartz', '6 fields -> Quartz');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?', type => 'quartz') };
+    eval { Cron::Describe->new(cron_str => '0 0 12 * * ?', type => 'quartz') };
     ok(!$@, 'Explicit quartz type');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 * * *', type => 'quartz') };
-    like($@, qr/Quartz cron requires 6-7 fields/, 'Too few fields for Quartz');
+    my $cron2 = Cron::Describe->new(cron_str => '0 0 * * *');
+    my ($valid, $errors) = $cron2->is_valid;
+    ok(!$valid, 'Too few fields for Quartz');
+    like($errors->{syntax}, qr/Invalid syntax/i, 'Too few fields for Quartz error');
 };
 
 subtest 'Field parsing' => sub {
-    plan tests => 10;
+    plan tests => 12;
 
-    my $cron = Cron::Describe->new(cron_str => '0 0 12 L * ?', type => 'quartz');
-    my ($valid, $errors) = $cron->is_valid;
+    my ($valid, $errors);
+    my $cron = Cron::Describe->new(cron_str => '0 0 12 L * ?');
+    ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Valid L in DayOfMonth') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, last day of the month, any day of week', 'Description for L');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, last day of the month, every day-of-week', 'Description for L');
 
-    $cron = Cron::Describe->new(cron_str => '0 0 12 15W * ?', type => 'quartz');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 15W * ?');
     ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Valid W in DayOfMonth') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, nearest weekday to the 15th, any day of week', 'Description for W');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, nearest weekday to the 15th, every day-of-week', 'Description for W');
 
-    $cron = Cron::Describe->new(cron_str => '0 0 12 * * MON#2', type => 'quartz');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 ? * MON#2');
     ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Valid # in DayOfWeek') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, any day of month, the 2nd mon day', 'Description for #');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, the 2nd mon day', 'Description for #');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 * * BAD#2', type => 'quartz') };
-    like($@, qr/Invalid # syntax/, 'Invalid # syntax');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 ? * BAD#2');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Invalid # syntax');
+    like($errors->{syntax}, qr/Invalid # syntax/, 'Invalid # syntax error');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 32 * ?', type => 'quartz') };
-    like($@, qr/Value 32 out of range/i, 'Invalid DayOfMonth');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 32 * ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Invalid DayOfMonth');
+    like($errors->{range}, qr/Value 32 out of range/i, 'Invalid DayOfMonth error');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?', type => 'quartz', timezone => 'Invalid/TZ') };
-    like($@, qr/Invalid timezone/, 'Invalid timezone');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?', type => 'quartz', timezone => 'Invalid/TZ');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Invalid timezone');
+    like($errors->{timezone}, qr/Invalid timezone/, 'Invalid timezone error');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 32W * ?', type => 'quartz') };
-    like($@, qr/W value 32 out of range/, 'Invalid W value');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 32W * ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Invalid W value');
+    like($errors->{range}, qr/W value 32 out of range/, 'Invalid W value error');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 L-32 * ?', type => 'quartz') };
-    like($@, qr/L offset 32 out of range/, 'Invalid L offset');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 L-32 * ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Invalid L offset');
+    like($errors->{range}, qr/L offset 32 out of range/, 'Invalid L offset error');
 };
 
 subtest 'Easy cases' => sub {
     plan tests => 4;
 
-    my $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?', type => 'quartz');
-    my ($valid, $errors) = $cron->is_valid;
+    my ($valid, $errors);
+    my $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?');
+    ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Basic daily Quartz') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, any day of month, any day of week', 'Description for daily');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, every day-of-week', 'Description for daily');
 
-    $cron = Cron::Describe->new(cron_str => '0 0,15 12 * * ?', type => 'quartz');
+    $cron = Cron::Describe->new(cron_str => '0 0,15 12 * * ?');
     ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Quartz list') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0,15 minutes, at 12 hours, any day of month, any day of week', 'Description for list');
+    is($cron->describe, 'at 0 seconds, at 0,15 minutes, at 12 hours, every day-of-month, every day-of-week', 'Description for list');
 };
 
 subtest 'Medium cases' => sub {
     plan tests => 6;
 
-    my $cron = Cron::Describe->new(cron_str => '0 0 1-5 * * ?', type => 'quartz');
-    my ($valid, $errors) = $cron->is_valid;
+    my ($valid, $errors);
+    my $cron = Cron::Describe->new(cron_str => '0 0 1-5 * * ?');
+    ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Quartz range') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, from 1 to 5 hours, any day of month, any day of week', 'Description for range');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, from 1 to 5 hours, every day-of-month, every day-of-week', 'Description for range');
 
-    $cron = Cron::Describe->new(cron_str => '0 0 12 * JAN,FEB ?', type => 'quartz');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 * JAN,FEB ?');
     ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Quartz month names') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, any day of month, jan,feb months, any day of week', 'Description for month names');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, jan,feb months, every day-of-week', 'Description for month names');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 * BAD ?', type => 'quartz') };
-    like($@, qr/Invalid syntax in field: BAD/, 'Invalid month name');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 * BAD ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Invalid month name');
+    like($errors->{syntax}, qr/Invalid syntax in field: BAD/, 'Invalid month name error');
 };
 
 subtest 'Edge cases' => sub {
-    plan tests => 8;
+    plan tests => 10;
 
-    my $cron;
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 0 ? 2 2#5', type => 'quartz') };
-    like($@, qr/Fifth weekday in February/, 'Impossible fifth Monday in Feb');
+    my ($valid, $errors);
+    my $cron = Cron::Describe->new(cron_str => '0 0 0 ? 2 2#5');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Impossible fifth Monday in Feb');
+    like($errors->{impossible}, qr/Fifth weekday in February/, 'Impossible fifth Monday in Feb error');
 
-    $cron = Cron::Describe->new(cron_str => '0 0 12 29 * ? 2024', type => 'quartz');
-    my ($valid, $errors) = $cron->is_valid;
+    $cron = Cron::Describe->new(cron_str => '0 0 12 29 * ? 2024');
+    ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Leap year day (Feb 29, 2024)') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, at 29 days-of-month, any day of week, at 2024 year', 'Description for leap year');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, at 29 days, every day-of-week, at 2024 years', 'Description for leap year');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 15 * MON', type => 'quartz') };
-    like($@, qr/Either DayOfMonth or DayOfWeek must be \?/, 'DayOfMonth and DayOfWeek conflict');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 15 * MON');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'DayOfMonth and DayOfWeek conflict');
+    like($errors->{conflict}, qr/Either DayOfMonth or DayOfWeek must be \?/, 'DayOfMonth and DayOfWeek conflict error');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 30 4 ?', type => 'quartz') };
-    like($@, qr/Day 30 invalid for 4/, 'Invalid day for April');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 30 4 ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Invalid day for April');
+    like($errors->{range}, qr/Day 30 invalid for 4/, 'Invalid day for April error');
 
-    $cron = Cron::Describe->new(cron_str => '0 0 12 L-3 * ?', type => 'quartz');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 L-3 * ?');
     ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Valid L-3 in DayOfMonth') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, 3 days before the last day of the month, any day of week', 'Description for L-3');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, 3 days before the last day of the month, every day-of-week', 'Description for L-3');
 };
 
 subtest 'Unusual patterns' => sub {
-    plan tests => 14;
+    plan tests => 18;
 
-    my $cron = Cron::Describe->new(cron_str => '0 0 12 1,3-5/2 * ?', type => 'quartz');
-    my ($valid, $errors) = $cron->is_valid;
+    my ($valid, $errors);
+    my $cron = Cron::Describe->new(cron_str => '0 0 12 1,3-5/2 * ?');
+    ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Combined list and range with step') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, at 1, every 2 days from 3 to 5, any day of week', 'Description for list and range with step');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, at 1, every 2 days from 3 to 5, every day-of-week', 'Description for list and range with step');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?/0', type => 'quartz') };
-    like($@, qr/Step value cannot be zero/, 'Zero step');
+    $cron = Cron::Describe->new(cron_str => '*/0 * * * * ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Zero step');
+    like($errors->{step}, qr/Step value cannot be zero/, 'Zero step error');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 -1 * ?', type => 'quartz') };
-    like($@, qr/Invalid syntax/i, 'Negative number');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 -1 * ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Negative number');
+    like($errors->{syntax}, qr/Invalid syntax/i, 'Negative number error');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 a * ?', type => 'quartz') };
-    like($@, qr/Invalid syntax/i, 'Non-numeric');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 a * ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Non-numeric');
+    like($errors->{syntax}, qr/Invalid syntax/i, 'Non-numeric error');
 
-    eval { $cron = Cron::Describe->new(cron_str => '0 0 12 30 4 ?', type => 'quartz') };
-    like($@, qr/Day 30 invalid for 4/, 'Invalid day for April');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 30 4 ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok(!$valid, 'Invalid day for April');
+    like($errors->{range}, qr/Day 30 invalid for 4/, 'Invalid day for April error');
 
-    $cron = Cron::Describe->new(cron_str => '1-5/2,10 0 12 * * ?', type => 'quartz');
+    $cron = Cron::Describe->new(cron_str => '1-5/2,10 0 12 * * ?');
     ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Range with step and list') or diag explain $errors;
-    is($cron->describe, 'every 2 seconds from 1 to 5, at 10 seconds, at 0 minute, at 12 hours, any day of month, any day of week', 'Description for range with step and list');
+    is($cron->describe, 'every 2 seconds from 1 to 5, at 10 seconds, at 0 minutes, at 12 hours, every day-of-month, every day-of-week', 'Description for range with step and list');
 
-    $cron = Cron::Describe->new(cron_str => '0 0 12 1,15 * SUN,MON', type => 'quartz');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 ? * 1,2');
     ($valid, $errors) = $cron->is_valid;
-    ok($valid, 'Multiple days and months') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, at 1,15 days-of-month, sun,mon days', 'Description for multiple days');
+    ok($valid, 'Multiple days of week') or diag explain $errors;
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, mon,tue days', 'Description for multiple days');
 
-    $cron = Cron::Describe->new(cron_str => '0 0 12 * * L 2023', type => 'quartz');
+    $cron = Cron::Describe->new(cron_str => '0 0 12 * * L 2023');
     ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Last Saturday in year') or diag explain $errors;
-    is($cron->describe, 'at 0 second, at 0 minute, at 12 hours, any day of month, last Saturday, at 2023 year', 'Description for L and year');
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, last Saturday, at 2023 years', 'Description for L and year');
 
-    $cron = Cron::Describe->new(cron_str => '0 1-5/2 12 1-3,15 JAN,FEB ?', type => 'quartz');
+    $cron = Cron::Describe->new(cron_str => '0 1-5/2 12 1-3,15 JAN,FEB ?');
     ($valid, $errors) = $cron->is_valid;
     ok($valid, 'Complex combined pattern') or diag explain $errors;
-    is($cron->describe, 'at 0 second, every 2 minutes from 1 to 5, at 12 hours, at 1,2,3,15 days-of-month, jan,feb months, any day of week', 'Description for complex pattern');
+    is($cron->describe, 'at 0 seconds, every 2 minutes from 1 to 5, at 12 hours, at 1,2,3,15 days, jan,feb months, every day-of-week', 'Description for complex pattern');
+
+    $cron = Cron::Describe->new(cron_str => '0 0 12 L-0 * ?');
+    ($valid, $errors) = $cron->is_valid;
+    ok($valid, 'Valid L-0 in DayOfMonth') or diag explain $errors;
+    is($cron->describe, 'at 0 seconds, at 0 minutes, at 12 hours, last day of the month, every day-of-week', 'Description for L-0');
 };
 
 done_testing;

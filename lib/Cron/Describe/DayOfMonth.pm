@@ -13,21 +13,24 @@ has 'allowed_specials' => (is => 'ro', default => sub { ['*', ',', '-', '/', '?'
 around 'is_valid' => sub {
     my $orig = shift;
     my ($self) = @_;
-    my ($valid, $errors) = $self->$orig();
-    my %errors = %$errors;  # Declare %errors
+    my $val = $self->value;
+    my %errors;
 
-    if ($self->value =~ /L/) {
-        unless ($self->value =~ /^L(?:-(\d+))?$/) {
-            $errors{syntax} = "Invalid L syntax: " . $self->value;
-        } elsif ($1 && $1 > 31) {
-            $errors{range} = "L offset $1 out of range [0-31]";
+    if ($val =~ /^(\d+)W$/) {
+        my $num = $1;
+        if ($num < 1 || $num > 31) {
+            $errors{range} = "W value $num out of range [1-31]";
         }
-    } elsif ($self->value =~ /W/) {
-        unless ($self->value =~ /^(\d+)W$/) {
-            $errors{syntax} = "Invalid W syntax: " . $self->value;
-        } elsif ($1 < 1 || $1 > 31) {
-            $errors{range} = "W value $1 out of range [1-31]";
+    } elsif ($val =~ /^L(?:-(\d+))?$/) {
+        my $num = $1 // 0;
+        if ($num > 31) {
+            $errors{range} = "L offset $num out of range [0-31]";
         }
+    } elsif ($val eq '?') {
+        # OK
+    } else {
+        my ($valid, $field_errors) = $self->$orig();
+        %errors = %$field_errors unless $valid;
     }
 
     return (scalar keys %errors == 0, \%errors);

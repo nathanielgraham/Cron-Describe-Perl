@@ -16,18 +16,23 @@ has 'allowed_names' => (is => 'ro', default => sub { {
 around 'is_valid' => sub {
     my $orig = shift;
     my ($self) = @_;
-    my ($valid, $errors) = $self->$orig();
-    my %errors = %$errors;  # Declare %errors
+    my $val = $self->value;
+    my %errors;
 
-    if ($self->value =~ /#/) {
-        unless ($self->value =~ /^(?:\d+|SUN|MON|TUE|WED|THU|FRI|SAT)#([1-5])$/) {
-            $errors{syntax} = "Invalid # syntax: " . $self->value;
-        } elsif ($self->value =~ /^(\d+)#/) {
-            my $num = $1;
-            if ($num < 1 || $num > 7) {
-                $errors{range} = "Day number $num out of range [1-7]";
+    if ($val =~ /#/) {
+        if ($val =~ /^(?:\d+|SUN|MON|TUE|WED|THU|FRI|SAT)#([1-5])$/) {
+            my $day = $1;
+            if ($day =~ /\d+/ && ($day < 1 || $day > 7)) {
+                $errors{range} = "Day number $day out of range [1-7]";
             }
+        } else {
+            $errors{syntax} = "Invalid # syntax: $val";
         }
+    } elsif ($val eq '?' or $val eq 'L') {
+        # OK
+    } else {
+        my ($valid, $field_errors) = $self->$orig();
+        %errors = %$field_errors unless $valid;
     }
 
     return (scalar keys %errors == 0, \%errors);
