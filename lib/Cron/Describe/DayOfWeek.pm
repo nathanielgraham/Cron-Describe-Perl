@@ -49,10 +49,12 @@ sub to_english {
         } elsif ($struct->{type} eq 'last_of_day') {
             push @phrases, "last $dow_names{$struct->{day}}";
         } else {
-            push @phrases, $self->SUPER::to_english();
+            my $base = $self->SUPER::to_english();
+            $base =~ s/every day-of-week/every day-of-week/;
+            push @phrases, $base;
         }
     }
-    return join(', ', @phrases);
+    return join(', ', @phrases) || "every day-of-week";
 }
 
 1;
