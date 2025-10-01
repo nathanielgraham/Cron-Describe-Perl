@@ -8,6 +8,7 @@ sub new {
     my $self = bless \%args, $class;
     $self->{min} // die "No min for $args{type}";
     $self->{max} // die "No max for $args{type}";
+    print STDERR "DEBUG: Using latest Field.pm for type $self->{type} with min=$self->{min}, max=$self->{max}\n";
     $self->parse();
     return $self;
 }
@@ -55,12 +56,15 @@ sub parse {
 
 sub _name_to_num {
     my ($self, $name) = @_;
-    $name = lc $name;
+    $name = uc $name; # Handle uppercase explicitly
     if ($self->{type} eq 'month') {
-        my %months = (jan=>1, feb=>2, mar=>3, apr=>4, may=>5, jun=>6, jul=>7, aug=>8, sep=>9, oct=>10, nov=>11, dec=>12);
+        my %months = (JAN=>1, FEB=>2, MAR=>3, APR=>4, MAY=>5, JUN=>6, JUL=>7, AUG=>8, SEP=>9, OCT=>10, NOV=>11, DEC=>12);
         return $months{$name};
     } elsif ($self->{type} eq 'dow') {
-        my %dow = (sun=>0, mon=>1, tue=>2, wed=>3, thu=>4, fri=>5, sat=>6, sunday=>0, monday=>1, tuesday=>2, wednesday=>3, thursday=>4, friday=>5, saturday=>6);
+        my %dow = (
+            SUN=>0, MON=>1, TUE=>2, WED=>3, THU=>4, FRI=>5, SAT=>6,
+            SUNDAY=>0, MONDAY=>1, TUESDAY=>2, WEDNESDAY=>3, THURSDAY=>4, FRIDAY=>5, SATURDAY=>6
+        );
         return $dow{$name};
     }
     return undef;

@@ -47,10 +47,11 @@ sub to_english {
             push @phrases, $struct->{offset} ? "last day minus $struct->{offset}" : "last day";
         } elsif ($struct->{type} eq 'nearest_weekday') {
             push @phrases, "nearest weekday to the $struct->{day}";
-        } else {
+        } elsif ($struct->{type} eq 'range' || $struct->{type} eq 'single' || $struct->{type} eq 'step') {
             my $base = $self->SUPER::to_english();
-            $base =~ s/every day-of-month/every day-of-month/;
-            push @phrases, $base;
+            return $base; # Return immediately to avoid duplication
+        } else {
+            push @phrases, $self->SUPER::to_english();
         }
     }
     return join(', ', @phrases) || "every day-of-month";
