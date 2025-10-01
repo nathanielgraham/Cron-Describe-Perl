@@ -43,7 +43,7 @@ sub parse {
         } else {
             die "Invalid format: $part for $self->{type}";
         }
-        # Bounds check after parsing all components
+        # Bounds check after parsing
         if ($struct->{type} ne '*' && $struct->{type} ne '?') {
             if ($struct->{min} < $self->{min} || $struct->{max} > $self->{max} || $struct->{step} <= 0) {
                 die "Out of bounds: $part for $self->{type}";
