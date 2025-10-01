@@ -22,13 +22,13 @@ sub _build_fields {
     return [
         Cron::Describe::Field->new(value => $field_values[0], min => 0, max => 59),  # minutes
         Cron::Describe::Field->new(value => $field_values[1], min => 0, max => 23),  # hours
-        Cron::Describe::DayOfMonth->new(value => $field_values[2]),  # dom
+        Cron::Describe::DayOfMonth->new(value => $field_values[2], min => 1, max => 31),  # dom
         Cron::Describe::Field->new(
             value => $field_values[3], min => 1, max => 12,
             allowed_names => { JAN => 1, FEB => 2, MAR => 3, APR => 4, MAY => 5, JUN => 6,
                                JUL => 7, AUG => 8, SEP => 9, OCT => 10, NOV => 11, DEC => 12 }
         ),  # month
-        Cron::Describe::DayOfWeek->new(value => $field_values[4]),  # dow
+        Cron::Describe::DayOfWeek->new(value => $field_values[4], min => 1, max => 7),  # dow
     ];
 }
 
@@ -54,6 +54,12 @@ sub is_valid {
         $errors{range} = "Day $dom_val invalid for February";
     } elsif ($month =~ /^(?:4|6|9|11|APR|JUN|SEP|NOV)$/ && $dom_val =~ /\d+/ && $dom_val > 30) {
         $errors{range} = "Day $dom_val invalid for $month";
+    } elsif ($month =~ /^(?:2|FEB)$/ && $dom_val =~ /,/ && grep { $_ > 29 } ($dom_val =~ /(\d+)/g)) {
+        my @invalid = grep { $_ > 29 } ($dom_val =~ /(\d+)/g);
+        $errors{range} = "Days @invalid invalid for February";
+    } elsif ($month =~ /^(?:4|6|9|11|APR|JUN|SEP|NOV)$/ && $dom_val =~ /,/ && grep { $_ > 30 } ($dom_val =~ /(\d+)/g)) {
+        my @invalid = grep { $_ > 30 } ($dom_val =~ /(\d+)/g);
+        $errors{range} = "Days @invalid invalid for $month";
     }
 
     return (scalar keys %errors == 0, \%errors);
@@ -62,7 +68,7 @@ sub is_valid {
 sub describe {
     my ($self) = @_;
     my @fields = @{$self->fields};
-    my @names = qw(minute hour day-of-month month day-of-week);
+    my @names = qw(minutes hour day month day-of-week);
 
     my @desc;
     for my $i (0..4) {
@@ -98,7 +104,7 @@ Returns (boolean, \%errors) indicating if the cron expression is valid.
 
 =item describe
 
-Returns a concise English description of the cron expression (e.g., "at 0 minutes, from 1 to 5 days-of-month").
+Returns a concise English description of the cron expression (e.g., "at 0 minutes, from 1 to 5 days").
 
 =back
 

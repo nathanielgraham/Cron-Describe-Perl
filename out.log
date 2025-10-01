@@ -1,0 +1,234 @@
+[DZ] building distribution under .build/WDhIIWgWbC for installation
+[DZ] beginning to build Cron-Describe
+[DZ] guessing dist's main_module is lib/Cron/Describe.pm
+[DZ] writing Cron-Describe in .build/WDhIIWgWbC
+Checking if your kit is complete...
+Looks good
+Generating a Unix-style Makefile
+Writing Makefile for Cron::Describe
+Writing MYMETA.yml and MYMETA.json
+cp lib/Cron/Describe/DayOfMonth.pm blib/lib/Cron/Describe/DayOfMonth.pm
+cp lib/Cron/Describe/Field.pm blib/lib/Cron/Describe/Field.pm
+cp lib/Cron/Describe/DayOfWeek.pm blib/lib/Cron/Describe/DayOfWeek.pm
+cp lib/Cron/Describe/Quartz.pm blib/lib/Cron/Describe/Quartz.pm
+cp lib/Cron/Describe/Standard.pm blib/lib/Cron/Describe/Standard.pm
+cp lib/Cron/Describe.pm blib/lib/Cron/Describe.pm
+PERL_DL_NONLAZY=1 "/usr/bin/perl" "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness(0, 'blib/lib', 'blib/arch')" t/*.t
+
+    #   Failed test 'Quartz chars in standard type'
+    #   at t/validate.t line 20.
+
+    #   Failed test 'Quartz chars in standard type error'
+    #   at t/validate.t line 21.
+    #                   undef
+    #     doesn't match '(?^i:Invalid syntax)'
+    # Looks like you failed 2 tests of 4.
+
+#   Failed test 'Constructor dispatch'
+#   at t/validate.t line 22.
+
+    #   Failed test 'Description for list, numeric day'
+    #   at t/validate.t line 31.
+    #          got: 'at 0 minutes, at 0, 15 hours, at 1 day'
+    #     expected: 'at 0 minutes, at 0,15 hours, mon day'
+    # Looks like you planned 8 tests but ran 10.
+    # Looks like you failed 1 test of 10 run.
+
+#   Failed test 'Field parsing'
+#   at t/validate.t line 52.
+
+    #   Failed test 'Description for list'
+    #   at t/validate.t line 66.
+    #          got: 'at 0 minutes, at 0, 15 hours'
+    #     expected: 'at 0 minutes, at 0,15 hours'
+    # Looks like you failed 1 test of 4.
+
+#   Failed test 'Easy cases'
+#   at t/validate.t line 67.
+
+    #   Failed test 'Month and day names'
+    #   at t/validate.t line 80.
+    # {
+    #   'syntax' => 'Invalid standard cron: Quartz-specific characters (#, ?, W, L) detected'
+    # }
+    # Looks like you planned 6 tests but ran 3.
+    # Looks like you failed 1 test of 3 run.
+
+#   Failed test 'Medium cases'
+#   at t/validate.t line 87.
+Can't locate object method "describe" via package "Cron::Describe" at t/validate.t line 81.
+# Tests were run but no plan was declared and done_testing() was not seen.
+# Looks like your test exited with 255 just after 4.
+t/validate.t ......... 
+Dubious, test returned 255 (wstat 65280, 0xff00)
+Failed 4/4 subtests 
+
+    #   Failed test 'Too few fields for Quartz'
+    #   at t/validate_quartz.t line 20.
+
+    #   Failed test 'Too few fields for Quartz error'
+    #   at t/validate_quartz.t line 21.
+    #                   undef
+    #     doesn't match '(?^i:Invalid syntax)'
+    # Looks like you failed 2 tests of 4.
+
+#   Failed test 'Constructor dispatch'
+#   at t/validate_quartz.t line 22.
+
+    #   Failed test 'Description for L'
+    #   at t/validate_quartz.t line 31.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, last day of the month, any day of week'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, last day of the month, every day-of-week'
+
+    #   Failed test 'Description for W'
+    #   at t/validate_quartz.t line 36.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, nearest weekday to the 15th, any day of week'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, nearest weekday to the 15th, every day-of-week'
+
+    #   Failed test 'Description for #'
+    #   at t/validate_quartz.t line 41.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, any day of month, the 2nd mon day'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, the 2nd mon day'
+    # Looks like you planned 12 tests but ran 16.
+    # Looks like you failed 3 tests of 16 run.
+
+#   Failed test 'Field parsing'
+#   at t/validate_quartz.t line 67.
+
+    #   Failed test 'Description for daily'
+    #   at t/validate_quartz.t line 76.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, every, any day of week'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, every day-of-week'
+
+    #   Failed test 'Description for list'
+    #   at t/validate_quartz.t line 81.
+    #          got: 'at 0 secondss, at 0, 15 minutess, at 12 hourss, every, any day of week'
+    #     expected: 'at 0 seconds, at 0,15 minutes, at 12 hours, every day-of-month, every day-of-week'
+    # Looks like you failed 2 tests of 4.
+
+#   Failed test 'Easy cases'
+#   at t/validate_quartz.t line 82.
+
+    #   Failed test 'Description for range'
+    #   at t/validate_quartz.t line 91.
+    #          got: 'at 0 secondss, at 0 minutess, from 1 to 5 hourss, every, any day of week'
+    #     expected: 'at 0 seconds, at 0 minutes, from 1 to 5 hours, every day-of-month, every day-of-week'
+
+    #   Failed test 'Description for month names'
+    #   at t/validate_quartz.t line 96.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, every, at jan, feb months, any day of week'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, jan,feb months, every day-of-week'
+    # Looks like you failed 2 tests of 6.
+
+#   Failed test 'Medium cases'
+#   at t/validate_quartz.t line 102.
+
+    #   Failed test 'Description for leap year'
+    #   at t/validate_quartz.t line 116.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, at 29 days, any day of week, at 2024 years'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, at 29 days, every day-of-week, at 2024 years'
+
+    #   Failed test 'Invalid day for April'
+    #   at t/validate_quartz.t line 125.
+
+    #   Failed test 'Invalid day for April error'
+    #   at t/validate_quartz.t line 126.
+    #                   undef
+    #     doesn't match '(?^:Day 30 invalid for 4)'
+
+    #   Failed test 'Description for L-3'
+    #   at t/validate_quartz.t line 131.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, 3 days before the last day of the month, any day of week'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, 3 days before the last day of the month, every day-of-week'
+    # Looks like you failed 4 tests of 10.
+
+#   Failed test 'Edge cases'
+#   at t/validate_quartz.t line 132.
+
+    #   Failed test 'Combined list and range with step'
+    #   at t/validate_quartz.t line 140.
+    # {
+    #   'syntax' => 'Invalid syntax in field: 1,3-5/2'
+    # }
+
+    #   Failed test 'Description for list and range with step'
+    #   at t/validate_quartz.t line 141.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, every 2 days 1,3-5, any day of week'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, at 1, every 2 days from 3 to 5, every day-of-week'
+
+    #   Failed test 'Negative number'
+    #   at t/validate_quartz.t line 150.
+
+    #   Failed test 'Negative number error'
+    #   at t/validate_quartz.t line 151.
+    #                   undef
+    #     doesn't match '(?^i:Invalid syntax)'
+
+    #   Failed test 'Invalid day for April'
+    #   at t/validate_quartz.t line 160.
+
+    #   Failed test 'Invalid day for April error'
+    #   at t/validate_quartz.t line 161.
+    #                   undef
+    #     doesn't match '(?^:Day 30 invalid for 4)'
+
+    #   Failed test 'Range with step and list'
+    #   at t/validate_quartz.t line 165.
+    # {
+    #   'syntax' => 'Invalid syntax in field: 1-5/2,10'
+    # }
+
+    #   Failed test 'Description for range with step and list'
+    #   at t/validate_quartz.t line 166.
+    #          got: '1-5/2,10, at 0 minutess, at 12 hourss, every, any day of week'
+    #     expected: 'every 2 seconds from 1 to 5, at 10 seconds, at 0 minutes, at 12 hours, every day-of-month, every day-of-week'
+
+    #   Failed test 'Description for multiple days'
+    #   at t/validate_quartz.t line 171.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, any day of month, at 1, 2 days'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, mon,tue days'
+
+    #   Failed test 'Last Saturday in year'
+    #   at t/validate_quartz.t line 175.
+    # {
+    #   'conflict' => 'Either DayOfMonth or DayOfWeek must be ? in Quartz cron'
+    # }
+
+    #   Failed test 'Description for L and year'
+    #   at t/validate_quartz.t line 176.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, every, last Saturday, at 2023 years'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, every day-of-month, last Saturday, at 2023 years'
+
+    #   Failed test 'Description for complex pattern'
+    #   at t/validate_quartz.t line 181.
+    #          got: 'at 0 secondss, every 2 minutess from 1 to 5 minutess, at 12 hourss, 1-3,15, at jan, feb months, any day of week'
+    #     expected: 'at 0 seconds, every 2 minutes from 1 to 5, at 12 hours, at 1,2,3,15 days, jan,feb months, every day-of-week'
+
+    #   Failed test 'Description for L-0'
+    #   at t/validate_quartz.t line 186.
+    #          got: 'at 0 secondss, at 0 minutess, at 12 hourss, 0 days before the last day of the month, any day of week'
+    #     expected: 'at 0 seconds, at 0 minutes, at 12 hours, last day of the month, every day-of-week'
+    # Looks like you planned 18 tests but ran 20.
+    # Looks like you failed 13 tests of 20 run.
+
+#   Failed test 'Unusual patterns'
+#   at t/validate_quartz.t line 187.
+# Looks like you failed 6 tests of 6.
+t/validate_quartz.t .. 
+Dubious, test returned 6 (wstat 1536, 0x600)
+Failed 6/6 subtests 
+
+Test Summary Report
+-------------------
+t/validate.t       (Wstat: 65280 (exited 255) Tests: 4 Failed: 4)
+  Failed tests:  1-4
+  Non-zero exit status: 255
+  Parse errors: No plan found in TAP output
+t/validate_quartz.t (Wstat: 1536 (exited 6) Tests: 6 Failed: 6)
+  Failed tests:  1-6
+  Non-zero exit status: 6
+Files=2, Tests=10,  0 wallclock secs ( 0.03 usr  0.01 sys +  0.38 cusr  0.05 csys =  0.47 CPU)
+Result: FAIL
+Failed 2/2 test programs. 10/10 subtests failed.
+make: *** [Makefile:839: test_dynamic] Error 6
+error running make test

@@ -18,7 +18,7 @@ subtest 'Constructor dispatch' => sub {
     my $cron2 = Cron::Describe->new(cron_str => '0 0 * * * ?');
     my ($valid, $errors) = $cron2->is_valid;
     ok(!$valid, 'Quartz chars in standard type');
-    like($errors->{syntax}, qr/Invalid syntax/i, 'Quartz chars in standard type error');
+    like($errors->{syntax}, qr/Invalid standard cron.*Quartz-specific/, 'Quartz chars in standard type error');
 };
 
 subtest 'Field parsing' => sub {
@@ -103,7 +103,7 @@ subtest 'Edge cases' => sub {
     $cron = Cron::Describe->new(cron_str => '0 0 * * *#2');
     ($valid, $errors) = $cron->is_valid;
     ok(!$valid, 'Quartz # in standard');
-    like($errors->{syntax}, qr/Invalid syntax/i, 'Quartz # in standard error');
+    like($errors->{syntax}, qr/Invalid standard cron.*Quartz-specific/, 'Quartz # in standard error');
 
     $cron = Cron::Describe->new(cron_str => '0 0 30 4 *');
     ($valid, $errors) = $cron->is_valid;

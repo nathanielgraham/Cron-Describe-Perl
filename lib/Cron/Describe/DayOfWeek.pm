@@ -52,6 +52,8 @@ around 'describe' => sub {
         return "any day of week";
     } elsif ($val eq 'L') {
         return "last Saturday";
+    } elsif ($val =~ /^\d+$/ && $self->allowed_names->{(keys %{$self->allowed_names})[$val-1]}) {
+        return lc((keys %{$self->allowed_names})[$val-1]) . " day";
     } elsif ($self->allowed_names->{$val}) {
         return lc($val) . " day";
     }

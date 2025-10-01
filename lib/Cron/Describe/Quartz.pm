@@ -114,7 +114,7 @@ Returns (boolean, \%errors) indicating if the cron expression is valid.
 
 =item describe
 
-Returns a concise English description of the cron expression (e.g., "every 5 seconds, at 12 hours, any day of month").
+Returns a concise English description of the cron expression (e.g., "every 5 seconds, at 12 hours, every day-of-month").
 
 =back
 

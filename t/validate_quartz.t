@@ -18,7 +18,7 @@ subtest 'Constructor dispatch' => sub {
     my $cron2 = Cron::Describe->new(cron_str => '0 0 * * *');
     my ($valid, $errors) = $cron2->is_valid;
     ok(!$valid, 'Too few fields for Quartz');
-    like($errors->{syntax}, qr/Invalid syntax/i, 'Too few fields for Quartz error');
+    like($errors->{syntax}, qr/Invalid cron expression: wrong number of fields/, 'Too few fields for Quartz error');
 };
 
 subtest 'Field parsing' => sub {
