@@ -1,113 +1,102 @@
-# ABSTRACT: Abstract base class for parsing and validating cron expressions
 package Cron::Describe;
+
+# ABSTRACT: Parse and describe standard and Quartz cron expressions, validating their syntax and generating human-readable descriptions
 
 use strict;
 use warnings;
-use Moo;
-use Carp qw(croak);
-use Try::Tiny;
-use DateTime::TimeZone;
-
-our $VERSION = '0.001';
-
-# Abstract base class - do not instantiate directly
+use POSIX 'mktime';
+use Cron::Describe::Field;
+use Cron::Describe::DayOfMonth;
+use Cron::Describe::DayOfWeek;
 
 sub new {
     my ($class, %args) = @_;
-    my $cron_str = delete $args{cron_str} // croak "cron_str required";
-    my $timezone = delete $args{timezone} // 'UTC';
-    my $type     = delete $args{type};
+    my $self = bless {}, $class;
+    my $expr = $args{expression} // die "No expression provided";
+    my @raw_fields = split /\s+/, $expr;
+    my @field_types = $self->is_quartz ? qw(seconds minute hour dom month dow year)
+                                      : qw(minute hour dom month dow);
+    # Allow 6 or 7 fields for Quartz (optional year)
+    die "Invalid field count: " . @raw_fields unless @raw_fields == @field_types || ($self->is_quartz && @raw_fields == 6);
 
-    # Sanitize input: trim whitespace
-    $cron_str =~ s/^\s+|\s+$//g;
-
-    my %errors;
-    try {
-        DateTime::TimeZone->new(name => $timezone);
-    } catch {
-        $errors{timezone} = "Invalid timezone: $timezone";
-    };
-
-    # Heuristic to determine type
-    my @fields = split /\s+/, $cron_str;
-    my $field_count = scalar @fields;
-    my $detected_type = $type;
-
-    unless ($detected_type) {
-        if ($field_count == 5) {
-            $detected_type = 'standard';
-        } elsif ($field_count == 6 || $field_count == 7) {
-            $detected_type = 'quartz';
-        } else {
-            $errors{syntax} = "Invalid cron expression: wrong number of fields ($field_count)";
-        }
-
-        # Check for Quartz-specific chars in standard cron
-        if ($detected_type eq 'standard' && $cron_str =~ /[#?WL]/) {
-            $errors{syntax} = "Invalid standard cron: Quartz-specific characters (#, ?, W, L) detected";
-        }
+    $self->{fields} = [];
+    for my $i (0 .. $#raw_fields) {
+        my $type = $field_types[$i];
+        my $field_class = $type eq 'dom' ? 'Cron::Describe::DayOfMonth'
+                        : $type eq 'dow' ? 'Cron::Describe::DayOfWeek'
+                        : 'Cron::Describe::Field';
+        my $field_args = { type => $type, value => $raw_fields[$i] };
+        # Set bounds
+        $field_args->{min} = 0; $field_args->{max} = 59 if $type eq 'seconds' || $type eq 'minute';
+        $field_args->{min} = 0; $field_args->{max} = 23 if $type eq 'hour';
+        $field_args->{min} = 1; $field_args->{max} = 31 if $type eq 'dom';
+        $field_args->{min} = 1; $field_args->{max} = 12 if $type eq 'month';
+        $field_args->{min} = 0; $field_args->{max} = 7  if $type eq 'dow';
+        $field_args->{min} = 1970; $field_args->{max} = 2199 if $type eq 'year';
+        push @{$self->{fields}}, $field_class->new(%$field_args);
     }
-
-    if (keys %errors) {
-        return bless { errors => \%errors }, $class;
-    }
-
-    my $subclass = $detected_type eq 'standard' ? 'Cron::Describe::Standard' : 'Cron::Describe::Quartz';
-    require $subclass =~ s/::/\//gr . '.pm';
-
-    return $subclass->new(
-        cron_str => $cron_str,
-        timezone => $timezone,
-        %args,
-    );
+    return $self;
 }
 
+sub is_quartz { 0 }  # Overridden in Quartz.pm
+
 sub is_valid {
-    my ($self) = @_;
-    return (0, $self->{errors}) if $self->{errors};
-    return (1, {});
+    my $self = shift;
+    # Syntax and bounds check
+    for my $field (@{$self->{fields}}) {
+        return 0 unless $field->validate();
+    }
+    # Heuristic: Can it ever trigger?
+    return $self->_can_trigger();
+}
+
+sub _can_trigger {
+    my $self = shift;
+    my $start = time;
+    my $max_days = 365 * 10;  # Check 10 years
+    for my $i (0 .. $max_days) {
+        my $t = $start + $i * 86400;
+        my @lt = localtime($t);
+        my %time_parts = (
+            seconds => $lt[0],
+            minute  => $lt[1],
+            hour    => $lt[2],
+            dom     => $lt[3],
+            month   => $lt[4] + 1,
+            dow     => $lt[6],
+            year    => $lt[5] + 1900,
+        );
+        my $matches_all = 1;
+        for my $field (@{$self->{fields}}) {
+            $matches_all = 0 unless $field->matches(\%time_parts);
+        }
+        return 1 if $matches_all;
+    }
+    return 0;  # No match found
+}
+
+sub describe {
+    my $self = shift;
+    my @descs = map { $_->to_english() } @{$self->{fields}};
+    # Simple join; enhance for idiomatic phrasing
+    my $time = join(':', grep { defined } @descs[0..2]);  # seconds, minute, hour
+    my $rest = join(', ', grep { defined } @descs[3..$#descs]);  # dom, month, dow, year
+    return "at $time on $rest";
+}
+
+sub _days_in_month {
+    my ($mon, $year) = @_;
+    my @days = (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+    my $d = $days[$mon];
+    $d = 29 if $mon == 2 && $year % 4 == 0 && ($year % 100 != 0 || $year % 400 == 0);
+    return $d;
+}
+
+sub _dow_of_date {
+    my ($year, $mon, $dom) = @_;
+    my $epoch = mktime(0, 0, 0, $dom, $mon - 1, $year - 1900, 0, 0, -1);
+    my @lt = localtime($epoch);
+    return $lt[6];
 }
 
 1;
-
-__END__
-
-=pod
-
-=head1 NAME
-
-Cron::Describe - Abstract base class for parsing and validating cron expressions
-
-=head1 SYNOPSIS
-
-use Cron::Describe;
-my $cron = Cron::Describe->new(cron_str => '0 0 12 * * ?');
-if ($cron->is_valid) { ... }
-
-=head1 DESCRIPTION
-
-Base class for cron parsers. Use subclasses via factory.
-
-=head1 METHODS
-
-=over 4
-
-=item new(%args)
-
-Factory constructor. Args: C<cron_str> (required), C<timezone> (default 'UTC'), C<type> (optional: 'standard' or 'quartz').
-
-=item is_valid
-
-Returns (boolean, \%errors) indicating if the cron expression is valid.
-
-=back
-
-=head1 AUTHOR
-
-Nathaniel Graham <ngraham@cpan.org>
-
-=head1 LICENSE
-
-This is released under the Artistic License 2.0.
-
-=cut

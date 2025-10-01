@@ -1,86 +1,58 @@
-# ABSTRACT: Validator for cron DayOfWeek field
 package Cron::Describe::DayOfWeek;
 
 use strict;
 use warnings;
-use Moo;
-extends 'Cron::Describe::Field';
+use base 'Cron::Describe::Field';
 
-has 'min' => (is => 'ro', default => 1);
-has 'max' => (is => 'ro', default => 7);
-has 'allowed_specials' => (is => 'ro', default => sub { ['*', ',', '-', '/', '?', 'L', '#'] });
-has 'allowed_names' => (is => 'ro', default => sub { {
-    SUN => 1, MON => 2, TUE => 3, WED => 4, THU => 5, FRI => 6, SAT => 7
-} });
-
-around 'is_valid' => sub {
-    my $orig = shift;
-    my ($self) = @_;
-    my $val = $self->value;
-    my %errors;
-
-    if ($val =~ /#/) {
-        if ($val =~ /^(?:\d+|SUN|MON|TUE|WED|THU|FRI|SAT)#([1-5])$/) {
-            my $day = $1;
-            if ($day =~ /\d+/ && ($day < 1 || $day > 7)) {
-                $errors{range} = "Day number $day out of range [1-7]";
-            }
-        } else {
-            $errors{syntax} = "Invalid # syntax: $val";
-        }
-    } elsif ($val eq '?' or $val eq 'L') {
-        # OK
+sub parse {
+    my $self = shift;
+    my $value = $self->{value} // '*';
+    if ($value =~ /^(\d+)#(\d+)$/) {
+        $self->{parsed} = [{ type => 'nth', day => $1, nth => $2 }];
+        die "Invalid nth: $2 (max 5)" if $2 < 1 || $2 > 5;
+        die "Invalid day: $1" if $1 < 0 || $1 > 7;
+    } elsif ($value =~ /^(\d+)L$/) {
+        $self->{parsed} = [{ type => 'last_of_day', day => $1 }];
+        die "Invalid day: $1" if $1 < 0 || $1 > 7;
     } else {
-        my ($valid, $field_errors) = $self->$orig();
-        %errors = %$field_errors unless $valid;
+        $self->SUPER::parse();
     }
+}
 
-    return (scalar keys %errors == 0, \%errors);
-};
-
-around 'describe' => sub {
-    my $orig = shift;
-    my ($self, $unit) = @_;
-
-    my $val = $self->value;
-    if ($val =~ /#/) {
-        if ($val =~ /^(\w+)#(\d+)$/) {
-            my ($day, $nth) = ($1, $2);
-            return "the $nth" . ($nth == 1 ? "st" : $nth == 2 ? "nd" : $nth == 3 ? "rd" : "th") . " " . lc($day) . " day";
+sub matches {
+    my ($self, $time_parts) = @_;
+    my $dow = $time_parts->{dow};
+    my $dom = $time_parts->{dom};
+    for my $struct (@{$self->{parsed}}) {
+        if ($struct->{type} eq 'nth') {
+            my $occurrence = int(($dom - 1) / 7) + 1;
+            return $dow == $struct->{day} && $occurrence == $struct->{nth};
+        } elsif ($struct->{type} eq 'last_of_day') {
+            my $occurrence = int(($dom - 1) / 7) + 1;
+            my $dim = Cron::Describe::_days_in_month($time_parts->{month}, $time_parts->{year});
+            my $max_occurrence = int(($dim - 1) / 7) + 1;
+            return $dow == $struct->{day} && $occurrence == $max_occurrence;
         }
-    } elsif ($val eq '?') {
-        return "any day of week";
-    } elsif ($val eq 'L') {
-        return "last Saturday";
-    } elsif ($val =~ /^\d+$/ && $self->allowed_names->{(keys %{$self->allowed_names})[$val-1]}) {
-        return lc((keys %{$self->allowed_names})[$val-1]) . " day";
-    } elsif ($self->allowed_names->{$val}) {
-        return lc($val) . " day";
+        return $self->SUPER::matches($time_parts);
     }
+    return 0;
+}
 
-    return $self->$orig('day');
-};
+sub to_english {
+    my $self = shift;
+    my @phrases;
+    my %dow_names = (0=>'Sunday', 1=>'Monday', 2=>'Tuesday', 3=>'Wednesday', 4=>'Thursday', 5=>'Friday', 6=>'Saturday', 7=>'Sunday');
+    for my $struct (@{$self->{parsed}}) {
+        if ($struct->{type} eq 'nth') {
+            my $nth = $struct->{nth} == 1 ? 'first' : $struct->{nth} == 2 ? 'second' : $struct->{nth} == 3 ? 'third' : $struct->{nth} == 4 ? 'fourth' : 'fifth';
+            push @phrases, "$nth $dow_names{$struct->{day}}";
+        } elsif ($struct->{type} eq 'last_of_day') {
+            push @phrases, "last $dow_names{$struct->{day}}";
+        } else {
+            push @phrases, $self->SUPER::to_english();
+        }
+    }
+    return join(', ', @phrases);
+}
 
 1;
-
-__END__
-
-=pod
-
-=head1 NAME
-
-Cron::Describe::DayOfWeek - Validator for cron DayOfWeek field
-
-=head1 DESCRIPTION
-
-Validates and describes DayOfWeek field, including Quartz-specific # and day names (e.g., MON).
-
-=head1 AUTHOR
-
-Nathaniel Graham <ngraham@cpan.org>
-
-=head1 LICENSE
-
-This is released under the Artistic License 2.0.
-
-=cut

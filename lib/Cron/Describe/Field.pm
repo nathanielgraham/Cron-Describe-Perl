@@ -1,122 +1,107 @@
-# ABSTRACT: Base class for validating and describing cron expression fields
 package Cron::Describe::Field;
 
 use strict;
 use warnings;
-use Moo;
-use Carp qw(croak);
 
-has 'value'       => (is => 'ro', required => 1);
-has 'min'         => (is => 'ro', required => 1);
-has 'max'         => (is => 'ro', required => 1);
-has 'allowed_specials' => (is => 'ro', default => sub { ['*', ',', '-', '/'] });
-has 'allowed_names' => (is => 'ro', default => sub { {} });  # For month/day names
-
-sub is_valid {
-    my ($self) = @_;
-    my $val = $self->value;
-    my %errors;
-
-    # Validate against allowed specials and names
-    my $specials = join '|', map { quotemeta } @{$self->allowed_specials};
-    my $names = join '|', keys %{$self->allowed_names};
-    my $num_regex = qr/\d+/;
-    my $range_regex = qr/(?:$num_regex|$names)-(?:$num_regex|$names)/;
-    my $list_regex = qr/(?:$num_regex|$names|$range_regex)(?:,(?:$num_regex|$names|$range_regex))*/;
-    my $step_regex = qr/(?:\*|$num_regex|$range_regex|$list_regex)\/(\d+)/;
-
-    unless ($val =~ m{
-        ^ (?: \* (?: / \d+ )? 
-          | $range_regex (?: / \d+ )? 
-          | $list_regex 
-          | $num_regex
-          | $names
-          | $specials
-        ) $
-    }x) {
-        $errors{syntax} = "Invalid syntax in field: $val";
-    } else {
-        # Check numeric ranges
-        if ($val =~ /(\d+)/) {
-            my @nums = ($val =~ /(\d+)/g);
-            for my $num (@nums) {
-                if ($num < $self->min || $num > $self->max) {
-                    $errors{range} = "Value $num out of range [$self->min-$self->max]";
-                }
-            }
-        }
-        # Check step values
-        if ($val =~ $step_regex) {
-            my $step = $1;
-            if ($step == 0) {
-                $errors{step} = "Step value cannot be zero: $val";
-            }
-        }
-    }
-
-    return (scalar keys %errors == 0, \%errors);
+sub new {
+    my ($class, %args) = @_;
+    my $self = bless \%args, $class;
+    $self->{min} // die "No min for $args{type}";
+    $self->{max} // die "No max for $args{type}";
+    $self->parse();
+    return $self;
 }
 
-sub describe {
-    my ($self, $unit) = @_;
-    my $val = $self->value;
-    my $names = join '|', keys %{$self->allowed_names};
-
-    if ($val eq '*') {
-        return 'every';
-    } elsif ($val =~ /^(\d+)$/) {
-        return "at $1 $unit" . ($1 == 1 && $unit ne 'month' ? '' : 's');
-    } elsif ($val =~ /^(\d+)-(\d+)$/) {
-        return "from $1 to $2 $unit" . ($2 == 1 && $unit ne 'month' ? '' : 's');
-    } elsif ($val =~ /^(?:(?:\d+|$names)(?:,(?:\d+|$names))*)$/) {
-        my @parts = split /,/, $val;
-        my @desc = map { $self->allowed_names->{$_} ? lc($_) : $_ } @parts;
-        return "at " . join(',', @desc) . " $unit" . (@desc == 1 && $unit ne 'month' ? '' : 's');
-    } elsif ($val =~ /^(.*?)(?:\/(\d+))$/) {
-        my ($base, $step) = ($1, $2);
-        my $base_desc = $base eq '*' ? 'every' : $self->new(value => $base, min => $self->min, max => $self->max)->describe($unit);
-        return "every $step $unit" . ($step == 1 && $unit ne 'month' ? '' : 's') . ($base eq '*' ? '' : " $base_desc");
-    } elsif ($self->allowed_names->{$val}) {
-        return lc $val;
+sub parse {
+    my $self = shift;
+    my $value = $self->{value} // '*';
+    my @parts = split /,/, $value;
+    $self->{parsed} = [];
+    foreach my $part (@parts) {
+        $part =~ s/^\s+|\s+$//g;
+        my $struct = {};
+        if ($part eq '*' || $part eq '?') {
+            $struct->{type} = $part;
+        } elsif ($part =~ /^(\d+)-(\d+)(?:\/(\d+))?$/) {
+            $struct->{type} = 'range';
+            $struct->{min} = $1;
+            $struct->{max} = $2;
+            $struct->{step} = $3 // 1;
+        } elsif ($part =~ /^(\d+)(?:\/(\d+))?$/) {
+            $struct->{type} = 'single';
+            $struct->{min} = $struct->{max} = $1;
+            $struct->{step} = $2 // 1;
+        } elsif ($part =~ /^\*\/(\d+)$/) {
+            $struct->{type} = 'step';
+            $struct->{min} = $self->{min};
+            $struct->{max} = $self->{max};
+            $struct->{step} = $1;
+        } elsif (my $num = $self->_name_to_num($part)) {
+            $struct->{type} = 'single';
+            $struct->{min} = $struct->{max} = $num;
+            $struct->{step} = 1;
+        } else {
+            die "Invalid format: $part for $self->{type}";
+        }
+        # Bounds and step check
+        if ($struct->{type} ne '*' && $struct->{type} ne '?') {
+            die "Out of bounds: $part for $self->{type}" if $struct->{min} < $self->{min} || $struct->{max} > $self->{max};
+            die "Invalid step: $part" if $struct->{step} <= 0;
+        }
+        push @{$self->{parsed}}, $struct;
     }
+}
 
-    return $val;  # Fallback for special characters
+sub _name_to_num {
+    my ($self, $name) = @_;
+    $name = lc $name;
+    if ($self->{type} eq 'month') {
+        my %months = (jan=>1, feb=>2, mar=>3, apr=>4, may=>5, jun=>6, jul=>7, aug=>8, sep=>9, oct=>10, nov=>11, dec=>12);
+        return $months{$name};
+    } elsif ($self->{type} eq 'dow') {
+        my %dow = (sun=>0, mon=>1, tue=>2, wed=>3, thu=>4, fri=>5, sat=>6, sunday=>0, monday=>1, tuesday=>2, wednesday=>3, thursday=>4, friday=>5, saturday=>6);
+        return $dow{$name};
+    }
+    return undef;
+}
+
+sub validate {
+    my $self = shift;
+    eval { $self->parse() };
+    return $@ ? 0 : 1;
+}
+
+sub matches {
+    my ($self, $time_parts) = @_;
+    my $val = $time_parts->{$self->{type}};
+    for my $struct (@{$self->{parsed}}) {
+        if ($struct->{type} eq '*' || $struct->{type} eq '?') {
+            return 1;
+        }
+        if ($struct->{type} eq 'range' || $struct->{type} eq 'single') {
+            return 1 if $val >= $struct->{min} && $val <= $struct->{max} && ($val - $struct->{min}) % $struct->{step} == 0;
+        } elsif ($struct->{type} eq 'step') {
+            return 1 if ($val - $self->{min}) % $struct->{step} == 0;
+        }
+    }
+    return 0;
+}
+
+sub to_english {
+    my $self = shift;
+    my @phrases;
+    for my $struct (@{$self->{parsed}}) {
+        if ($struct->{type} eq '*' || $struct->{type} eq '?') {
+            push @phrases, "every $self->{type}";
+        } elsif ($struct->{type} eq 'step') {
+            push @phrases, "every $struct->{step} $self->{type}s";
+        } elsif ($struct->{min} == $struct->{max}) {
+            push @phrases, $struct->{min};
+        } else {
+            push @phrases, "from $struct->{min} to $struct->{max}" . ($struct->{step} > 1 ? " every $struct->{step}" : "");
+        }
+    }
+    return join(', ', @phrases) || "every $self->{type}";
 }
 
 1;
-
-__END__
-
-=pod
-
-=head1 NAME
-
-Cron::Describe::Field - Base class for validating and describing cron expression fields
-
-=head1 DESCRIPTION
-
-Handles generic field validation and description for cron expressions.
-
-=head1 METHODS
-
-=over 4
-
-=item is_valid
-
-Returns (boolean, \%errors) indicating if the field is valid.
-
-=item describe($unit)
-
-Returns a concise English description of the field value (e.g., 'every minutes', 'at 5 minutes', 'from 1 to 5 hours').
-
-=back
-
-=head1 AUTHOR
-
-Nathaniel Graham <ngraham@cpan.org>
-
-=head1 LICENSE
-
-This is released under the Artistic License 2.0.
-
-=cut

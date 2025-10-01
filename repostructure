@@ -1,0 +1,10 @@
+Direct links for you to evaluate:
+https://github.com/nathanielgraham/Cron-Describe-Perl/blob/master/t/validate.t
+https://github.com/nathanielgraham/Cron-Describe-Perl/blob/master/t/validate_quartz.t
+https://github.com/nathanielgraham/Cron-Describe-Perl/blob/master/lib/Cron/Describe.pm
+https://github.com/nathanielgraham/Cron-Describe-Perl/blob/master/lib/Cron/Describe/Quartz.pm
+https://github.com/nathanielgraham/Cron-Describe-Perl/blob/master/lib/Cron/Describe/Standard.pm
+https://github.com/nathanielgraham/Cron-Describe-Perl/blob/master/lib/Cron/Describe/Field.pm
+https://github.com/nathanielgraham/Cron-Describe-Perl/blob/master/lib/Cron/Describe/DayOfMonth.pm
+https://github.com/nathanielgraham/Cron-Describe-Perl/blob/master/lib/Cron/Describe/DayOfWeek.pm
+

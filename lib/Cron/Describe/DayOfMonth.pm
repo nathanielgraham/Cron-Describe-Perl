@@ -1,83 +1,57 @@
-# ABSTRACT: Validator for cron DayOfMonth field
 package Cron::Describe::DayOfMonth;
 
 use strict;
 use warnings;
-use Moo;
-extends 'Cron::Describe::Field';
+use base 'Cron::Describe::Field';
 
-has 'min' => (is => 'ro', default => 1);
-has 'max' => (is => 'ro', default => 31);
-has 'allowed_specials' => (is => 'ro', default => sub { ['*', ',', '-', '/', '?', 'L', 'W'] });
-
-around 'is_valid' => sub {
-    my $orig = shift;
-    my ($self) = @_;
-    my $val = $self->value;
-    my %errors;
-
-    if ($val =~ /^(\d+)W$/) {
-        my $num = $1;
-        if ($num < 1 || $num > 31) {
-            $errors{range} = "W value $num out of range [1-31]";
-        }
-    } elsif ($val =~ /^L(?:-(\d+))?$/) {
-        my $num = $1 // 0;
-        if ($num > 31) {
-            $errors{range} = "L offset $num out of range [0-31]";
-        }
-    } elsif ($val eq '?') {
-        # OK
+sub parse {
+    my $self = shift;
+    my $value = $self->{value} // '*';
+    if ($value =~ /^L(?:-(\d+))?$/) {
+        $self->{parsed} = [{ type => 'last', offset => $1 // 0 }];
+        die "Invalid offset: $1" if defined $1 && $1 > 30;
+    } elsif ($value =~ /^(\d+)W$/) {
+        $self->{parsed} = [{ type => 'nearest_weekday', day => $1 }];
+        die "Invalid day: $1" if $1 < 1 || $1 > 31;
     } else {
-        my ($valid, $field_errors) = $self->$orig();
-        %errors = %$field_errors unless $valid;
+        $self->SUPER::parse();
     }
+}
 
-    return (scalar keys %errors == 0, \%errors);
-};
-
-around 'describe' => sub {
-    my $orig = shift;
-    my ($self, $unit) = @_;
-
-    my $val = $self->value;
-    if ($val =~ /L/) {
-        if ($val =~ /^L-(\d+)$/) {
-            return "$1 day" . ($1 == 1 ? '' : 's') . " before the last day of the month";
-        } elsif ($val eq 'L') {
-            return "last day of the month";
+sub matches {
+    my ($self, $time_parts) = @_;
+    my $dom = $time_parts->{dom};
+    for my $struct (@{$self->{parsed}}) {
+        if ($struct->{type} eq 'last') {
+            my $last_day = Cron::Describe::_days_in_month($time_parts->{month}, $time_parts->{year});
+            return $dom == $last_day - $struct->{offset};
+        } elsif ($struct->{type} eq 'nearest_weekday') {
+            my $target_day = $struct->{day};
+            my $dow = Cron::Describe::_dow_of_date($time_parts->{year}, $time_parts->{month}, $target_day);
+            if ($dow == 6) { $target_day -= 1; }  # Sat -> Fri
+            elsif ($dow == 0) { $target_day += 1; }  # Sun -> Mon
+            my $dim = Cron::Describe::_days_in_month($time_parts->{month}, $time_parts->{year});
+            return 0 if $target_day < 1 || $target_day > $dim;
+            return $dom == $target_day;
         }
-    } elsif ($val =~ /W/) {
-        if ($val =~ /^(\d+)W$/) {
-            return "nearest weekday to the $1" . ($1 == 1 ? 'st' : $1 == 2 ? 'nd' : $1 == 3 ? 'rd' : 'th');
-        }
-    } elsif ($val eq '?') {
-        return "any day of month";
+        return $self->SUPER::matches($time_parts);
     }
+    return 0;
+}
 
-    return $self->$orig('day');
-};
+sub to_english {
+    my $self = shift;
+    my @phrases;
+    for my $struct (@{$self->{parsed}}) {
+        if ($struct->{type} eq 'last') {
+            push @phrases, $struct->{offset} ? "last day minus $struct->{offset}" : "last day";
+        } elsif ($struct->{type} eq 'nearest_weekday') {
+            push @phrases, "nearest weekday to the $struct->{day}";
+        } else {
+            push @phrases, $self->SUPER::to_english();
+        }
+    }
+    return join(', ', @phrases);
+}
 
 1;
-
-__END__
-
-=pod
-
-=head1 NAME
-
-Cron::Describe::DayOfMonth - Validator for cron DayOfMonth field
-
-=head1 DESCRIPTION
-
-Validates and describes DayOfMonth field, including Quartz-specific L and W specials.
-
-=head1 AUTHOR
-
-Nathaniel Graham <ngraham@cpan.org>
-
-=head1 LICENSE
-
-This is released under the Artistic License 2.0.
-
-=cut
