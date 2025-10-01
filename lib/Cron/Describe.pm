@@ -13,9 +13,14 @@ sub new {
     my ($class, %args) = @_;
     my $self = bless {}, $class;
     my $expr = $args{expression} // die "No expression provided";
+    print STDERR "DEBUG: Describe.pm loaded (mtime: " . (stat(__FILE__))[9] . ")\n";
+    print STDERR "DEBUG: Normalizing expression '$expr' to uppercase\n";
+    $expr = uc $expr; # Normalize to uppercase
     my @raw_fields = split /\s+/, $expr;
+    print STDERR "DEBUG: Split into " . @raw_fields . " fields: [" . join(", ", @raw_fields) . "]\n";
     my @field_types = $self->is_quartz ? qw(seconds minute hour dom month dow year)
                                       : qw(minute hour dom month dow);
+    print STDERR "DEBUG: Expected field types: [" . join(", ", @field_types) . "]\n";
     die "Invalid field count: " . @raw_fields unless @raw_fields == @field_types || ($self->is_quartz && @raw_fields == 6);
 
     $self->{fields} = [];
@@ -39,6 +44,7 @@ sub new {
         } elsif ($type eq 'year') {
             $field_args->{min} = 1970; $field_args->{max} = 2199;
         }
+        print STDERR "DEBUG: Creating field $i: type=$type, value=$raw_fields[$i], class=$field_class, min=$field_args->{min}, max=$field_args->{max}\n";
         my $field_obj = eval { $field_class->new(%$field_args) };
         if ($@) {
             warn "Failed to create field object for $type: $@";
@@ -53,6 +59,7 @@ sub is_quartz { 0 } # Overridden in Quartz.pm
 
 sub is_valid {
     my $self = shift;
+    print STDERR "DEBUG: Validating expression\n";
     # Syntax and bounds check
     for my $field (@{$self->{fields}}) {
         return 0 unless $field->validate();
@@ -60,9 +67,11 @@ sub is_valid {
     # Heuristic check
     my $heuristic_result = $self->heuristic_is_valid();
     if (defined $heuristic_result) {
+        print STDERR "DEBUG: Heuristic is_valid result: $heuristic_result\n";
         return $heuristic_result;
     }
-    # Fallback to simulation for uncertain cases
+    # Fallback to simulation
+    print STDERR "DEBUG: Falling back to _can_trigger\n";
     return $self->_can_trigger();
 }
 
@@ -74,6 +83,8 @@ sub heuristic_is_valid {
     my $year_idx = $self->is_quartz ? 6 : -1;
     my $minute_idx = $self->is_quartz ? 1 : 0;
 
+    print STDERR "DEBUG: Running heuristic_is_valid\n";
+
     # Heuristic 1: Wildcard patterns
     my $all_wildcard = 1;
     for my $field (@{$self->{fields}}) {
@@ -83,6 +94,7 @@ sub heuristic_is_valid {
         }
     }
     if ($all_wildcard) {
+        print STDERR "DEBUG: All wildcard pattern, valid\n";
         return 1;
     }
 
@@ -93,14 +105,18 @@ sub heuristic_is_valid {
     @month_values = (1..12) unless @month_values; # Default to all months if wildcard or range
     for my $month (@month_values) {
         my $max_days = $self->_days_in_month($month, 2000); # Non-leap year for heuristic
+        print STDERR "DEBUG: Checking month $month with max_days=$max_days\n";
         for my $struct (@{$dom_field->{parsed}}) {
             if ($struct->{type} eq 'single' && $struct->{min} > $max_days) {
-                return 0; # e.g., 31 in February
+                print STDERR "DEBUG: Invalid DOM $struct->{min} for month $month\n";
+                return 0;
             }
             if ($struct->{type} eq 'range' && $struct->{max} > $max_days) {
+                print STDERR "DEBUG: Invalid DOM range $struct->{min}-$struct->{max} for month $month\n";
                 return 0;
             }
             if ($month == 2 && $struct->{type} eq 'single' && $struct->{min} == 29) {
+                print STDERR "DEBUG: February 29, uncertain\n";
                 return undef; # Uncertain: leap year
             }
         }
@@ -111,10 +127,13 @@ sub heuristic_is_valid {
     for my $struct (@{$dow_field->{parsed}}) {
         if ($struct->{type} eq 'nth') {
             my $nth = $struct->{nth};
+            print STDERR "DEBUG: Checking nth DOW: day=$struct->{day}, nth=$nth\n";
             if ($nth > 5) {
+                print STDERR "DEBUG: Invalid nth $nth (max 5)\n";
                 return 0;
             }
             if (@month_values == 1 && $month_values[0] == 2 && $nth >= 5) {
+                print STDERR "DEBUG: 5th DOW in February, uncertain\n";
                 return undef; # Uncertain: 5th DOW in February
             }
         }
@@ -124,7 +143,9 @@ sub heuristic_is_valid {
     if ($self->is_quartz) {
         my $dom_is_wild = $dom_field->{parsed}[0]{type} eq '*' || $dom_field->{parsed}[0]{type} eq '?';
         my $dow_is_wild = $dow_field->{parsed}[0]{type} eq '*' || $dow_field->{parsed}[0]{type} eq '?';
+        print STDERR "DEBUG: Quartz DOM-DOW check: dom_wild=$dom_is_wild, dow_wild=$dow_is_wild\n";
         if (!$dom_is_wild && !$dow_is_wild) {
+            print STDERR "DEBUG: Invalid Quartz DOM-DOW conflict\n";
             return 0;
         }
     }
@@ -132,10 +153,13 @@ sub heuristic_is_valid {
     # Heuristic 5: Year validity
     if ($year_idx != -1) {
         for my $struct (@{$self->{fields}[$year_idx]{parsed}}) {
+            print STDERR "DEBUG: Checking year: type=$struct->{type}, min=$struct->{min}, max=" . ($struct->{max} // $struct->{min}) . "\n";
             if ($struct->{type} eq 'single' && $struct->{min} < (localtime)[5] + 1900) {
+                print STDERR "DEBUG: Invalid past year $struct->{min}\n";
                 return 0;
             }
             if ($struct->{type} eq 'range' && $struct->{max} < (localtime)[5] + 1900) {
+                print STDERR "DEBUG: Invalid year range ending $struct->{max}\n";
                 return 0;
             }
         }
@@ -144,16 +168,20 @@ sub heuristic_is_valid {
     # Heuristic 6: Specific minute patterns
     my $minute_field = $self->{fields}[$minute_idx];
     for my $struct (@{$minute_field->{parsed}}) {
+        print STDERR "DEBUG: Checking minute: type=$struct->{type}\n";
         if ($struct->{type} eq 'range' || $struct->{type} eq 'single' || $struct->{type} eq 'step') {
-            return 1; # Specific minutes are always valid
+            print STDERR "DEBUG: Specific minute pattern, valid\n";
+            return 1;
         }
     }
 
+    print STDERR "DEBUG: Uncertain pattern, needs simulation\n";
     return undef; # Uncertain: need simulation
 }
 
 sub _can_trigger {
     my $self = shift;
+    print STDERR "DEBUG: Running _can_trigger\n";
     my $start_year = (localtime)[5] + 1900;
     my $month_idx = $self->is_quartz ? 4 : 3;
     my $dow_idx = $self->is_quartz ? 5 : 4;
@@ -186,25 +214,33 @@ sub _can_trigger {
                             for my $field (@{$self->{fields}}) {
                                 $matches_all = 0 unless $field->matches(\%time_parts);
                             }
-                            return 1 if $matches_all;
+                            if ($matches_all) {
+                                print STDERR "DEBUG: _can_trigger found match: $year-$month-$dom $hour:$minute:$second\n";
+                                return 1;
+                            }
                         }
                     }
                 }
             }
         }
     }
+    print STDERR "DEBUG: _can_trigger found no match\n";
     return 0;
 }
 
 sub describe {
     my $self = shift;
+    print STDERR "DEBUG: Generating description\n";
     my @descs;
     for my $field (@{$self->{fields}}) {
         if (ref($field) && $field->can('to_english')) {
-            push @descs, $field->to_english();
+            my $desc = $field->to_english();
+            print STDERR "DEBUG: Field $field->{type} description: $desc\n";
+            push @descs, $desc;
         } else {
-            warn "Invalid field object for type " . ($field->{type} // 'unknown') . "; using default";
-            push @descs, "every " . ($field->{type} // 'field');
+            my $type = ref($field) ? $field->{type} : 'unknown';
+            warn "Invalid field object for type $type; using default";
+            push @descs, "every $type";
         }
     }
     # Format time fields (seconds, minute, hour) as 0 if * or ?
@@ -230,7 +266,9 @@ sub describe {
         $desc =~ s/^every dow/every day-of-week/;
         push @date_parts, $desc;
     }
-    return "at $time on " . join(', ', @date_parts);
+    my $result = "at $time on " . join(', ', @date_parts);
+    print STDERR "DEBUG: Final description: $result\n";
+    return $result;
 }
 
 sub _days_in_month {
