@@ -5,6 +5,7 @@ package Cron::Describe;
 use strict;
 use warnings;
 use POSIX 'mktime';
+use DateTime::TimeZone;
 use Cron::Describe::Field;
 use Cron::Describe::DayOfMonth;
 use Cron::Describe::DayOfWeek;
@@ -13,23 +14,50 @@ sub new {
     my ($class, %args) = @_;
     my $self = bless {}, $class;
     my $expr = $args{expression} // die "No expression provided";
+    my $tz = $args{time_zone} // 'UTC';
     print STDERR "DEBUG: Describe.pm loaded (mtime: " . (stat(__FILE__))[9] . ")\n";
-    print STDERR "DEBUG: Normalizing expression '$expr' to uppercase\n";
-    $expr = uc $expr; # Normalize to uppercase
+    print STDERR "DEBUG: Normalizing expression '$expr' with time_zone='$tz'\n";
+
+    # Validate time zone
+    eval { DateTime::TimeZone->new(name => $tz) };
+    if ($@) {
+        warn "Invalid time zone: $tz; defaulting to UTC";
+        $tz = 'UTC';
+    }
+    $self->{time_zone} = $tz;
+
+    # Normalize expression
+    $expr = uc $expr;
+    $expr =~ s/\s+/ /g;
+    $expr =~ s/^\s+|\s+$//g;
+    print STDERR "DEBUG: Normalized expression: '$expr'\n";
+
+    # Split into fields
     my @raw_fields = split /\s+/, $expr;
     print STDERR "DEBUG: Split into " . @raw_fields . " fields: [" . join(", ", @raw_fields) . "]\n";
-    my @field_types = $self->is_quartz ? qw(seconds minute hour dom month dow year)
-                                      : qw(minute hour dom month dow);
-    print STDERR "DEBUG: Expected field types: [" . join(", ", @field_types) . "]\n";
-    die "Invalid field count: " . @raw_fields unless @raw_fields == @field_types || ($self->is_quartz && @raw_fields == 6);
 
+    # Determine expression type
+    $self->{expression_type} = @raw_fields >= 6 || $expr =~ /\?|\bL\b|\bW\b|\#/ ? 'quartz' : 'standard';
+    my @field_types = $self->{expression_type} eq 'quartz' ? qw(seconds minute hour dom month dow year)
+                                                          : qw(minute hour dom month dow);
+    print STDERR "DEBUG: Expression type: $self->{expression_type}, expected field types: [" . join(", ", @field_types) . "]\n";
+
+    # Validate field count
+    my $expected_count = $self->{expression_type} eq 'quartz' ? 6 : 5;
+    $self->{errors} = [];
+    if (@raw_fields != $expected_count && !($self->{expression_type} eq 'quartz' && @raw_fields == 7)) {
+        push @{$self->{errors}}, "Invalid field count: got " . @raw_fields . ", expected $expected_count";
+        print STDERR "DEBUG: Error: Invalid field count\n";
+        $self->{is_valid} = 0;
+        return $self;
+    }
+
+    $self->{raw_expression} = $expr;
     $self->{fields} = [];
     for my $i (0 .. $#raw_fields) {
         my $type = $field_types[$i];
-        my $field_class = $type eq 'dom' ? 'Cron::Describe::DayOfMonth'
-                        : $type eq 'dow' ? 'Cron::Describe::DayOfWeek'
-                        : 'Cron::Describe::Field';
-        my $field_args = { type => $type, value => $raw_fields[$i] };
+        my $field_args = { field_type => $type, raw_value => $raw_fields[$i] };
+
         # Set bounds
         if ($type eq 'seconds' || $type eq 'minute') {
             $field_args->{min} = 0; $field_args->{max} = 59;
@@ -44,51 +72,184 @@ sub new {
         } elsif ($type eq 'year') {
             $field_args->{min} = 1970; $field_args->{max} = 2199;
         }
-        print STDERR "DEBUG: Creating field $i: type=$type, value=$raw_fields[$i], class=$field_class, min=$field_args->{min}, max=$field_args->{max}\n";
-        my $field_obj = eval { $field_class->new(%$field_args) };
-        if ($@) {
-            warn "Failed to create field object for $type: $@";
-            $field_obj = Cron::Describe::Field->new(type => $type, value => '*', min => $field_args->{min}, max => $field_args->{max});
-        }
-        push @{$self->{fields}}, $field_obj;
+
+        # Parse field into intermediate format
+        my $field = $self->_parse_field($raw_fields[$i], $type, $field_args->{min}, $field_args->{max});
+        print STDERR "DEBUG: Parsed field $type: " . _dump_field($field) . "\n";
+        push @{$self->{fields}}, $field;
     }
+
+    # Initial validity check
+    $self->{is_valid} = @{$self->{errors}} ? 0 : 1;
     return $self;
 }
 
-sub is_quartz { 0 } # Overridden in Quartz.pm
+sub _parse_field {
+    my ($self, $value, $type, $min, $max) = @_;
+    my $field = { field_type => $type, min => $min, max => $max, raw_value => $value, is_special => 0 };
+
+    # Handle Quartz-specific tokens
+    if ($value =~ /^[LW#]/) {
+        $field->{is_special} = 1;
+        if ($value =~ /^L(?:-(\d+))?$/) {
+            my $offset = $1 // 0;
+            if ($offset > 30 && $type eq 'dom') {
+                push @{$self->{errors}}, "Invalid offset $offset for $type";
+                print STDERR "DEBUG: Error: Invalid offset $offset for $type\n";
+                return { %$field, pattern_type => 'wildcard', value => undef };
+            }
+            $field->{pattern_type} = 'last';
+            $field->{offset} = $offset;
+            return $field;
+        } elsif ($value =~ /^(\d+)W$/) {
+            my $day = $1;
+            if ($day < 1 || $day > 31) {
+                push @{$self->{errors}}, "Invalid day $day for $type";
+                print STDERR "DEBUG: Error: Invalid day $day for $type\n";
+                return { %$field, pattern_type => 'wildcard', value => undef };
+            }
+            $field->{pattern_type} = 'nearest_weekday';
+            $field->{day} = $day;
+            return $field;
+        } elsif ($value =~ /^(\d+)#(\d+)$/) {
+            my ($day, $nth) = ($1, $2);
+            if ($nth < 1 || $nth > 5 || $day < 0 || $day > 7) {
+                push @{$self->{errors}}, "Invalid nth $nth or day $day for $type";
+                print STDERR "DEBUG: Error: Invalid nth $nth or day $day for $type\n";
+                return { %$field, pattern_type => 'wildcard', value => undef };
+            }
+            $field->{pattern_type} = 'nth';
+            $field->{day} = $day;
+            $field->{nth} = $nth;
+            return $field;
+        }
+    }
+
+    # Handle day/month names
+    if ($type eq 'month' || $type eq 'dow') {
+        my $num = $self->_name_to_num($value, $type);
+        if (defined $num) {
+            $field->{pattern_type} = 'single';
+            $field->{value} = $num;
+            $field->{min_value} = $num;
+            $field->{max_value} = $num;
+            $field->{step} = 1;
+            return $field;
+        }
+    }
+
+    # Handle standard patterns
+    my @parts = split /,/, $value;
+    if (@parts > 1) {
+        $field->{pattern_type} = 'list';
+        $field->{sub_patterns} = [];
+        for my $part (@parts) {
+            $part =~ s/^\s+|\s+$//g;
+            my $sub_field = $self->_parse_single_part($part, $type, $min, $max);
+            push @{$field->{sub_patterns}}, $sub_field;
+            if ($sub_field->{pattern_type} eq 'error') {
+                $field->{pattern_type} = 'wildcard';
+                $field->{sub_patterns} = [];
+                last;
+            }
+        }
+        return $field;
+    }
+
+    return $self->_parse_single_part($value, $type, $min, $max);
+}
+
+sub _parse_single_part {
+    my ($self, $part, $type, $min, $max) = @_;
+    my $field = { field_type => $type, min => $min, max => $max, raw_value => $part };
+
+    if ($part eq '*' || $part eq '?') {
+        $field->{pattern_type} = $part eq '*' ? 'wildcard' : 'unspecified';
+        $field->{value} = undef;
+        return $field;
+    } elsif ($part =~ /^(\d+)-(\d+)(?:\/(\d+))?$/) {
+        $field->{pattern_type} = 'range';
+        $field->{min_value} = $1;
+        $field->{max_value} = $2;
+        $field->{step} = $3 // 1;
+    } elsif ($part =~ /^(\d+)(?:\/(\d+))?$/) {
+        $field->{pattern_type} = 'single';
+        $field->{value} = $1;
+        $field->{min_value} = $1;
+        $field->{max_value} = $1;
+        $field->{step} = $2 // 1;
+    } elsif ($part =~ /^\*\/(\d+)$/) {
+        $field->{pattern_type} = 'step';
+        $field->{min_value} = $min;
+        $field->{max_value} = $max;
+        $field->{step} = $1;
+    } else {
+        push @{$self->{errors}}, "Invalid format: $part for $type";
+        print STDERR "DEBUG: Error: Invalid format $part for $type\n";
+        $field->{pattern_type} = 'wildcard';
+        $field->{value} = undef;
+    }
+
+    # Bounds check
+    if ($field->{pattern_type} ne 'wildcard' && $field->{pattern_type} ne 'unspecified') {
+        if ($field->{min_value} < $min || $field->{max_value} > $max || $field->{step} <= 0) {
+            push @{$self->{errors}}, "Out of bounds: $part for $type";
+            print STDERR "DEBUG: Error: Out of bounds $part for $type\n";
+            $field->{pattern_type} = 'wildcard';
+            $field->{value} = undef;
+        }
+    }
+
+    return $field;
+}
+
+sub _name_to_num {
+    my ($self, $name, $type) = @_;
+    print STDERR "DEBUG: Mapping name '$name' for $type\n";
+    if ($type eq 'month') {
+        my %months = (
+            JAN=>1, FEB=>2, MAR=>3, APR=>4, MAY=>5, JUN=>6,
+            JUL=>7, AUG=>8, SEP=>9, OCT=>10, NOV=>11, DEC=>12
+        );
+        my $num = $months{$name};
+        print STDERR "DEBUG: Month name '$name' mapped to " . ($num // 'undef') . "\n";
+        return $num if defined $num;
+    } elsif ($type eq 'dow') {
+        my %dow = (
+            SUN=>0, MON=>1, TUE=>2, WED=>3, THU=>4, FRI=>5, SAT=>6,
+            SUNDAY=>0, MONDAY=>1, TUESDAY=>2, WEDNESDAY=>3, THURSDAY=>4, FRIDAY=>5, SATURDAY=>6
+        );
+        my $num = $dow{$name};
+        print STDERR "DEBUG: DOW name '$name' mapped to " . ($num // 'undef') . "\n";
+        return $num if defined $num;
+    }
+    return undef;
+}
 
 sub is_valid {
     my $self = shift;
     print STDERR "DEBUG: Validating expression\n";
-    # Syntax and bounds check
-    for my $field (@{$self->{fields}}) {
-        return 0 unless $field->validate();
-    }
-    # Heuristic check
-    my $heuristic_result = $self->heuristic_is_valid();
-    if (defined $heuristic_result) {
-        print STDERR "DEBUG: Heuristic is_valid result: $heuristic_result\n";
-        return $heuristic_result;
-    }
-    # Fallback to simulation
-    print STDERR "DEBUG: Falling back to _can_trigger\n";
-    return $self->_can_trigger();
-}
+    return 0 if @{$self->{errors}};
 
-sub heuristic_is_valid {
-    my $self = shift;
+    # Syntax check
+    for my $field (@{$self->{fields}}) {
+        if ($field->{pattern_type} eq 'error') {
+            print STDERR "DEBUG: Validation failed for $field->{field_type}\n";
+            return 0;
+        }
+    }
+
+    # Heuristic checks
     my $month_idx = $self->is_quartz ? 4 : 3;
     my $dom_idx = $self->is_quartz ? 3 : 2;
     my $dow_idx = $self->is_quartz ? 5 : 4;
     my $year_idx = $self->is_quartz ? 6 : -1;
     my $minute_idx = $self->is_quartz ? 1 : 0;
 
-    print STDERR "DEBUG: Running heuristic_is_valid\n";
-
-    # Heuristic 1: Wildcard patterns
+    # Wildcard check
     my $all_wildcard = 1;
     for my $field (@{$self->{fields}}) {
-        if ($field->{parsed}[0]{type} ne '*' && $field->{parsed}[0]{type} ne '?') {
+        if ($field->{pattern_type} ne 'wildcard' && $field->{pattern_type} ne 'unspecified') {
             $all_wildcard = 0;
             last;
         }
@@ -98,51 +259,28 @@ sub heuristic_is_valid {
         return 1;
     }
 
-    # Heuristic 2: Month-specific DOM validity
+    # Month-specific DOM check
     my $month_field = $self->{fields}[$month_idx];
     my $dom_field = $self->{fields}[$dom_idx];
-    my @month_values = map { $_->{type} eq 'single' ? $_->{min} : () } @{$month_field->{parsed}};
-    @month_values = (1..12) unless @month_values; # Default to all months if wildcard or range
+    my @month_values = $month_field->{pattern_type} eq 'single' ? ($month_field->{value})
+                     : $month_field->{pattern_type} eq 'list' ? map { $_->{value} } @{$month_field->{sub_patterns}}
+                     : (1..12);
     for my $month (@month_values) {
-        my $max_days = $self->_days_in_month($month, 2000); # Non-leap year for heuristic
+        my $max_days = $self->_days_in_month($month, 2000);
         print STDERR "DEBUG: Checking month $month with max_days=$max_days\n";
-        for my $struct (@{$dom_field->{parsed}}) {
-            if ($struct->{type} eq 'single' && $struct->{min} > $max_days) {
-                print STDERR "DEBUG: Invalid DOM $struct->{min} for month $month\n";
-                return 0;
-            }
-            if ($struct->{type} eq 'range' && $struct->{max} > $max_days) {
-                print STDERR "DEBUG: Invalid DOM range $struct->{min}-$struct->{max} for month $month\n";
-                return 0;
-            }
-            if ($month == 2 && $struct->{type} eq 'single' && $struct->{min} == 29) {
-                print STDERR "DEBUG: February 29, uncertain\n";
-                return undef; # Uncertain: leap year
-            }
+        if ($dom_field->{pattern_type} eq 'single' && $dom_field->{value} > $max_days) {
+            print STDERR "DEBUG: Invalid DOM $dom_field->{value} for month $month\n";
+            return 0;
+        } elsif ($dom_field->{pattern_type} eq 'range' && $dom_field->{max_value} > $max_days) {
+            print STDERR "DEBUG: Invalid DOM range $dom_field->{min_value}-$dom_field->{max_value} for month $month\n";
+            return 0;
         }
     }
 
-    # Heuristic 3: nth DOW validity
-    my $dow_field = $self->{fields}[$dow_idx];
-    for my $struct (@{$dow_field->{parsed}}) {
-        if ($struct->{type} eq 'nth') {
-            my $nth = $struct->{nth};
-            print STDERR "DEBUG: Checking nth DOW: day=$struct->{day}, nth=$nth\n";
-            if ($nth > 5) {
-                print STDERR "DEBUG: Invalid nth $nth (max 5)\n";
-                return 0;
-            }
-            if (@month_values == 1 && $month_values[0] == 2 && $nth >= 5) {
-                print STDERR "DEBUG: 5th DOW in February, uncertain\n";
-                return undef; # Uncertain: 5th DOW in February
-            }
-        }
-    }
-
-    # Heuristic 4: Quartz DOM-DOW conflict
+    # Quartz DOM-DOW conflict
     if ($self->is_quartz) {
-        my $dom_is_wild = $dom_field->{parsed}[0]{type} eq '*' || $dom_field->{parsed}[0]{type} eq '?';
-        my $dow_is_wild = $dow_field->{parsed}[0]{type} eq '*' || $dow_field->{parsed}[0]{type} eq '?';
+        my $dom_is_wild = $dom_field->{pattern_type} eq 'wildcard' || $dom_field->{pattern_type} eq 'unspecified';
+        my $dow_is_wild = $self->{fields}[$dow_idx]->{pattern_type} eq 'wildcard' || $self->{fields}[$dow_idx]->{pattern_type} eq 'unspecified';
         print STDERR "DEBUG: Quartz DOM-DOW check: dom_wild=$dom_is_wild, dow_wild=$dow_is_wild\n";
         if (!$dom_is_wild && !$dow_is_wild) {
             print STDERR "DEBUG: Invalid Quartz DOM-DOW conflict\n";
@@ -150,140 +288,181 @@ sub heuristic_is_valid {
         }
     }
 
-    # Heuristic 5: Year validity
+    # Year validity
     if ($year_idx != -1) {
-        for my $struct (@{$self->{fields}[$year_idx]{parsed}}) {
-            print STDERR "DEBUG: Checking year: type=$struct->{type}, min=$struct->{min}, max=" . ($struct->{max} // $struct->{min}) . "\n";
-            if ($struct->{type} eq 'single' && $struct->{min} < (localtime)[5] + 1900) {
-                print STDERR "DEBUG: Invalid past year $struct->{min}\n";
-                return 0;
-            }
-            if ($struct->{type} eq 'range' && $struct->{max} < (localtime)[5] + 1900) {
-                print STDERR "DEBUG: Invalid year range ending $struct->{max}\n";
-                return 0;
-            }
+        my $year_field = $self->{fields}[$year_idx];
+        if ($year_field->{pattern_type} eq 'single' && $year_field->{value} < (localtime)[5] + 1900) {
+            print STDERR "DEBUG: Invalid past year $year_field->{value}\n";
+            return 0;
         }
     }
 
-    # Heuristic 6: Specific minute patterns
-    my $minute_field = $self->{fields}[$minute_idx];
-    for my $struct (@{$minute_field->{parsed}}) {
-        print STDERR "DEBUG: Checking minute: type=$struct->{type}\n";
-        if ($struct->{type} eq 'range' || $struct->{type} eq 'single' || $struct->{type} eq 'step') {
-            print STDERR "DEBUG: Specific minute pattern, valid\n";
-            return 1;
-        }
-    }
-
-    print STDERR "DEBUG: Uncertain pattern, needs simulation\n";
-    return undef; # Uncertain: need simulation
+    print STDERR "DEBUG: Validation passed\n";
+    return 1;
 }
 
-sub _can_trigger {
+sub is_quartz {
     my $self = shift;
-    print STDERR "DEBUG: Running _can_trigger\n";
-    my $start_year = (localtime)[5] + 1900;
-    my $month_idx = $self->is_quartz ? 4 : 3;
-    my $dow_idx = $self->is_quartz ? 5 : 4;
-    my $dom_idx = $self->is_quartz ? 3 : 2;
-    my $minute_idx = $self->is_quartz ? 1 : 0;
-
-    # Sample time values for specific patterns
-    my @test_minutes = (0, 1, 3, 5, 10, 12, 14, 15, 30, 45); # Cover common minute patterns
-    my @test_hours = (0, 12);
-    my @test_seconds = $self->is_quartz ? (0, 30) : (0);
-
-    for my $year ($start_year .. $start_year + 1) {
-        for my $month (1..12) {
-            my $days = $self->_days_in_month($month, $year);
-            for my $dom (1..$days) {
-                my $dow = $self->_dow_of_date($year, $month, $dom);
-                for my $hour (@test_hours) {
-                    for my $minute (@test_minutes) {
-                        for my $second (@test_seconds) {
-                            my %time_parts = (
-                                seconds => $second,
-                                minute => $minute,
-                                hour => $hour,
-                                dom => $dom,
-                                month => $month,
-                                dow => $dow,
-                                year => $year,
-                            );
-                            my $matches_all = 1;
-                            for my $field (@{$self->{fields}}) {
-                                $matches_all = 0 unless $field->matches(\%time_parts);
-                            }
-                            if ($matches_all) {
-                                print STDERR "DEBUG: _can_trigger found match: $year-$month-$dom $hour:$minute:$second\n";
-                                return 1;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    print STDERR "DEBUG: _can_trigger found no match\n";
-    return 0;
+    print STDERR "DEBUG: Checking is_quartz: $self->{expression_type}\n";
+    return $self->{expression_type} eq 'quartz';
 }
 
-sub describe {
+sub to_english {
     my $self = shift;
-    print STDERR "DEBUG: Generating description\n";
+    print STDERR "DEBUG: Generating to_english\n";
     my @descs;
     for my $field (@{$self->{fields}}) {
-        if (ref($field) && $field->can('to_english')) {
-            my $desc = $field->to_english();
-            print STDERR "DEBUG: Field $field->{type} description: $desc\n";
-            push @descs, $desc;
-        } else {
-            my $type = ref($field) ? $field->{type} : 'unknown';
-            warn "Invalid field object for type $type; using default";
-            push @descs, "every $type";
-        }
+        my $desc = $self->_field_to_english($field);
+        print STDERR "DEBUG: Field $field->{field_type} description: $desc\n";
+        push @descs, $desc;
     }
-    # Format time fields (seconds, minute, hour) as 0 if * or ?
+
+    # Format time fields
     my @time_parts;
-    my $time_start = $self->is_quartz ? 0 : 0;
     my $time_end = $self->is_quartz ? 2 : 1;
-    for my $i ($time_start..$time_end) {
-        my $desc = $descs[$i] // 'every ' . $self->{fields}[$i]{type};
+    for my $i (0 .. $time_end) {
+        my $desc = $descs[$i] // 'every ' . $self->{fields}[$i]{field_type};
         push @time_parts, $desc =~ /^every \w+$/ ? 0 : $desc;
     }
-    # Add leading 0 for seconds if standard (no seconds)
     unshift @time_parts, 0 if !$self->is_quartz;
     my $time = join(':', @time_parts);
-    # Format date fields (dom, month, dow, year)
+
+    # Format date fields
     my $date_start = $self->is_quartz ? 3 : 2;
     my @date_parts;
-    for my $i ($date_start..$#descs) {
-        my $type = $self->{fields}[$i]{type};
+    for my $i ($date_start .. $#descs) {
+        my $type = $self->{fields}[$i]{field_type};
         $type = 'day-of-month' if $type eq 'dom';
         $type = 'day-of-week' if $type eq 'dow';
         my $desc = $descs[$i] // 'every ' . $type;
-        $desc =~ s/^every dom/every day-of-month/;
-        $desc =~ s/^every dow/every day-of-week/;
         push @date_parts, $desc;
     }
+
     my $result = "at $time on " . join(', ', @date_parts);
     print STDERR "DEBUG: Final description: $result\n";
     return $result;
 }
 
+sub _field_to_english {
+    my ($self, $field) = @_;
+    my $type = $field->{field_type};
+    my $pattern = $field->{pattern_type};
+
+    if ($pattern eq 'wildcard' || $pattern eq 'unspecified') {
+        return "every $type";
+    } elsif ($pattern eq 'single') {
+        return $field->{value};
+    } elsif ($pattern eq 'range') {
+        return "$field->{min_value}-$field->{max_value}" . ($field->{step} > 1 ? " every $field->{step}" : "");
+    } elsif ($pattern eq 'step') {
+        return "every $field->{step} ${type}s";
+    } elsif ($pattern eq 'list') {
+        my @sub_descs = map { $self->_field_to_english($_) } @{$field->{sub_patterns}};
+        return join(', ', @sub_descs);
+    } elsif ($pattern eq 'last') {
+        return $field->{offset} ? "last day minus $field->{offset}" : "last day";
+    } elsif ($pattern eq 'nearest_weekday') {
+        return "nearest weekday to the $field->{day}";
+    } elsif ($pattern eq 'nth') {
+        my $nth = $field->{nth} == 1 ? 'first' : $field->{nth} == 2 ? 'second' : $field->{nth} == 3 ? 'third' : $field->{nth} == 4 ? 'fourth' : 'fifth';
+        return "$nth $field->{day}";
+    }
+    return "every $type";
+}
+
+sub is_match {
+    my ($self, $epoch_seconds) = @_;
+    print STDERR "DEBUG: Checking is_match for epoch $epoch_seconds\n";
+    return 0 if @{$self->{errors}};
+
+    # Convert epoch to time parts in the specified time zone
+    my $dt;
+    eval {
+        $dt = DateTime->from_epoch(epoch => $epoch_seconds, time_zone => $self->{time_zone});
+    };
+    if ($@) {
+        warn "Invalid epoch or time zone: $@";
+        print STDERR "DEBUG: Error: Invalid epoch or time zone\n";
+        return 0;
+    }
+
+    my %time_parts = (
+        seconds => $dt->second,
+        minute => $dt->minute,
+        hour => $dt->hour,
+        dom => $dt->day,
+        month => $dt->month,
+        dow => $dt->day_of_week % 7, # Convert 1-7 to 0-6
+        year => $dt->year,
+    );
+    print STDERR "DEBUG: Time parts: " . join(", ", map { "$_=$time_parts{$_}" } keys %time_parts) . "\n";
+
+    for my $field (@{$self->{fields}}) {
+        my $type = $field->{field_type};
+        my $val = $time_parts{$type};
+        my $matches = $self->_field_matches($field, \%time_parts);
+        print STDERR "DEBUG: Field $type value $val matches: $matches\n";
+        return 0 unless $matches;
+    }
+    print STDERR "DEBUG: All fields match\n";
+    return 1;
+}
+
+sub _field_matches {
+    my ($self, $field, $time_parts) = @_;
+    my $val = $time_parts->{$field->{field_type}};
+
+    if ($field->{pattern_type} eq 'wildcard' || $field->{pattern_type} eq 'unspecified') {
+        return 1;
+    } elsif ($field->{pattern_type} eq 'single') {
+        return $val == $field->{value};
+    } elsif ($field->{pattern_type} eq 'range') {
+        return $val >= $field->{min_value} && $val <= $field->{max_value} && ($val - $field->{min_value}) % $field->{step} == 0;
+    } elsif ($field->{pattern_type} eq 'step') {
+        return ($val - $field->{min_value}) % $field->{step} == 0;
+    } elsif ($field->{pattern_type} eq 'list') {
+        return grep { $self->_field_matches($_, $time_parts) } @{$field->{sub_patterns}};
+    } elsif ($field->{pattern_type} eq 'last') {
+        my $last_day = $self->_days_in_month($time_parts->{month}, $time_parts->{year});
+        return $val == $last_day - $field->{offset};
+    } elsif ($field->{pattern_type} eq 'nearest_weekday') {
+        my $target_day = $field->{day};
+        my $dow = $self->_dow_of_date($time_parts->{year}, $time_parts->{month}, $target_day);
+        if ($dow == 6) { $target_day -= 1; } # Sat -> Fri
+        elsif ($dow == 0) { $target_day += 1; } # Sun -> Mon
+        my $dim = $self->_days_in_month($time_parts->{month}, $time_parts->{year});
+        return 0 if $target_day < 1 || $target_day > $dim;
+        return $val == $target_day;
+    } elsif ($field->{pattern_type} eq 'nth') {
+        my $occurrence = int(($time_parts->{dom} - 1) / 7) + 1;
+        return $val == $field->{day} && $occurrence == $field->{nth};
+    }
+    return 0;
+}
+
 sub _days_in_month {
     my ($self, $mon, $year) = @_;
-    my @days = (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
-    my $d = $days[$mon];
+    my $d = (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[$mon];
     $d = 29 if $mon == 2 && $year % 4 == 0 && ($year % 100 != 0 || $year % 400 == 0);
     return $d;
 }
 
 sub _dow_of_date {
     my ($self, $year, $mon, $dom) = @_;
-    my $epoch = mktime(0, 0, 0, $dom, $mon - 1, $year - 1900, 0, 0, -1);
-    my @lt = localtime($epoch);
-    return $lt[6];
+    my $dt = DateTime->new(year => $year, month => $mon, day => $dom, time_zone => $self->{time_zone});
+    return $dt->day_of_week % 7; # Convert 1-7 to 0-6
+}
+
+sub _dump_field {
+    my ($field) = @_;
+    my @parts = ("type=$field->{pattern_type}");
+    for my $key (qw(value min_value max_value step offset day nth)) {
+        push @parts, "$key=$field->{$key}" if exists $field->{$key};
+    }
+    if ($field->{sub_patterns}) {
+        push @parts, "sub_patterns=[" . join(", ", map { _dump_field($_) } @{$field->{sub_patterns}}) . "]";
+    }
+    return "{" . join(", ", @parts) . "}";
 }
 
 1;
