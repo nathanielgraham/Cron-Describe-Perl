@@ -1,0 +1,37 @@
+Perltidy version is 20230309
+
+<stdin>: Begin Error Output Stream
+
+70: my @sub_descs = map { $self->to_english($) } @{$field->{sub_patt ...
+                        ^
+70: my @sub_descs = map { $self->to_english($) } @{$field->{sub_patt ...
+                                           ^
+70: my @sub_descs = map { $self->to_english($) } @{$field->{sub_patt ...
+                                               ^
+Found 1 extra '(' between '{' on line 70 and '}' on line 70
+    The most recent un-matched '(' is on line 70
+
+69: } elif ($field->{pattern_type} eq 'list') {
+                                              ^
+70: my @sub_descs = map { $self->to_english($) } @{$field->{sub_patt ...
+                                           ^
+74: }
+    ^
+Found 1 extra '(' between '{' on line 69 and '}' on line 74
+    The most recent un-matched '(' is on line 70
+
+49: sub to_english {
+                   ^
+70: my @sub_descs = map { $self->to_english($) } @{$field->{sub_patt ...
+                                           ^
+78: }
+    ^
+Found 1 extra '(' between '{' on line 49 and '}' on line 78
+    The most recent un-matched '(' is on line 70
+79: final indentation level: 1
+
+Final nesting depth of '('s is 1
+The most recent un-matched '(' is on line 70
+70: my @sub_descs = map { $self->to_english($) } @{$field->{sub_patt ...
+                                           ^
+79: To save a full .LOG file rerun with -g

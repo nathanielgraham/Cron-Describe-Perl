@@ -1,5 +1,4 @@
 package Cron::Describe::Field;
-
 use strict;
 use warnings;
 
@@ -31,7 +30,7 @@ sub matches {
             return 1;
         }
     } elsif ($self->{pattern_type} eq 'step') {
-        if (($val - $self->{min_value}) % $self->{step} == 0) {
+        if (($val - $self->{start_value}) % $self->{step} == 0) {
             print STDERR "DEBUG: $self->{field_type} matches step: $val with step $self->{step}\n";
             return 1;
         }
@@ -51,30 +50,37 @@ sub matches {
 }
 
 sub to_english {
-    my $self = shift;
-    print STDERR "DEBUG: Generating to_english for $self->{field_type}\n";
-    if ($self->{pattern_type} eq 'wildcard' || $self->{pattern_type} eq 'unspecified') {
-        print STDERR "DEBUG: to_english for $self->{field_type}: every $self->{field_type}\n";
-        return "every $self->{field_type}";
-    } elsif ($self->{pattern_type} eq 'single') {
-        print STDERR "DEBUG: to_english for $self->{field_type}: $self->{value}\n";
-        return $self->{value};
-    } elsif ($self->{pattern_type} eq 'range') {
-        my $desc = "$self->{min_value}-$self->{max_value}" . ($self->{step} > 1 ? " every $self->{step}" : "");
-        print STDERR "DEBUG: to_english for $self->{field_type}: $desc\n";
+    my ($self, $sub_field) = @_;
+    my $field = $sub_field // $self;  # Handle sub-patterns
+    my $type = $field->{field_type};
+    print STDERR "DEBUG: Generating to_english for $type\n";
+    if ($field->{pattern_type} eq 'wildcard' || $field->{pattern_type} eq 'unspecified') {
+        print STDERR "DEBUG: to_english for $type: every $type\n";
+        return "every $type";
+    } elsif ($field->{pattern_type} eq 'single') {
+        print STDERR "DEBUG: to_english for $type: $field->{value}\n";
+        return sprintf("%02d", $field->{value});
+    } elsif ($field->{pattern_type} eq 'range') {
+        my $desc = sprintf("%02d-%02d", $field->{min_value}, $field->{max_value}) . ($field->{step} > 1 ? " every $field->{step}" : "");
+        print STDERR "DEBUG: to_english for $type: $desc\n";
         return $desc;
-    } elsif ($self->{pattern_type} eq 'step') {
-        my $desc = "every $self->{step} $self->{field_type}s";
-        print STDERR "DEBUG: to_english for $self->{field_type}: $desc\n";
+    } elsif ($field->{pattern_type} eq 'step') {
+        my $desc = $field->{step} == 1 ? sprintf("%02d", $field->{start_value}) :
+                   "every $field->{step} ${type}s starting at " . sprintf("%02d", $field->{start_value});
+        print STDERR "DEBUG: to_english for $type: $desc\n";
         return $desc;
-    } elsif ($self->{pattern_type} eq 'list') {
-        my @sub_descs = map { $self->to_english($_) } @{$self->{sub_patterns}};
+    } elsif ($field->{pattern_type} eq 'list') {
+        my @sub_descs;
+        for my $sub (@{$field->{sub_patterns}}) {
+            my $sub_field = bless { %$sub, field_type => $type }, ref($self);
+            push @sub_descs, $sub_field->to_english;
+        }
         my $desc = join(', ', @sub_descs);
-        print STDERR "DEBUG: to_english for $self->{field_type}: $desc\n";
+        print STDERR "DEBUG: to_english for $type: $desc\n";
         return $desc;
     }
-    my $desc = "every $self->{field_type}";
-    print STDERR "DEBUG: to_english for $self->{field_type}: $desc\n";
+    my $desc = "every $type";
+    print STDERR "DEBUG: to_english for $type: $desc\n";
     return $desc;
 }
 
