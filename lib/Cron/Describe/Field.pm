@@ -43,10 +43,11 @@ sub parse {
         } else {
             die "Invalid format: $part for $self->{type}";
         }
-        # Bounds and step check
+        # Bounds check after parsing all components
         if ($struct->{type} ne '*' && $struct->{type} ne '?') {
-            die "Out of bounds: $part for $self->{type}" if $struct->{min} < $self->{min} || $struct->{max} > $self->{max};
-            die "Invalid step: $part" if $struct->{step} <= 0;
+            if ($struct->{min} < $self->{min} || $struct->{max} > $self->{max} || $struct->{step} <= 0) {
+                die "Out of bounds: $part for $self->{type}";
+            }
         }
         push @{$self->{parsed}}, $struct;
     }
@@ -98,7 +99,7 @@ sub to_english {
         } elsif ($struct->{min} == $struct->{max}) {
             push @phrases, $struct->{min};
         } else {
-            push @phrases, "from $struct->{min} to $struct->{max}" . ($struct->{step} > 1 ? " every $struct->{step}" : "");
+            push @phrases, "$struct->{min}-$struct->{max}" . ($struct->{step} > 1 ? " every $struct->{step}" : "");
         }
     }
     return join(', ', @phrases) || "every $self->{type}";

@@ -53,7 +53,7 @@ sub is_valid {
 sub _can_trigger {
     my $self = shift;
     my $start = time;
-    my $max_days = 365 * 10;  # Check 10 years
+    my $max_days = 365 * 2;  # Reduced to 2 years for performance
     for my $i (0 .. $max_days) {
         my $t = $start + $i * 86400;
         my @lt = localtime($t);
@@ -78,10 +78,25 @@ sub _can_trigger {
 sub describe {
     my $self = shift;
     my @descs = map { $_->to_english() } @{$self->{fields}};
-    # Simple join; enhance for idiomatic phrasing
-    my $time = join(':', grep { defined } @descs[0..2]);  # seconds, minute, hour
-    my $rest = join(', ', grep { defined } @descs[3..$#descs]);  # dom, month, dow, year
-    return "at $time on $rest";
+    # Format time fields (seconds, minute, hour) as 0:0:0 if *
+    my @time_parts;
+    for my $i (0..2) {
+        my $desc = $descs[$i] // 'every ' . $self->{fields}[$i]{type};
+        $time_parts[$i] = $desc =~ /^every/ ? 0 : $desc;
+    }
+    my $time = join(':', @time_parts);
+    # Format date fields (dom, month, dow, year) with proper names
+    my @date_parts;
+    for my $i (3..$#descs) {
+        my $type = $self->{fields}[$i]{type};
+        $type = 'day-of-month' if $type eq 'dom';
+        $type = 'day-of-week' if $type eq 'dow';
+        my $desc = $descs[$i] // 'every ' . $type;
+        $desc =~ s/^every dom/every day-of-month/;
+        $desc =~ s/^every dow/every day-of-week/;
+        push @date_parts, $desc;
+    }
+    return "at $time on " . join(', ', @date_parts);
 }
 
 sub _days_in_month {
