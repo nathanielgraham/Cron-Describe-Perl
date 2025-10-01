@@ -53,7 +53,7 @@ sub is_valid {
         return 0 unless $field->validate();
     }
     # Heuristic check
-    my $heuristic_result = $self->_heuristic_is_valid();
+    my $heuristic_result = $self->heuristic_is_valid();
     if (defined $heuristic_result) {
         return $heuristic_result;
     }
@@ -61,54 +61,15 @@ sub is_valid {
     return $self->_can_trigger();
 }
 
-sub _heuristic_is_valid {
+sub heuristic_is_valid {
     my $self = shift;
-    # Heuristic 1: Basic Field Bounds (already checked in validate, but reinforce)
-    # Heuristic 2: Range and Step Validity (already in parse/validate)
-
-    # Field indices (adjust for Quartz/standard)
     my $month_idx = $self->is_quartz ? 4 : 3;
     my $dom_idx = $self->is_quartz ? 3 : 2;
     my $dow_idx = $self->is_quartz ? 5 : 4;
-    my $year_idx = $self->is_quartz ? 6 : -1; # No year in standard
+    my $year_idx = $self->is_quartz ? 6 : -1;
+    my $minute_idx = $self->is_quartz ? 1 : 0;
 
-    # Heuristic 3: Month-Specific DOM Validity
-    my $month_field = $self->{fields}[$month_idx];
-    my $dom_field = $self->{fields}[$dom_idx];
-    if ($month_field->{parsed}[0]{type} eq 'single' && $dom_field->{parsed}[0]{type} eq 'single') {
-        my $month = $month_field->{parsed}[0]{min};
-        my $dom = $dom_field->{parsed}[0]{min};
-        my $max_days = $self->_days_in_month($month, 2000); # Use non-leap year for heuristic
-        if ($dom > $max_days) {
-            return 0;
-        }
-        if ($month == 2 && $dom == 29) {
-            return undef; # Uncertain: leap year fallback
-        }
-    }
-
-    # Heuristic 4: nth DOW Validity
-    my $dow_field = $self->{fields}[$dow_idx];
-    if ($dow_field->{parsed}[0]{type} eq 'nth') {
-        my $nth = $dow_field->{parsed}[0]{nth};
-        if ($nth > 5) {
-            return 0;
-        }
-        # For February, check if nth is possible (heuristic max 4 for February)
-        if ($month_field->{parsed}[0]{type} eq 'single' && $month_field->{parsed}[0]{min} == 2 && $nth == 5) {
-            return undef; # Uncertain: simulation for leap year and specific DOW
-        }
-        return 1; # Assume valid for other months
-    }
-
-    # Heuristic 5: DOW and DOM Conflicts (Quartz-Specific)
-    if ($self->is_quartz) {
-        if ($dom_field->{parsed}[0]{type} ne '?' && $dow_field->{parsed}[0]{type} ne '?') {
-            return 0; # Both can't be specific in Quartz
-        }
-    }
-
-    # Heuristic 6: Wildcard Validity
+    # Heuristic 1: Wildcard patterns
     my $all_wildcard = 1;
     for my $field (@{$self->{fields}}) {
         if ($field->{parsed}[0]{type} ne '*' && $field->{parsed}[0]{type} ne '?') {
@@ -120,22 +81,114 @@ sub _heuristic_is_valid {
         return 1;
     }
 
-    # Heuristic 7: Year Validity
-    if ($year_idx != -1 && $self->{fields}[$year_idx]{parsed}[0]{type} eq 'single') {
-        my $year = $self->{fields}[$year_idx]{parsed}[0]{min};
-        if ($year < (localtime)[5] + 1900) {
-            return 0; # Past year is invalid
+    # Heuristic 2: Month-specific DOM validity
+    my $month_field = $self->{fields}[$month_idx];
+    my $dom_field = $self->{fields}[$dom_idx];
+    my @month_values = map { $_->{type} eq 'single' ? $_->{min} : () } @{$month_field->{parsed}};
+    @month_values = (1..12) unless @month_values; # Default to all months if wildcard or range
+    for my $month (@month_values) {
+        my $max_days = $self->_days_in_month($month, 2000); # Non-leap year for heuristic
+        for my $struct (@{$dom_field->{parsed}}) {
+            if ($struct->{type} eq 'single' && $struct->{min} > $max_days) {
+                return 0; # e.g., 31 in February
+            }
+            if ($struct->{type} eq 'range' && $struct->{max} > $max_days) {
+                return 0;
+            }
+            if ($month == 2 && $struct->{type} eq 'single' && $struct->{min} == 29) {
+                return undef; # Uncertain: leap year
+            }
         }
     }
 
-    # Heuristic 8: Leap Year Handling
-    # If February 29, fallback to simulation
-    if ($month_field->{parsed}[0]{type} eq 'single' && $month_field->{parsed}[0]{min} == 2 && $dom_field->{parsed}[0]{type} eq 'single' && $dom_field->{parsed}[0]{min} == 29) {
-        return undef; # Uncertain
+    # Heuristic 3: nth DOW validity
+    my $dow_field = $self->{fields}[$dow_idx];
+    for my $struct (@{$dow_field->{parsed}}) {
+        if ($struct->{type} eq 'nth') {
+            my $nth = $struct->{nth};
+            if ($nth > 5) {
+                return 0;
+            }
+            if (@month_values == 1 && $month_values[0] == 2 && $nth >= 5) {
+                return undef; # Uncertain: 5th DOW in February
+            }
+        }
     }
 
-    # If no definitive invalid, assume valid
-    return 1;
+    # Heuristic 4: Quartz DOM-DOW conflict
+    if ($self->is_quartz) {
+        my $dom_is_wild = $dom_field->{parsed}[0]{type} eq '*' || $dom_field->{parsed}[0]{type} eq '?';
+        my $dow_is_wild = $dow_field->{parsed}[0]{type} eq '*' || $dow_field->{parsed}[0]{type} eq '?';
+        if (!$dom_is_wild && !$dow_is_wild) {
+            return 0;
+        }
+    }
+
+    # Heuristic 5: Year validity
+    if ($year_idx != -1) {
+        for my $struct (@{$self->{fields}[$year_idx]{parsed}}) {
+            if ($struct->{type} eq 'single' && $struct->{min} < (localtime)[5] + 1900) {
+                return 0;
+            }
+            if ($struct->{type} eq 'range' && $struct->{max} < (localtime)[5] + 1900) {
+                return 0;
+            }
+        }
+    }
+
+    # Heuristic 6: Specific minute patterns
+    my $minute_field = $self->{fields}[$minute_idx];
+    for my $struct (@{$minute_field->{parsed}}) {
+        if ($struct->{type} eq 'range' || $struct->{type} eq 'single' || $struct->{type} eq 'step') {
+            return 1; # Specific minutes are always valid
+        }
+    }
+
+    return undef; # Uncertain: need simulation
+}
+
+sub _can_trigger {
+    my $self = shift;
+    my $start_year = (localtime)[5] + 1900;
+    my $month_idx = $self->is_quartz ? 4 : 3;
+    my $dow_idx = $self->is_quartz ? 5 : 4;
+    my $dom_idx = $self->is_quartz ? 3 : 2;
+    my $minute_idx = $self->is_quartz ? 1 : 0;
+
+    # Sample time values for specific patterns
+    my @test_minutes = (0, 1, 3, 5, 10, 12, 14, 15, 30, 45); # Cover common minute patterns
+    my @test_hours = (0, 12);
+    my @test_seconds = $self->is_quartz ? (0, 30) : (0);
+
+    for my $year ($start_year .. $start_year + 1) {
+        for my $month (1..12) {
+            my $days = $self->_days_in_month($month, $year);
+            for my $dom (1..$days) {
+                my $dow = $self->_dow_of_date($year, $month, $dom);
+                for my $hour (@test_hours) {
+                    for my $minute (@test_minutes) {
+                        for my $second (@test_seconds) {
+                            my %time_parts = (
+                                seconds => $second,
+                                minute => $minute,
+                                hour => $hour,
+                                dom => $dom,
+                                month => $month,
+                                dow => $dow,
+                                year => $year,
+                            );
+                            my $matches_all = 1;
+                            for my $field (@{$self->{fields}}) {
+                                $matches_all = 0 unless $field->matches(\%time_parts);
+                            }
+                            return 1 if $matches_all;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return 0;
 }
 
 sub describe {
@@ -180,34 +233,6 @@ sub _dow_of_date {
     my $epoch = mktime(0, 0, 0, $dom, $mon - 1, $year - 1900, 0, 0, -1);
     my @lt = localtime($epoch);
     return $lt[6];
-}
-
-sub _can_trigger {
-    my $self = shift;
-    my $start_year = (localtime)[5] + 1900;
-    for my $year ($start_year .. $start_year + 10) {
-        for my $month (1..12) {
-            my $days = $self->_days_in_month($month, $year);
-            for my $dom (1..$days) {
-                my $dow = $self->_dow_of_date($year, $month, $dom);
-                my %time_parts = (
-                    seconds => 0,
-                    minute => 0,
-                    hour => 0,
-                    dom => $dom,
-                    month => $month,
-                    dow => $dow,
-                    year => $year,
-                );
-                my $matches_all = 1;
-                for my $field (@{$self->{fields}}) {
-                    $matches_all = 0 unless $field->matches(\%time_parts);
-                }
-                return 1 if $matches_all;
-            }
-        }
-    }
-    return 0; # No match found
 }
 
 1;
