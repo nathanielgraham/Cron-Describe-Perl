@@ -8,7 +8,11 @@ sub new {
     my $self = bless \%args, $class;
     $self->{min} // die "No min for $args{type}";
     $self->{max} // die "No max for $args{type}";
-    $self->parse();
+    eval { $self->parse() };
+    if ($@) {
+        warn "Parse error for $self->{type}: $@";
+        $self->{parsed} = [{ type => '*' }]; # Fallback to wildcard
+    }
     return $self;
 }
 

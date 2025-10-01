@@ -7,15 +7,22 @@ use base 'Cron::Describe::Field';
 sub parse {
     my $self = shift;
     my $value = $self->{value} // '*';
-    if ($value =~ /^L(?:-(\d+))?$/) {
-        $self->{parsed} = [{ type => 'last', offset => $1 // 0 }];
-        die "Invalid offset: $1" if defined $1 && $1 > 30;
-    } elsif ($value =~ /^(\d+)W$/) {
-        $self->{parsed} = [{ type => 'nearest_weekday', day => $1 }];
-        die "Invalid day: $1" if $1 < 1 || $1 > 31;
-    } else {
-        $self->SUPER::parse();
+    eval {
+        if ($value =~ /^L(?:-(\d+))?$/) {
+            $self->{parsed} = [{ type => 'last', offset => $1 // 0 }];
+            die "Invalid offset: $1" if defined $1 && $1 > 30;
+        } elsif ($value =~ /^(\d+)W$/) {
+            $self->{parsed} = [{ type => 'nearest_weekday', day => $1 }];
+            die "Invalid day: $1" if $1 < 1 || $1 > 31;
+        } else {
+            $self->SUPER::parse();
+        }
+    };
+    if ($@) {
+        warn "Parse error in DayOfMonth: $@";
+        $self->{parsed} = [{ type => '*' }]; # Fallback to wildcard
     }
+    return $self; # Ensure blessed object return
 }
 
 sub matches {
@@ -47,14 +54,13 @@ sub to_english {
             push @phrases, $struct->{offset} ? "last day minus $struct->{offset}" : "last day";
         } elsif ($struct->{type} eq 'nearest_weekday') {
             push @phrases, "nearest weekday to the $struct->{day}";
-        } elsif ($struct->{type} eq 'range' || $struct->{type} eq 'single' || $struct->{type} eq 'step') {
-            my $base = $self->SUPER::to_english();
-            return $base; # Return immediately to avoid duplication
         } else {
-            push @phrases, $self->SUPER::to_english();
+            my $base = $self->SUPER::to_english();
+            return $base; # Avoid duplication
         }
     }
     return join(', ', @phrases) || "every day-of-month";
 }
 
 1;
+

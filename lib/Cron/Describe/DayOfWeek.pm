@@ -7,16 +7,23 @@ use base 'Cron::Describe::Field';
 sub parse {
     my $self = shift;
     my $value = $self->{value} // '*';
-    if ($value =~ /^(\d+)#(\d+)$/) {
-        $self->{parsed} = [{ type => 'nth', day => $1, nth => $2 }];
-        die "Invalid nth: $2 (max 5)" if $2 < 1 || $2 > 5;
-        die "Invalid day: $1" if $1 < 0 || $1 > 7;
-    } elsif ($value =~ /^(\d+)L$/) {
-        $self->{parsed} = [{ type => 'last_of_day', day => $1 }];
-        die "Invalid day: $1" if $1 < 0 || $1 > 7;
-    } else {
-        $self->SUPER::parse();
+    eval {
+        if ($value =~ /^(\d+)#(\d+)$/) {
+            $self->{parsed} = [{ type => 'nth', day => $1, nth => $2 }];
+            die "Invalid nth: $2 (max 5)" if $2 < 1 || $2 > 5;
+            die "Invalid day: $1" if $1 < 0 || $1 > 7;
+        } elsif ($value =~ /^(\d+)L$/) {
+            $self->{parsed} = [{ type => 'last_of_day', day => $1 }];
+            die "Invalid day: $1" if $1 < 0 || $1 > 7;
+        } else {
+            $self->SUPER::parse();
+        }
+    };
+    if ($@) {
+        warn "Parse error in DayOfWeek: $@";
+        $self->{parsed} = [{ type => '*' }]; # Fallback to wildcard
     }
+    return $self; # Ensure blessed object return
 }
 
 sub matches {

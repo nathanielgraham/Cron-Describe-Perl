@@ -39,7 +39,12 @@ sub new {
         } elsif ($type eq 'year') {
             $field_args->{min} = 1970; $field_args->{max} = 2199;
         }
-        push @{$self->{fields}}, $field_class->new(%$field_args);
+        my $field_obj = eval { $field_class->new(%$field_args) };
+        if ($@) {
+            warn "Failed to create field object for $type: $@";
+            $field_obj = Cron::Describe::Field->new(type => $type, value => '*', min => $field_args->{min}, max => $field_args->{max});
+        }
+        push @{$self->{fields}}, $field_obj;
     }
     return $self;
 }
@@ -193,7 +198,15 @@ sub _can_trigger {
 
 sub describe {
     my $self = shift;
-    my @descs = map { $_->to_english() } @{$self->{fields}};
+    my @descs;
+    for my $field (@{$self->{fields}}) {
+        if (ref($field) && $field->can('to_english')) {
+            push @descs, $field->to_english();
+        } else {
+            warn "Invalid field object for type " . ($field->{type} // 'unknown') . "; using default";
+            push @descs, "every " . ($field->{type} // 'field');
+        }
+    }
     # Format time fields (seconds, minute, hour) as 0 if * or ?
     my @time_parts;
     my $time_start = $self->is_quartz ? 0 : 0;
