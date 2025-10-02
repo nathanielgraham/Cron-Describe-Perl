@@ -20,7 +20,17 @@ sub make_epoch {
         minute => $minute,
         second => $second,
     );
-    return $tm->epoch;
+    # Convert to UTC epoch, adjusting for timezone
+    my $dt = DateTime->new(
+        year => $year,
+        month => $month,
+        day => $day,
+        hour => $hour,
+        minute => $minute,
+        second => $second,
+        time_zone => $tz
+    );
+    return $dt->epoch;
 }
 
 # Standard Cron Parsing and Validation (20 tests)
@@ -101,6 +111,7 @@ subtest 'Quartz Cron Parsing and Validation' => sub {
 
 # Standard Cron is_match Tests (6 tests)
 subtest 'Standard Cron is_match' => sub {
+    plan tests => 6;
     my $cron = Cron::Describe::Standard->new(expression => '* * * * *', timezone => 'UTC');
     my $epoch = make_epoch(2025, 1, 1, 0, 0, 0, 'UTC');
     ok($cron->is_match($epoch), 'Wildcard matches any time');
@@ -121,8 +132,9 @@ subtest 'Standard Cron is_match' => sub {
 
 # Quartz Cron is_match Tests (5 tests)
 subtest 'Quartz Cron is_match' => sub {
+    plan tests => 5;
     my $cron = Cron::Describe::Quartz->new(expression => '0/5 * * * * ?', timezone => 'UTC');
-    $epoch = make_epoch(2025, 1, 1, 0, 0, 5, 'UTC');
+    my $epoch = make_epoch(2025, 1, 1, 0, 0, 5, 'UTC');
     ok($cron->is_match($epoch), 'Matches every 5 seconds');
     $cron = Cron::Describe::Quartz->new(expression => '0 0 0 1 1 ? 2025', timezone => 'UTC');
     $epoch = make_epoch(2025, 1, 1, 0, 0, 0, 'UTC');
@@ -138,8 +150,9 @@ subtest 'Quartz Cron is_match' => sub {
 
 # Advanced Quartz is_match Tests (3 tests)
 subtest 'Advanced Quartz is_match' => sub {
+    plan tests => 3;
     my $cron = Cron::Describe::Quartz->new(expression => '0 0 0 15W * ?', timezone => 'UTC');
-    $epoch = make_epoch(2025, 1, 15, 0, 0, 0, 'UTC'); # Wednesday
+    my $epoch = make_epoch(2025, 1, 15, 0, 0, 0, 'UTC'); # Wednesday
     ok($cron->is_match($epoch), 'Matches Jan 15, 2025 (weekday)');
     $epoch = make_epoch(2025, 6, 16, 0, 0, 0, 'UTC'); # Jun 15 is Sunday, so 16 is Monday
     ok($cron->is_match($epoch), 'Matches nearest weekday for Jun 15');
@@ -150,6 +163,7 @@ subtest 'Advanced Quartz is_match' => sub {
 
 # Edge Case Tests for is_match (5 tests)
 subtest 'Edge Cases for is_match' => sub {
+    plan tests => 5;
     my $cron = Cron::Describe::Quartz->new(expression => '0 30 2 * * ?', timezone => 'America/Chicago');
     my $epoch = make_epoch(2025, 3, 9, 2, 30, 0, 'America/Chicago');
     ok(!$cron->is_match($epoch), 'Does not match non-existent DST time');
@@ -169,6 +183,7 @@ subtest 'Edge Cases for is_match' => sub {
 
 # Next/Previous Tests (6 tests)
 subtest 'Next and Previous Fire Times' => sub {
+    plan tests => 6;
     my $cron = Cron::Describe::Standard->new(expression => '0 0 * * *', timezone => 'UTC');
     my $epoch = make_epoch(2025, 1, 1, 0, 30, 0, 'UTC'); # Jan 1, 2025, 00:30
     my $next = $cron->next($epoch);
