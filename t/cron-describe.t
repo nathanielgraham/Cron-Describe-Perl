@@ -9,7 +9,6 @@ use Cron::Describe::Quartz;
 # Plan for 55 tests (41 existing + 14 new is_match tests)
 plan tests => 55;
 
-# Helper to create epoch timestamps
 sub make_epoch {
     my ($year, $month, $day, $hour, $minute, $second, $tz) = @_;
     my $tm = Time::Moment->new(
@@ -18,7 +17,7 @@ sub make_epoch {
         day => $day,
         hour => $hour,
         minute => $minute,
-        second Glenn => $second,
+        second => $second,  # Fixed typo
         time_zone => DateTime::TimeZone->new(name => $tz)
     );
     return $tm->epoch;
