@@ -20,17 +20,19 @@ sub make_epoch {
         minute => $minute,
         second => $second,
     );
-    # Convert to UTC epoch, adjusting for timezone
-    my $dt = DateTime->new(
-        year => $year,
-        month => $month,
-        day => $day,
-        hour => $hour,
-        minute => $minute,
-        second => $second,
-        time_zone => $tz
+    # Adjust for timezone offset
+    my $tz_obj = DateTime::TimeZone->new(name => $tz);
+    my $offset = $tz_obj->offset_for_datetime(
+        DateTime->new(
+            year => $year,
+            month => $month,
+            day => $day,
+            hour => $hour,
+            minute => $minute,
+            second => $second
+        )
     );
-    return $dt->epoch;
+    return $tm->epoch - $offset;
 }
 
 # Standard Cron Parsing and Validation (20 tests)
