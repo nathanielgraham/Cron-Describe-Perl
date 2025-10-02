@@ -7,6 +7,7 @@ use DateTime::TimeZone;
 use Cron::Describe::Field;
 use Cron::Describe::DayOfMonth;
 use Cron::Describe::DayOfWeek;
+use Time::Moment; 
 
 sub max { my ($a, $b) = @_; $a > $b ? $a : $b; }
 sub min { my ($a, $b) = @_; $a < $b ? $a : $b; }
@@ -433,14 +434,14 @@ sub to_english {
     print STDERR "DEBUG: Final description: $result\n";
     return $result;
 }
+
 sub is_match {
     my ($self, $epoch_seconds) = @_;
     print STDERR "DEBUG: Checking is_match for epoch $epoch_seconds\n";
     return 0 if @{$self->{errors}};
-    # Convert epoch to time parts in the specified time zone
-    my $dt;
+    my $tm;
     eval {
-        $dt = DateTime->from_epoch(epoch => $epoch_seconds, time_zone => $self->{time_zone});
+        $tm = Time::Moment->from_epoch($epoch_seconds, timezone => $self->{time_zone});
     };
     if ($@) {
         warn "Invalid epoch or time zone: $@";
@@ -448,13 +449,13 @@ sub is_match {
         return 0;
     }
     my %time_parts = (
-        seconds => $dt->second,
-        minute => $dt->minute,
-        hour => $dt->hour,
-        dom => $dt->day,
-        month => $dt->month,
-        dow => $dt->day_of_week % 7, # Convert 1-7 to 0-6
-        year => $dt->year,
+        seconds => $tm->second,
+        minute => $tm->minute,
+        hour => $tm->hour,
+        dom => $tm->day_of_month,
+        month => $tm->month,
+        dow => $tm->day_of_week - 1, # 1=Mon -> 0=Mon (matches your 0-6 DOW)
+        year => $tm->year,
     );
     print STDERR "DEBUG: Using time_zone=$self->{time_zone}, converted epoch to " . join(", ", map { "$_=$time_parts{$_}" } keys %time_parts) . "\n";
     for my $field (@{$self->{fields}}) {
@@ -467,17 +468,20 @@ sub is_match {
     print STDERR "DEBUG: All fields match\n";
     return 1;
 }
+
 sub _days_in_month {
     my ($self, $mon, $year) = @_;
     my $d = (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[$mon];
     $d = 29 if $mon == 2 && defined $year && $year % 4 == 0 && ($year % 100 != 0 || $year % 400 == 0);
     return $d;
 }
+
 sub _dow_of_date {
     my ($self, $year, $mon, $dom) = @_;
-    my $dt = DateTime->new(year => $year, month => $mon, day => $dom, time_zone => $self->{time_zone});
-    return $dt->day_of_week % 7; # Convert 1-7 to 0-6
+    my $tm = Time::Moment->new(year => $year, month => $mon, day => $dom, timezone => $self->{time_zone});
+    return $tm->day_of_week - 1; # Convert 1-7 to 0-6
 }
+
 sub _dump_field {
     my ($field) = @_;
     my @parts = ("type=" . ($field->{pattern_type} // 'unknown'));
