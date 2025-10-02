@@ -19,7 +19,6 @@ sub make_epoch {
         hour => $hour,
         minute => $minute,
         second => $second,
-        time_zone => DateTime::TimeZone->new(name => $tz)
     );
     return $tm->epoch;
 }
@@ -123,7 +122,7 @@ subtest 'Standard Cron is_match' => sub {
 # Quartz Cron is_match Tests (5 tests)
 subtest 'Quartz Cron is_match' => sub {
     my $cron = Cron::Describe::Quartz->new(expression => '0/5 * * * * ?', timezone => 'UTC');
-    my $epoch = make_epoch(2025, 1, 1, 0, 0, 5, 'UTC');
+    $epoch = make_epoch(2025, 1, 1, 0, 0, 5, 'UTC');
     ok($cron->is_match($epoch), 'Matches every 5 seconds');
     $cron = Cron::Describe::Quartz->new(expression => '0 0 0 1 1 ? 2025', timezone => 'UTC');
     $epoch = make_epoch(2025, 1, 1, 0, 0, 0, 'UTC');
@@ -140,7 +139,7 @@ subtest 'Quartz Cron is_match' => sub {
 # Advanced Quartz is_match Tests (3 tests)
 subtest 'Advanced Quartz is_match' => sub {
     my $cron = Cron::Describe::Quartz->new(expression => '0 0 0 15W * ?', timezone => 'UTC');
-    my $epoch = make_epoch(2025, 1, 15, 0, 0, 0, 'UTC'); # Wednesday
+    $epoch = make_epoch(2025, 1, 15, 0, 0, 0, 'UTC'); # Wednesday
     ok($cron->is_match($epoch), 'Matches Jan 15, 2025 (weekday)');
     $epoch = make_epoch(2025, 6, 16, 0, 0, 0, 'UTC'); # Jun 15 is Sunday, so 16 is Monday
     ok($cron->is_match($epoch), 'Matches nearest weekday for Jun 15');
@@ -152,11 +151,11 @@ subtest 'Advanced Quartz is_match' => sub {
 # Edge Case Tests for is_match (5 tests)
 subtest 'Edge Cases for is_match' => sub {
     my $cron = Cron::Describe::Quartz->new(expression => '0 30 2 * * ?', timezone => 'America/Chicago');
-    my $epoch = make_epoch(2025, 3, 9, 2, 30, 0, 'America/Chicago'); # DST spring-forward
+    my $epoch = make_epoch(2025, 3, 9, 2, 30, 0, 'America/Chicago');
     ok(!$cron->is_match($epoch), 'Does not match non-existent DST time');
     like($cron->{errors}->[0], qr/Invalid timestamp/, 'DST error logged');
     $cron = Cron::Describe::Quartz->new(expression => '0 30 1 * * ?', timezone => 'America/Chicago');
-    $epoch = make_epoch(2025, 11, 2, 1, 30, 0, 'America/Chicago'); # DST fall-back
+    $epoch = make_epoch(2025, 11, 2, 1, 30, 0, 'America/Chicago');
     ok($cron->is_match($epoch), 'Matches during DST fall-back');
     $cron = Cron::Describe::Quartz->new(expression => '0 0 0 29 2 ?', timezone => 'UTC');
     $epoch = make_epoch(2028, 2, 29, 0, 0, 0, 'UTC');
