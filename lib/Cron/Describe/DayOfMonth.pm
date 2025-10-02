@@ -1,88 +1,91 @@
 package Cron::Describe::DayOfMonth;
+
 use strict;
 use warnings;
 use base 'Cron::Describe::Field';
+use Time::Moment;
 
 sub new {
     my ($class, %args) = @_;
     my $self = $class->SUPER::new(%args);
+    $self->{field_type} = 'dom' unless defined $self->{field_type};
+    $self->{min} = 1;
+    $self->{max} = 31;
+    $self->{special} = ['*', '/', '-', ',', 'L', 'W', 'LW'];
     print STDERR "DEBUG: DayOfMonth.pm loaded (mtime: " . (stat(__FILE__))[9] . ") for type $self->{field_type}\n";
     return $self;
 }
 
-sub matches {
-    my ($self, $time_parts) = @_;
-    my $dom = $time_parts->{dom};
-    print STDERR "DEBUG: Checking DayOfMonth match: dom=$dom\n";
-    if ($self->{pattern_type} eq 'last') {
-        my $last_day = $self->_days_in_month($time_parts->{month}, $time_parts->{year});
-        if ($dom == $last_day - $self->{offset}) {
-            print STDERR "DEBUG: DayOfMonth matches last: dom=$dom, last_day=$last_day, offset=$self->{offset}\n";
-            return 1;
-        }
-    } elsif ($self->{pattern_type} eq 'last_weekday') {
-        my $last_day = $self->_days_in_month($time_parts->{month}, $time_parts->{year});
-        my $dow = $self->_dow_of_date($time_parts->{year}, $time_parts->{month}, $last_day);
-        my $target_day = $last_day;
-        if ($dow == 6) { $target_day -= 1; } # Sat -> Fri
-        elsif ($dow == 0) { $target_day -= 2; } # Sun -> Fri
-        if ($dom == $target_day) {
-            print STDERR "DEBUG: DayOfMonth matches last_weekday: dom=$dom, target_day=$target_day\n";
-            return 1;
-        }
-    } elsif ($self->{pattern_type} eq 'nearest_weekday') {
-        my $target_day = $self->{day};
-        my $dow = $self->_dow_of_date($time_parts->{year}, $time_parts->{month}, $target_day);
-        if ($dow == 6) { $target_day -= 1; } # Sat -> Fri
-        elsif ($dow == 0) { $target_day += 1; } # Sun -> Mon
-        my $dim = $self->_days_in_month($time_parts->{month}, $time_parts->{year});
-        if ($target_day < 1 || $target_day > $dim) {
-            print STDERR "DEBUG: DayOfMonth does not match nearest_weekday: target_day=$target_day out of bounds\n";
-            return 0;
-        }
-        if ($dom == $target_day) {
-            print STDERR "DEBUG: DayOfMonth matches nearest_weekday: dom=$dom, target_day=$target_day\n";
-            return 1;
-        }
-    } else {
-        return $self->SUPER::matches($time_parts);
-    }
-    print STDERR "DEBUG: DayOfMonth does not match\n";
-    return 0;
-}
-
 sub to_english {
-    my $self = shift;
-    print STDERR "DEBUG: Generating to_english for DayOfMonth\n";
-    if ($self->{pattern_type} eq 'last') {
-        my $desc = $self->{offset} ? "last day minus $self->{offset}" : "last day";
+    my ($self, %args) = @_;
+    my $pattern = $self->{pattern_type} // 'error';
+
+    print STDERR "DEBUG: Generating to_english for DayOfMonth, pattern=$pattern\n";
+    if ($pattern eq 'last') {
+        my $desc = "last day-of-month" . ($self->{offset} ? " minus $self->{offset} days" : '');
         print STDERR "DEBUG: DayOfMonth last: $desc\n";
         return $desc;
-    } elsif ($self->{pattern_type} eq 'last_weekday') {
-        my $desc = "last weekday";
+    } elsif ($pattern eq 'last_weekday') {
+        my $desc = "last weekday of month";
         print STDERR "DEBUG: DayOfMonth last_weekday: $desc\n";
         return $desc;
-    } elsif ($self->{pattern_type} eq 'nearest_weekday') {
-        my $desc = "nearest weekday to the $self->{day}";
+    } elsif ($pattern eq 'nearest_weekday') {
+        my $desc = "nearest weekday to day $self->{day} of month";
         print STDERR "DEBUG: DayOfMonth nearest_weekday: $desc\n";
         return $desc;
     }
-    my $desc = $self->SUPER::to_english();
+    my $desc = $self->SUPER::to_english(%args);
     print STDERR "DEBUG: DayOfMonth base: $desc\n";
     return $desc;
 }
 
-sub _days_in_month {
-    my ($self, $mon, $year) = @_;
-    my $d = (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[$mon];
-    $d = 29 if $mon == 2 && $year % 4 == 0 && ($year % 100 != 0 || $year % 400 == 0);
-    return $d;
+sub matches {
+    my ($self, $time_parts) = @_;
+    my $pattern = $self->{pattern_type} // 'error';
+    my $dom = $time_parts->{dom};
+    my $month = $time_parts->{month};
+    my $year = $time_parts->{year};
+
+    print STDERR "DEBUG: Checking DayOfMonth match: dom=$dom, month=$month, year=$year, pattern=$pattern\n";
+    return 0 if $pattern eq 'error';
+
+    if ($pattern eq 'last') {
+        my $tm = Time::Moment->new(year => $year, month => $month, day => 1, timezone => 'UTC')->plus_months(1)->minus_days(1);
+        my $target = $tm->day_of_month - ($self->{offset} // 0);
+        my $result = $dom == $target;
+        print STDERR "DEBUG: DayOfMonth last match: target=$target, result=$result\n";
+        return $result;
+    } elsif ($pattern eq 'last_weekday') {
+        my $tm = Time::Moment->new(year => $year, month => $month, day => 1, timezone => 'UTC')->plus_months(1)->minus_days(1);
+        while ($tm->day_of_week == 0 || $tm->day_of_week == 6) {
+            $tm = $tm->minus_days(1);
+        }
+        my $result = $dom == $tm->day_of_month;
+        print STDERR "DEBUG: DayOfMonth last_weekday match: target=" . $tm->day_of_month . ", result=$result\n";
+        return $result;
+    } elsif ($pattern eq 'nearest_weekday') {
+        my $tm = Time::Moment->new(year => $year, month => $month, day => $self->{day}, timezone => 'UTC');
+        my $dow = $tm->day_of_week;
+        if ($dow == 0) { # Sunday
+            $tm = $tm->plus_days(1);
+        } elsif ($dow == 6) { # Saturday
+            $tm = $tm->minus_days(1);
+        }
+        my $result = $dom == $tm->day_of_month;
+        print STDERR "DEBUG: DayOfMonth nearest_weekday match: target=" . $tm->day_of_month . ", result=$result\n";
+        return $result;
+    }
+    my $result = $self->SUPER::matches($time_parts);
+    print STDERR "DEBUG: DayOfMonth base match: $result\n";
+    return $result;
 }
 
-sub _dow_of_date {
-    my ($self, $year, $mon, $dom) = @_;
-    my $dt = DateTime->new(year => $year, month => $mon, day => $dom, time_zone => $self->{time_zone});
-    return $dt->day_of_week % 7; # Convert 1-7 to 0-6
+sub _days_in_month {
+    my ($self, $month, $year) = @_;
+    my $tm = Time::Moment->new(year => $year // 2025, month => $month, day => 1, timezone => 'UTC')->plus_months(1)->minus_days(1);
+    my $d = $tm->day_of_month;
+    print STDERR "DEBUG: Days in month $month (year=$year): $d\n";
+    return $d;
 }
 
 1;
