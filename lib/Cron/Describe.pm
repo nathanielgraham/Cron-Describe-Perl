@@ -4,10 +4,11 @@ use strict;
 use warnings;
 use POSIX 'mktime';
 use DateTime::TimeZone;
+use DateTime;
 use Cron::Describe::Field;
 use Cron::Describe::DayOfMonth;
 use Cron::Describe::DayOfWeek;
-use Time::Moment; 
+use Time::Moment;
 
 sub max { my ($a, $b) = @_; $a > $b ? $a : $b; }
 sub min { my ($a, $b) = @_; $a < $b ? $a : $b; }
@@ -86,10 +87,12 @@ sub new {
     print STDERR "DEBUG: is_valid returned: $self->{is_valid}\n";
     return $self;
 }
+
 sub describe {
     my ($self) = @_;
     return $self->to_english; # Compatibility with tests
 }
+
 sub _parse_field {
     my ($self, $value, $type, $min, $max) = @_;
     my $field = { field_type => $type, min => $min, max => $max, raw_value => $value };
@@ -137,7 +140,7 @@ sub _parse_field {
             return { field_type => $type, pattern_type => 'last_of_day', min => $min, max => $max, is_special => 1, day => $day };
         }
     }
-    # Handle day/month names
+    # Handle day/month names and ranges
     if ($type eq 'month' || $type eq 'dow') {
         if ($value =~ /,/) {
             my @names = split /,/, $value;
@@ -162,6 +165,22 @@ sub _parse_field {
                 };
             }
             return { field_type => $type, pattern_type => 'list', min => $min, max => $max, sub_patterns => \@sub_patterns };
+        } elsif ($type eq 'month' && $value =~ /^([A-Z]{3})-([A-Z]{3})$/) {
+            my ($start, $end) = ($1, $2);
+            print STDERR "DEBUG: Matched month range $start-$end for $type\n";
+            my $start_num = $self->_name_to_num($start, $type);
+            my $end_num = $self->_name_to_num($end, $type);
+            if (!defined $start_num || !defined $end_num) {
+                push @{$self->{errors}}, "Invalid month range $value for $type";
+                print STDERR "DEBUG: Error: Invalid month range $value for $type\n";
+                return { field_type => $type, pattern_type => 'error', min => $min, max => $max };
+            }
+            if ($start_num > $end_num) {
+                push @{$self->{errors}}, "Invalid month range: $start_num > $end_num";
+                print STDERR "DEBUG: Error: Invalid month range $start_num > $end_num\n";
+                return { field_type => $type, pattern_type => 'error', min => $min, max => $max };
+            }
+            return { field_type => $type, pattern_type => 'range', min_value => $start_num, max_value => $end_num, step => 1, min => $min, max => $max };
         } else {
             my $num = $self->_name_to_num($value, $type);
             if (defined $num) {
@@ -187,6 +206,7 @@ sub _parse_field {
     }
     return $self->_parse_single_part($value, $type, $min, $max);
 }
+
 sub _parse_single_part {
     my ($self, $part, $type, $min, $max) = @_;
     my $field = { field_type => $type, min => $min, max => $max, raw_value => $part };
@@ -247,6 +267,7 @@ sub _parse_single_part {
     print STDERR "DEBUG: Error: Invalid format $part for $type\n";
     return { field_type => $type, pattern_type => 'error', min => $min, max => $max };
 }
+
 sub _name_to_num {
     my ($self, $name, $type) = @_;
     print STDERR "DEBUG: Mapping name '$name' for $type\n";
@@ -269,6 +290,7 @@ sub _name_to_num {
     }
     return undef;
 }
+
 sub is_valid {
     my $self = shift;
     print STDERR "DEBUG: Validating expression\n";
@@ -287,6 +309,7 @@ sub is_valid {
     my $dom_field = $self->{fields}[$dom_idx];
     my @month_values = $month_field->{pattern_type} eq 'single' ? ($month_field->{value})
                      : $month_field->{pattern_type} eq 'list' ? map { $_->{value} } @{$month_field->{sub_patterns}}
+                     : $month_field->{pattern_type} eq 'range' ? ($month_field->{min_value} .. $month_field->{max_value})
                      : (1..12);
     my $is_wild_month = $month_field->{pattern_type} eq 'wildcard';
     my $is_wild_dom = $dom_field->{pattern_type} eq 'wildcard';
@@ -375,11 +398,13 @@ sub is_valid {
     print STDERR "DEBUG: Validation passed\n";
     return 1;
 }
+
 sub is_quartz {
     my $self = shift;
     print STDERR "DEBUG: Checking is_quartz: $self->{expression_type}\n";
     return $self->{expression_type} eq 'quartz';
 }
+
 sub to_english {
     my $self = shift;
     print STDERR "DEBUG: Generating to_english\n";
@@ -441,7 +466,10 @@ sub is_match {
     return 0 if @{$self->{errors}};
     my $tm;
     eval {
-        $tm = Time::Moment->from_epoch($epoch_seconds, timezone => $self->{time_zone});
+        # Adjust epoch for timezone
+        my $tz = DateTime::TimeZone->new(name => $self->{time_zone} || 'UTC');
+        my $dt = DateTime->from_epoch(epoch => $epoch_seconds, time_zone => $tz);
+        $tm = Time::Moment->from_epoch($dt->epoch); # Use UTC epoch
     };
     if ($@) {
         warn "Invalid epoch or time zone: $@";
@@ -454,7 +482,7 @@ sub is_match {
         hour => $tm->hour,
         dom => $tm->day_of_month,
         month => $tm->month,
-        dow => $tm->day_of_week - 1, # 1=Mon -> 0=Mon (matches your 0-6 DOW)
+        dow => $tm->day_of_week - 1, # 1=Mon -> 0=Mon
         year => $tm->year,
     );
     print STDERR "DEBUG: Using time_zone=$self->{time_zone}, converted epoch to " . join(", ", map { "$_=$time_parts{$_}" } keys %time_parts) . "\n";
@@ -471,14 +499,17 @@ sub is_match {
 
 sub _days_in_month {
     my ($self, $mon, $year) = @_;
-    my $d = (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[$mon];
-    $d = 29 if $mon == 2 && defined $year && $year % 4 == 0 && ($year % 100 != 0 || $year % 400 == 0);
+    my $tm = Time::Moment->new(year => $year // 2025, month => $mon, day => 1)->plus_months(1)->minus_days(1);
+    my $d = $tm->day_of_month;
+    print STDERR "DEBUG: Days in month $mon (year=$year): $d\n";
     return $d;
 }
 
 sub _dow_of_date {
     my ($self, $year, $mon, $dom) = @_;
-    my $tm = Time::Moment->new(year => $year, month => $mon, day => $dom, timezone => $self->{time_zone});
+    my $tz = DateTime::TimeZone->new(name => $self->{time_zone} || 'UTC');
+    my $dt = DateTime->new(year => $year, month => $mon, day => $dom, time_zone => $tz);
+    my $tm = Time::Moment->from_epoch($dt->epoch);
     return $tm->day_of_week - 1; # Convert 1-7 to 0-6
 }
 
@@ -494,4 +525,6 @@ sub _dump_field {
     }
     return "{" . join(", ", @parts) . "}";
 }
+
 1;
+
