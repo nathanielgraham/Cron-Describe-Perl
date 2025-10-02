@@ -19,7 +19,10 @@ sub _parse_expression {
     $expr =~ s/\s+/ /g;
     $expr =~ s/^\s+|\s+$//g;
     my @raw_fields = split /\s+/, $expr;
-    die "Invalid field count: got " . @raw_fields . ", expected 5" unless @raw_fields == 5;
+    if (@raw_fields != 5) {
+        push @{$self->{errors}}, "Invalid field count: got " . @raw_fields . ", expected 5";
+        die "Invalid field count: got " . @raw_fields . ", expected 5";
+    }
     my @field_types = qw(minute hour dom month dow);
     my $fields = [];
     for my $i (0 .. $#raw_fields) {
@@ -80,6 +83,7 @@ sub _parse_field {
             my $sub_field = $self->_parse_single_part($part, $type, $min, $max);
             push @sub_patterns, $sub_field;
             if ($sub_field->{pattern_type} eq 'error') {
+                push @{$self->{errors}}, "Invalid format: $part for $type";
                 return { field_type => $type, pattern_type => 'error', min => $min, max => $max };
             }
         }
@@ -205,9 +209,22 @@ sub is_valid {
 sub to_english {
     my ($self) = @_;
     my @descs;
-    for my $field (values %{$self->{fields}}) {
-        my $expand_steps = ($field->{field_type} eq 'minute') ? 1 : 0;
-        push @descs, $field->to_english(expand_steps => $expand_steps);
+    for my $field (qw(minute hour dom month dow)) {
+        my $f = $self->{fields}{$field};
+        my $expand_steps = ($f->{field_type} eq 'minute') ? 1 : 0;
+        my $desc = $f->to_english(expand_steps => $expand_steps);
+        if ($f->{field_type} eq 'dow' && $f->{pattern_type} eq 'list') {
+            my @days = map { $_->{value} } @{$f->{sub_patterns}};
+            my %dow = (0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday');
+            $desc = join(',', map { $dow{$_} } @days);
+        } elsif ($f->{field_type} eq 'minute' && $f->{pattern_type} eq 'list') {
+            $desc = join(',', map { sprintf("%02d", $_->{value}) } @{$f->{sub_patterns}}) . ' minutes past';
+        } elsif ($f->{field_type} eq 'hour' && $f->{pattern_type} eq 'range') {
+            $desc = sprintf("every hour from %02d through %02d", $f->{min_value}, $f->{max_value});
+        } elsif ($f->{field_type} eq 'minute' && $f->{pattern_type} eq 'step') {
+            $desc = sprintf("every %dth minute past", $f->{step});
+        }
+        push @descs, $desc;
     }
     my @time_parts = @descs[0..1];
     for my $i (0..1) {
@@ -215,14 +232,17 @@ sub to_english {
             $time_parts[$i] = '00';
         } elsif ($time_parts[$i] =~ /^every \d+ (minutes|hours) starting at (\d+)/) {
             $time_parts[$i] = sprintf("%02d", $2);
+        } elsif ($time_parts[$i] =~ /^(\d+)$/) {
+            $time_parts[$i] = sprintf("%02d", $1);
         }
     }
-    my $time = sprintf("%02s:%02s", @time_parts);
+    my $time = sprintf("%s:%s", @time_parts);
     my @date_parts = @descs[2..4];
     for my $i (0..2) {
-        my $type = ['dom', 'month', 'dow']->[$i];
         $date_parts[$i] =~ s/every dom/every day-of-month/;
         $date_parts[$i] =~ s/every dow/every day-of-week/;
+        $date_parts[$i] =~ s/(\d+)-(\d+)/sprintf("days-of-month %d through %d", $1, $2)/e if $date_parts[$i] =~ /^(\d+)-(\d+)$/;
+        $date_parts[$i] =~ s/(\d+)/sprintf("day-of-month %d", $1)/e if $date_parts[$i] =~ /^(\d+)$/ && $i == 0;
     }
     return "Runs at $time on " . join(', ', @date_parts);
 }

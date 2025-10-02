@@ -146,7 +146,7 @@ sub _check_day_of_week {
     if (ref($dow) eq 'SCALAR' && $$dow eq '?') {
         return 1;
     }
-    if (ref($dow) eq 'SCALAR' && $$dom =~ /^(\d+)#(\d+)$/) {
+    if (ref($dow) eq 'SCALAR' && $$dow =~ /^(\d+)#(\d+)$/) {
         my ($target_dow, $nth) = ($1, $2);
         return $self->_is_nth_day_of_week($tm, $target_dow, $nth);
     }

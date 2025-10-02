@@ -19,7 +19,10 @@ sub _parse_expression {
     $expr =~ s/\s+/ /g;
     $expr =~ s/^\s+|\s+$//g;
     my @raw_fields = split /\s+/, $expr;
-    die "Invalid field count: got " . @raw_fields . ", expected 6 or 7" unless @raw_fields == 6 || @raw_fields == 7;
+    if (@raw_fields != 6 && @raw_fields != 7) {
+        push @{$self->{errors}}, "Invalid field count: got " . @raw_fields . ", expected 6 or 7";
+        die "Invalid field count: got " . @raw_fields . ", expected 6 or 7";
+    }
     my @field_types = qw(seconds minute hour dom month dow);
     push @field_types, 'year' if @raw_fields == 7;
     my $fields = [];
@@ -93,6 +96,7 @@ sub _parse_field {
             my $sub_field = $self->_parse_single_part($part, $type, $min, $max);
             push @sub_patterns, $sub_field;
             if ($sub_field->{pattern_type} eq 'error') {
+                push @{$self->{errors}}, "Invalid format: $part for $type";
                 return { field_type => $type, pattern_type => 'error', min => $min, max => $max };
             }
         }
@@ -235,30 +239,48 @@ sub is_valid {
 sub to_english {
     my ($self) = @_;
     my @descs;
-    for my $field (values %{$self->{fields}}) {
-        my $expand_steps = ($field->{field_type} eq 'seconds' || $field->{field_type} eq 'minute') ? 1 : 0;
-        my $desc = $field->to_english(expand_steps => $expand_steps);
-        if ($field->{field_type} eq 'dom' && $field->{pattern_type} eq 'last_weekday') {
-            $desc = 'last weekday';
+    for my $field (qw(seconds minute hour dom month dow year)) {
+        next unless exists $self->{fields}{$field};
+        my $f = $self->{fields}{$field};
+        my $expand_steps = ($f->{field_type} eq 'seconds' || $f->{field_type} eq 'minute') ? 1 : 0;
+        my $desc = $f->to_english(expand_steps => $expand_steps);
+        if ($f->{field_type} eq 'dom' && $f->{pattern_type} eq 'last_weekday') {
+            $desc = 'last weekday of every month';
+        } elsif ($f->{field_type} eq 'dom' && $f->{pattern_type} eq 'last') {
+            $desc = 'last day-of-month';
+        } elsif ($f->{field_type} eq 'dom' && $f->{pattern_type} eq 'nearest_weekday') {
+            $desc = sprintf("nearest weekday to day-of-month %d", $f->{day});
+        } elsif ($f->{field_type} eq 'dow' && $f->{pattern_type} eq 'nth') {
+            my %nth = (1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th', 5 => '5th');
+            my %dow = (0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday');
+            $desc = sprintf("every %s %s", $nth{$f->{nth}}, $dow{$f->{day}});
+        } elsif ($f->{field_type} eq 'seconds' && $f->{pattern_type} eq 'step') {
+            $desc = sprintf("every %dth second", $f->{step});
+        } elsif ($f->{field_type} eq 'dow' && $f->{pattern_type} eq 'range') {
+            my %dow = (0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday');
+            $desc = sprintf("every %s through %s", $dow{$f->{min_value}}, $dow{$f->{max_value}});
         }
         push @descs, $desc;
     }
     my @time_parts = @descs[0..2];
     for my $i (0..2) {
         if ($time_parts[$i] =~ /^every (seconds|minute|hour)$/) {
-            $time_parts[$i] = '0 seconds';
+            $time_parts[$i] = '00';
         } elsif ($time_parts[$i] =~ /^every \d+ (seconds|minutes|hours) starting at (\d+)/) {
-            $time_parts[$i] = sprintf("%d", $2) . ($1 eq 'seconds' ? ' seconds' : '');
+            $time_parts[$i] = sprintf("%02d", $2);
+        } elsif ($time_parts[$i] =~ /^(\d+)$/) {
+            $time_parts[$i] = sprintf("%02d", $1);
         }
     }
-    my $time = sprintf("%s:%02d:%02d", @time_parts);
+    my $time = sprintf("%s:%s:%s", @time_parts);
     my @date_parts = @descs[3..$#descs];
     for my $i (0..$#date_parts) {
-        my $type = ['dom', 'month', 'dow', 'year']->[$i];
         $date_parts[$i] =~ s/every dom/every day-of-month/;
         $date_parts[$i] =~ s/every dow/every day-of-week/;
+        $date_parts[$i] =~ s/(\d+)-(\d+)/sprintf("days-of-month %d through %d", $1, $2)/e if $date_parts[$i] =~ /^(\d+)-(\d+)$/ && $i == 0;
+        $date_parts[$i] =~ s/(\d+)/sprintf("day-of-month %d", $1)/e if $date_parts[$i] =~ /^(\d+)$/ && $i == 0;
     }
-    return "Runs at $time on " . join(', ', @date_parts);
+    return "Runs at $time on " . join(', ', grep { defined } @date_parts);
 }
 
 sub _days_in_month {
