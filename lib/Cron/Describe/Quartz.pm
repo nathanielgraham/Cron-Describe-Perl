@@ -237,17 +237,21 @@ sub to_english {
     my @descs;
     for my $field (values %{$self->{fields}}) {
         my $expand_steps = ($field->{field_type} eq 'seconds' || $field->{field_type} eq 'minute') ? 1 : 0;
-        push @descs, $field->to_english(expand_steps => $expand_steps);
+        my $desc = $field->to_english(expand_steps => $expand_steps);
+        if ($field->{field_type} eq 'dom' && $field->{pattern_type} eq 'last_weekday') {
+            $desc = 'last weekday';
+        }
+        push @descs, $desc;
     }
     my @time_parts = @descs[0..2];
     for my $i (0..2) {
         if ($time_parts[$i] =~ /^every (seconds|minute|hour)$/) {
-            $time_parts[$i] = '00';
+            $time_parts[$i] = '0 seconds';
         } elsif ($time_parts[$i] =~ /^every \d+ (seconds|minutes|hours) starting at (\d+)/) {
-            $time_parts[$i] = sprintf("%02d", $2);
+            $time_parts[$i] = sprintf("%d", $2) . ($1 eq 'seconds' ? ' seconds' : '');
         }
     }
-    my $time = sprintf("%02s:%02s:%02s", @time_parts);
+    my $time = sprintf("%s:%02d:%02d", @time_parts);
     my @date_parts = @descs[3..$#descs];
     for my $i (0..$#date_parts) {
         my $type = ['dom', 'month', 'dow', 'year']->[$i];
