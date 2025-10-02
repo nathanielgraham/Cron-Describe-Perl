@@ -17,10 +17,11 @@
 [Prereqs] online, Dist::Zilla::Plugin::Prereqs v6.033
 [TestRequires] online, Dist::Zilla::Plugin::Prereqs v6.033
 [MetaResources] online, Dist::Zilla::Plugin::MetaResources v6.033
-[DZ] building distribution under .build/UEC22lu_oA for installation
+[DZ] building distribution under .build/jONKRp0O2u for installation
 [DZ] beginning to build Cron-Describe
 [@Basic/GatherDir] considering .
 [@Basic/GatherDir] considering out
+[@Basic/GatherDir] considering README.md
 [@Basic/GatherDir] considering perltidy.ERR
 [@Basic/GatherDir] considering dist.ini
 [@Basic/GatherDir] considering .gitignore
@@ -28,24 +29,29 @@
 [@Basic/GatherDir] considering .build
 [@Basic/GatherDir] considering t
 [@Basic/GatherDir] considering validate.t
+[@Basic/GatherDir] considering cron-describe.t
 [@Basic/GatherDir] considering validate_quartz.t
 [@Basic/GatherDir] considering .git
 [@Basic/GatherDir] considering lib
 [@Basic/GatherDir] considering Cron
 [@Basic/GatherDir] considering Describe.pm
 [@Basic/GatherDir] considering Describe
+[@Basic/GatherDir] considering Base.pm
 [@Basic/GatherDir] considering DayOfMonth.pm
 [@Basic/GatherDir] considering Standard.pm
 [@Basic/GatherDir] considering Field.pm
 [@Basic/GatherDir] considering Quartz.pm
 [@Basic/GatherDir] considering DayOfWeek.pm
 [@Basic/GatherDir] adding file out
+[@Basic/GatherDir] adding file README.md
 [@Basic/GatherDir] adding file perltidy.ERR
 [@Basic/GatherDir] adding file dist.ini
 [@Basic/GatherDir] adding file Changes
 [@Basic/GatherDir] adding file t/validate.t
+[@Basic/GatherDir] adding file t/cron-describe.t
 [@Basic/GatherDir] adding file t/validate_quartz.t
 [@Basic/GatherDir] adding file lib/Cron/Describe.pm
+[@Basic/GatherDir] adding file lib/Cron/Describe/Base.pm
 [@Basic/GatherDir] adding file lib/Cron/Describe/DayOfMonth.pm
 [@Basic/GatherDir] adding file lib/Cron/Describe/Standard.pm
 [@Basic/GatherDir] adding file lib/Cron/Describe/Field.pm
@@ -62,7 +68,7 @@
 [DZ] extracting distribution abstract from lib/Cron/Describe.pm
 [@Basic/ExtraTests] MANIFEST has 'bytes' encoding, skipping...
 [@Basic/MakeMaker] updating contents of Makefile.PL in memory
-[DZ] writing Cron-Describe in .build/UEC22lu_oA
+[DZ] writing Cron-Describe in .build/jONKRp0O2u
 [@Basic/MakeMaker::Runner] running /usr/bin/perl Makefile.PL
 Checking if your kit is complete...
 Looks good
@@ -70,16 +76,22 @@ Generating a Unix-style Makefile
 Writing Makefile for Cron::Describe
 Writing MYMETA.yml and MYMETA.json
 [@Basic/MakeMaker::Runner] running make
-cp lib/Cron/Describe/Standard.pm blib/lib/Cron/Describe/Standard.pm
-cp lib/Cron/Describe/Quartz.pm blib/lib/Cron/Describe/Quartz.pm
 cp lib/Cron/Describe/DayOfMonth.pm blib/lib/Cron/Describe/DayOfMonth.pm
 cp lib/Cron/Describe.pm blib/lib/Cron/Describe.pm
+cp lib/Cron/Describe/Base.pm blib/lib/Cron/Describe/Base.pm
 cp lib/Cron/Describe/Field.pm blib/lib/Cron/Describe/Field.pm
+cp lib/Cron/Describe/Quartz.pm blib/lib/Cron/Describe/Quartz.pm
 cp lib/Cron/Describe/DayOfWeek.pm blib/lib/Cron/Describe/DayOfWeek.pm
+cp lib/Cron/Describe/Standard.pm blib/lib/Cron/Describe/Standard.pm
 [@Basic/MakeMaker::Runner] running make test TEST_VERBOSE=1
 PERL_DL_NONLAZY=1 "/usr/bin/perl" "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness(1, 'blib/lib', 'blib/arch')" t/*.t
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+syntax error at t/cron-describe.t line 21, near "second Glenn"
+Execution of t/cron-describe.t aborted due to compilation errors.
+t/cron-describe.t .... 
+Dubious, test returned 255 (wstat 65280, 0xff00)
+No subtests run 
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='* * * * *', time_zone='UTC'
 DEBUG: Normalized expression: '* * * * *'
 DEBUG: Split into 5 fields: [*, *, *, *, *]
@@ -90,20 +102,20 @@ DEBUG: Parsing field 0: minute with value '*'
 DEBUG: Parsing field minute with value '*'
 DEBUG: Parsing single part '*' for minute
 DEBUG: Matched pattern * for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=wildcard}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -111,7 +123,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -119,8 +131,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -132,8 +144,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='0 0 1 * *', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 1 * *'
 DEBUG: Split into 5 fields: [0, 0, 1, *, *]
@@ -144,20 +156,20 @@ DEBUG: Parsing field 0: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: dom with value '1'
 DEBUG: Parsing field dom with value '1'
 DEBUG: Parsing single part '1' for dom
 DEBUG: Matched single pattern 1 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=single, value=1, min_value=1, max_value=1, step=1}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -165,7 +177,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -173,8 +185,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -186,8 +198,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='1-5,10-15/2 * * * *', time_zone='UTC'
 DEBUG: Normalized expression: '1-5,10-15/2 * * * *'
 DEBUG: Split into 5 fields: [1-5,10-15/2, *, *, *, *]
@@ -201,20 +213,20 @@ DEBUG: Parsing single part '1-5' for minute
 DEBUG: Matched range pattern 1-5 for minute
 DEBUG: Parsing single part '10-15/2' for minute
 DEBUG: Matched range pattern 10-15/2 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=list, sub_patterns=[{type=range, min_value=1, max_value=5, step=1}, {type=range, min_value=10, max_value=15, step=2}]}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -222,7 +234,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -230,8 +242,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -243,8 +255,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='60 * * * *', time_zone='UTC'
 DEBUG: Normalized expression: '60 * * * *'
 DEBUG: Split into 5 fields: [60, *, *, *, *]
@@ -256,20 +268,20 @@ DEBUG: Parsing field minute with value '60'
 DEBUG: Parsing single part '60' for minute
 DEBUG: Matched single pattern 60 for minute
 DEBUG: Error: Out of bounds 60 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=error, value=60, min_value=60, max_value=60, step=1}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -277,7 +289,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -285,8 +297,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -294,8 +306,8 @@ DEBUG: Validation failed due to parsing errors: Out of bounds: 60 for minute
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Out of bounds: 60 for minute
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='* * 31 2 *', time_zone='UTC'
 DEBUG: Normalized expression: '* * 31 2 *'
 DEBUG: Split into 5 fields: [*, *, 31, 2, *]
@@ -306,20 +318,20 @@ DEBUG: Parsing field 0: minute with value '*'
 DEBUG: Parsing field minute with value '*'
 DEBUG: Parsing single part '*' for minute
 DEBUG: Matched pattern * for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=wildcard}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '31'
 DEBUG: Parsing field dom with value '31'
 DEBUG: Parsing single part '31' for dom
 DEBUG: Matched single pattern 31 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=single, value=31, min_value=31, max_value=31, step=1}
 DEBUG: Parsing field 3: month with value '2'
 DEBUG: Parsing field month with value '2'
@@ -327,7 +339,7 @@ DEBUG: Mapping name '2' for month
 DEBUG: Month name '2' mapped to undef
 DEBUG: Parsing single part '2' for month
 DEBUG: Matched single pattern 2 for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=single, value=2, min_value=2, max_value=2, step=1}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -335,18 +347,18 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
-Use of uninitialized value $b in numeric gt (>) at /home/broom/Cron-Describe-Perl/.build/UEC22lu_oA/blib/lib/Cron/Describe.pm line 11.
+Use of uninitialized value $b in numeric gt (>) at /home/broom/Cron-Describe-Perl/.build/jONKRp0O2u/blib/lib/Cron/Describe.pm line 11.
 DEBUG: Invalid DOM for months [2]: max DOM 31 exceeds 28 days
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Invalid DOM for months [2]: max DOM 31 exceeds 28 days
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='0 0 * * SUN', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 * * SUN'
 DEBUG: Split into 5 fields: [0, 0, *, *, SUN]
@@ -357,20 +369,20 @@ DEBUG: Parsing field 0: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -378,15 +390,15 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value 'SUN'
 DEBUG: Parsing field dow with value 'SUN'
 DEBUG: Mapping name 'SUN' for dow
 DEBUG: DOW name 'SUN' mapped to 0
 DEBUG: Mapped name SUN to 0 for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -398,8 +410,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='*/15 * * * *', time_zone='UTC'
 DEBUG: Normalized expression: '*/15 * * * *'
 DEBUG: Split into 5 fields: [*/15, *, *, *, *]
@@ -410,20 +422,20 @@ DEBUG: Parsing field 0: minute with value '*/15'
 DEBUG: Parsing field minute with value '*/15'
 DEBUG: Parsing single part '*/15' for minute
 DEBUG: Matched step pattern */15 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=step, min_value=0, max_value=59, start_value=0, step=15}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -431,7 +443,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -439,8 +451,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -452,8 +464,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='1,3,5 * * JAN,FEB *', time_zone='UTC'
 DEBUG: Normalized expression: '1,3,5 * * JAN,FEB *'
 DEBUG: Split into 5 fields: [1,3,5, *, *, JAN,FEB, *]
@@ -469,20 +481,20 @@ DEBUG: Parsing single part '3' for minute
 DEBUG: Matched single pattern 3 for minute
 DEBUG: Parsing single part '5' for minute
 DEBUG: Matched single pattern 5 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=list, sub_patterns=[{type=single, value=1, min_value=1, max_value=1, step=1}, {type=single, value=3, min_value=3, max_value=3, step=1}, {type=single, value=5, min_value=5, max_value=5, step=1}]}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value 'JAN,FEB'
 DEBUG: Parsing field month with value 'JAN,FEB'
@@ -491,7 +503,7 @@ DEBUG: Mapping name 'JAN' for month
 DEBUG: Month name 'JAN' mapped to 1
 DEBUG: Mapping name 'FEB' for month
 DEBUG: Month name 'FEB' mapped to 2
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=list, sub_patterns=[{type=single, value=1, min_value=1, max_value=1, step=1}, {type=single, value=2, min_value=2, max_value=2, step=1}]}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -499,8 +511,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -512,8 +524,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='0 * * * *', time_zone='UTC'
 DEBUG: Normalized expression: '0 * * * *'
 DEBUG: Split into 5 fields: [0, *, *, *, *]
@@ -524,20 +536,20 @@ DEBUG: Parsing field 0: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -545,7 +557,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -553,8 +565,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -566,8 +578,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='0 0 * * 1-5', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 * * 1-5'
 DEBUG: Split into 5 fields: [0, 0, *, *, 1-5]
@@ -578,20 +590,20 @@ DEBUG: Parsing field 0: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -599,7 +611,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '1-5'
 DEBUG: Parsing field dow with value '1-5'
@@ -607,8 +619,8 @@ DEBUG: Mapping name '1-5' for dow
 DEBUG: DOW name '1-5' mapped to undef
 DEBUG: Parsing single part '1-5' for dow
 DEBUG: Matched range pattern 1-5 for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=range, min_value=1, max_value=5, step=1}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -620,8 +632,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='0 -1 * * *', time_zone='UTC'
 DEBUG: Normalized expression: '0 -1 * * *'
 DEBUG: Split into 5 fields: [0, -1, *, *, *]
@@ -632,21 +644,21 @@ DEBUG: Parsing field 0: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: hour with value '-1'
 DEBUG: Parsing field hour with value '-1'
 DEBUG: Parsing single part '-1' for hour
 DEBUG: Matched single pattern -1 for hour
 DEBUG: Error: Out of bounds -1 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=error, value=-1, min_value=-1, max_value=-1, step=1}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -654,7 +666,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -662,8 +674,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -671,8 +683,8 @@ DEBUG: Validation failed due to parsing errors: Out of bounds: -1 for hour
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Out of bounds: -1 for hour
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='0 0 1-10/3 * *', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 1-10/3 * *'
 DEBUG: Split into 5 fields: [0, 0, 1-10/3, *, *]
@@ -683,20 +695,20 @@ DEBUG: Parsing field 0: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: dom with value '1-10/3'
 DEBUG: Parsing field dom with value '1-10/3'
 DEBUG: Parsing single part '1-10/3' for dom
 DEBUG: Matched range pattern 1-10/3 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=range, min_value=1, max_value=10, step=3}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -704,7 +716,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -712,8 +724,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -725,8 +737,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='* * 31 * *', time_zone='UTC'
 DEBUG: Normalized expression: '* * 31 * *'
 DEBUG: Split into 5 fields: [*, *, 31, *, *]
@@ -737,20 +749,20 @@ DEBUG: Parsing field 0: minute with value '*'
 DEBUG: Parsing field minute with value '*'
 DEBUG: Parsing single part '*' for minute
 DEBUG: Matched pattern * for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=wildcard}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '31'
 DEBUG: Parsing field dom with value '31'
 DEBUG: Parsing single part '31' for dom
 DEBUG: Matched single pattern 31 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=single, value=31, min_value=31, max_value=31, step=1}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -758,7 +770,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -766,8 +778,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -779,8 +791,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='* * 1,3,31 * *', time_zone='UTC'
 DEBUG: Normalized expression: '* * 1,3,31 * *'
 DEBUG: Split into 5 fields: [*, *, 1,3,31, *, *]
@@ -791,13 +803,13 @@ DEBUG: Parsing field 0: minute with value '*'
 DEBUG: Parsing field minute with value '*'
 DEBUG: Parsing single part '*' for minute
 DEBUG: Matched pattern * for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=wildcard}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '1,3,31'
 DEBUG: Parsing field dom with value '1,3,31'
@@ -808,8 +820,8 @@ DEBUG: Parsing single part '3' for dom
 DEBUG: Matched single pattern 3 for dom
 DEBUG: Parsing single part '31' for dom
 DEBUG: Matched single pattern 31 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=list, sub_patterns=[{type=single, value=1, min_value=1, max_value=1, step=1}, {type=single, value=3, min_value=3, max_value=3, step=1}, {type=single, value=31, min_value=31, max_value=31, step=1}]}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -817,7 +829,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -825,8 +837,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -838,8 +850,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='* * 32 * *', time_zone='UTC'
 DEBUG: Normalized expression: '* * 32 * *'
 DEBUG: Split into 5 fields: [*, *, 32, *, *]
@@ -850,21 +862,21 @@ DEBUG: Parsing field 0: minute with value '*'
 DEBUG: Parsing field minute with value '*'
 DEBUG: Parsing single part '*' for minute
 DEBUG: Matched pattern * for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=wildcard}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '32'
 DEBUG: Parsing field dom with value '32'
 DEBUG: Parsing single part '32' for dom
 DEBUG: Matched single pattern 32 for dom
 DEBUG: Error: Out of bounds 32 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=error, value=32, min_value=32, max_value=32, step=1}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -872,7 +884,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -880,8 +892,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -889,8 +901,8 @@ DEBUG: Validation failed due to parsing errors: Out of bounds: 32 for dom
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Out of bounds: 32 for dom
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='0 0 0/0 * *', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0/0 * *'
 DEBUG: Split into 5 fields: [0, 0, 0/0, *, *]
@@ -901,21 +913,21 @@ DEBUG: Parsing field 0: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: dom with value '0/0'
 DEBUG: Parsing field dom with value '0/0'
 DEBUG: Parsing single part '0/0' for dom
 DEBUG: Matched step pattern 0/0 for dom
 DEBUG: Bounds check failed: start_value=0, step=0 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=error}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -923,7 +935,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -931,8 +943,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -940,8 +952,8 @@ DEBUG: Validation failed due to parsing errors: Out of bounds: 0/0 for dom
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Out of bounds: 0/0 for dom
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='0 0 1-31 * *', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 1-31 * *'
 DEBUG: Split into 5 fields: [0, 0, 1-31, *, *]
@@ -952,20 +964,20 @@ DEBUG: Parsing field 0: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: dom with value '1-31'
 DEBUG: Parsing field dom with value '1-31'
 DEBUG: Parsing single part '1-31' for dom
 DEBUG: Matched range pattern 1-31 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=range, min_value=1, max_value=31, step=1}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -973,7 +985,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -981,8 +993,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -994,8 +1006,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='ABC * * * *', time_zone='UTC'
 DEBUG: Normalized expression: 'ABC * * * *'
 DEBUG: Split into 5 fields: [ABC, *, *, *, *]
@@ -1006,20 +1018,20 @@ DEBUG: Parsing field 0: minute with value 'ABC'
 DEBUG: Parsing field minute with value 'ABC'
 DEBUG: Parsing single part 'ABC' for minute
 DEBUG: Error: Invalid format ABC for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=error}
 DEBUG: Parsing field 1: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 2: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 3: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1027,7 +1039,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 4: dow with value '*'
 DEBUG: Parsing field dow with value '*'
@@ -1035,8 +1047,8 @@ DEBUG: Mapping name '*' for dow
 DEBUG: DOW name '*' mapped to undef
 DEBUG: Parsing single part '*' for dow
 DEBUG: Matched pattern * for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=wildcard}
 DEBUG: Finished parsing loop, fields count: 5
 DEBUG: Validating expression
@@ -1044,8 +1056,8 @@ DEBUG: Validation failed due to parsing errors: Invalid format: ABC for minute
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Invalid format: ABC for minute
-DEBUG: Standard.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Standard.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Standard', expression='0 0 * * * * *', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 * * * * *'
 DEBUG: Split into 7 fields: [0, 0, *, *, *, *, *]
@@ -1153,8 +1165,8 @@ ok 19 - Non-numeric minute
 ok 20 - Too many fields
 1..20
 ok
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, *, *, ?]
@@ -1165,26 +1177,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1192,7 +1204,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1200,8 +1212,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1213,8 +1225,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 L * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 L * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, L, *, ?]
@@ -1225,25 +1237,25 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value 'L'
 DEBUG: Parsing field dom with value 'L'
 DEBUG: Matched pattern L(-0) for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=last, offset=0}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1251,7 +1263,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1259,8 +1271,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1272,8 +1284,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 15W * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 15W * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, 15W, *, ?]
@@ -1284,25 +1296,25 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '15W'
 DEBUG: Parsing field dom with value '15W'
 DEBUG: Matched pattern 15W for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=nearest_weekday, day=15}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1310,7 +1322,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1318,8 +1330,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1331,8 +1343,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * 1#5', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * 1#5'
 DEBUG: Split into 6 fields: [0, 0, 0, *, *, 1#5]
@@ -1343,26 +1355,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1370,13 +1382,13 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '1#5'
 DEBUG: Parsing field dow with value '1#5'
 DEBUG: Matched pattern 1#5 for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=nth, day=1, nth=5}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1388,8 +1400,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * 1#6', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * 1#6'
 DEBUG: Split into 6 fields: [0, 0, 0, *, *, 1#6]
@@ -1400,26 +1412,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1427,14 +1439,14 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '1#6'
 DEBUG: Parsing field dow with value '1#6'
 DEBUG: Matched pattern 1#6 for dow
 DEBUG: Error: Invalid nth 6 or day dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=error}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1442,8 +1454,8 @@ DEBUG: Validation failed due to parsing errors: Invalid nth 6 or day 1 for dow
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Invalid nth 6 or day 1 for dow
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 60 0 * * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 60 0 * * ?'
 DEBUG: Split into 6 fields: [0, 60, 0, *, *, ?]
@@ -1454,27 +1466,27 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '60'
 DEBUG: Parsing field minute with value '60'
 DEBUG: Parsing single part '60' for minute
 DEBUG: Matched single pattern 60 for minute
 DEBUG: Error: Out of bounds 60 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=error, value=60, min_value=60, max_value=60, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1482,7 +1494,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1490,8 +1502,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1499,8 +1511,8 @@ DEBUG: Validation failed due to parsing errors: Out of bounds: 60 for minute
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Out of bounds: 60 for minute
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 31 2 ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 31 2 ?'
 DEBUG: Split into 6 fields: [0, 0, 0, 31, 2, ?]
@@ -1511,26 +1523,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '31'
 DEBUG: Parsing field dom with value '31'
 DEBUG: Parsing single part '31' for dom
 DEBUG: Matched single pattern 31 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=single, value=31, min_value=31, max_value=31, step=1}
 DEBUG: Parsing field 4: month with value '2'
 DEBUG: Parsing field month with value '2'
@@ -1538,7 +1550,7 @@ DEBUG: Mapping name '2' for month
 DEBUG: Month name '2' mapped to undef
 DEBUG: Parsing single part '2' for month
 DEBUG: Matched single pattern 2 for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=single, value=2, min_value=2, max_value=2, step=1}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1546,18 +1558,18 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
-Use of uninitialized value $b in numeric gt (>) at /home/broom/Cron-Describe-Perl/.build/UEC22lu_oA/blib/lib/Cron/Describe.pm line 11.
+Use of uninitialized value $b in numeric gt (>) at /home/broom/Cron-Describe-Perl/.build/jONKRp0O2u/blib/lib/Cron/Describe.pm line 11.
 DEBUG: Invalid DOM for months [2]: max DOM 31 exceeds 28 days
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Invalid DOM for months [2]: max DOM 31 exceeds 28 days
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * 1L', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * 1L'
 DEBUG: Split into 6 fields: [0, 0, 0, *, *, 1L]
@@ -1568,26 +1580,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1595,13 +1607,13 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '1L'
 DEBUG: Parsing field dow with value '1L'
 DEBUG: Matched pattern 1L for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=last_of_day, day=1}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1613,8 +1625,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * ? 2025', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * ? 2025'
 DEBUG: Split into 7 fields: [0, 0, 0, *, *, ?, 2025]
@@ -1625,26 +1637,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1652,7 +1664,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1660,14 +1672,14 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Parsing field 6: year with value '2025'
 DEBUG: Parsing field year with value '2025'
 DEBUG: Parsing single part '2025' for year
 DEBUG: Matched single pattern 2025 for year
-DEBUG: Field.pm loaded (mtime: 1759360383) for type year
+DEBUG: Field.pm loaded (mtime: 1759370259) for type year
 DEBUG: Parsed field year: {type=single, value=2025, min_value=2025, max_value=2025, step=1}
 DEBUG: Finished parsing loop, fields count: 7
 DEBUG: Validating expression
@@ -1677,8 +1689,8 @@ DEBUG: is_valid returned: 1
 DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 1-5,10-15/2 * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 1-5,10-15/2 * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, 1-5,10-15/2, *, ?]
@@ -1689,19 +1701,19 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '1-5,10-15/2'
 DEBUG: Parsing field dom with value '1-5,10-15/2'
@@ -1710,8 +1722,8 @@ DEBUG: Parsing single part '1-5' for dom
 DEBUG: Matched range pattern 1-5 for dom
 DEBUG: Parsing single part '10-15/2' for dom
 DEBUG: Matched range pattern 10-15/2 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=list, sub_patterns=[{type=range, min_value=1, max_value=5, step=1}, {type=range, min_value=10, max_value=15, step=2}]}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1719,7 +1731,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1727,8 +1739,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1740,8 +1752,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 LW * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 LW * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, LW, *, ?]
@@ -1752,25 +1764,25 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value 'LW'
 DEBUG: Parsing field dom with value 'LW'
 DEBUG: Matched pattern LW for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=last_weekday, offset=0}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1778,7 +1790,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1786,8 +1798,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1799,8 +1811,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='5/10 * * * * ?', time_zone='UTC'
 DEBUG: Normalized expression: '5/10 * * * * ?'
 DEBUG: Split into 6 fields: [5/10, *, *, *, *, ?]
@@ -1811,26 +1823,26 @@ DEBUG: Parsing field 0: seconds with value '5/10'
 DEBUG: Parsing field seconds with value '5/10'
 DEBUG: Parsing single part '5/10' for seconds
 DEBUG: Matched step pattern 5/10 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=step, min_value=5, max_value=59, start_value=5, step=10}
 DEBUG: Parsing field 1: minute with value '*'
 DEBUG: Parsing field minute with value '*'
 DEBUG: Parsing single part '*' for minute
 DEBUG: Matched pattern * for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=wildcard}
 DEBUG: Parsing field 2: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1838,7 +1850,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1846,8 +1858,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1859,8 +1871,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 5/15 * * * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 5/15 * * * ?'
 DEBUG: Split into 6 fields: [0, 5/15, *, *, *, ?]
@@ -1871,26 +1883,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '5/15'
 DEBUG: Parsing field minute with value '5/15'
 DEBUG: Parsing single part '5/15' for minute
 DEBUG: Matched step pattern 5/15 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=step, min_value=5, max_value=59, start_value=5, step=15}
 DEBUG: Parsing field 2: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1898,7 +1910,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -1906,8 +1918,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1919,8 +1931,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * 2#3', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * 2#3'
 DEBUG: Split into 6 fields: [0, 0, 0, *, *, 2#3]
@@ -1931,26 +1943,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -1958,13 +1970,13 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '2#3'
 DEBUG: Parsing field dow with value '2#3'
 DEBUG: Matched pattern 2#3 for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=nth, day=2, nth=3}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -1976,8 +1988,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 ? * MON,WED,FRI', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 ? * MON,WED,FRI'
 DEBUG: Split into 6 fields: [0, 0, 0, ?, *, MON,WED,FRI]
@@ -1988,26 +2000,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '?'
 DEBUG: Parsing field dom with value '?'
 DEBUG: Parsing single part '?' for dom
 DEBUG: Matched pattern ? for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=unspecified}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2015,7 +2027,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value 'MON,WED,FRI'
 DEBUG: Parsing field dow with value 'MON,WED,FRI'
@@ -2026,8 +2038,8 @@ DEBUG: Mapping name 'WED' for dow
 DEBUG: DOW name 'WED' mapped to 3
 DEBUG: Mapping name 'FRI' for dow
 DEBUG: DOW name 'FRI' mapped to 5
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=list, sub_patterns=[{type=single, value=1, min_value=1, max_value=1, step=1}, {type=single, value=3, min_value=3, max_value=3, step=1}, {type=single, value=5, min_value=5, max_value=5, step=1}]}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2039,8 +2051,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 LW * MON', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 LW * MON'
 DEBUG: Split into 6 fields: [0, 0, 0, LW, *, MON]
@@ -2051,25 +2063,25 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value 'LW'
 DEBUG: Parsing field dom with value 'LW'
 DEBUG: Matched pattern LW for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=last_weekday, offset=0}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2077,15 +2089,15 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value 'MON'
 DEBUG: Parsing field dow with value 'MON'
 DEBUG: Mapping name 'MON' for dow
 DEBUG: DOW name 'MON' mapped to 1
 DEBUG: Mapped name MON to 1 for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=single, value=1, min_value=1, max_value=1, step=1}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2094,8 +2106,8 @@ DEBUG: Invalid Quartz DOM-DOW conflict
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Quartz DOM-DOW conflict: both non-trivial
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * ?W', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * ?W'
 DEBUG: Split into 6 fields: [0, 0, 0, *, *, ?W]
@@ -2106,26 +2118,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2133,7 +2145,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?W'
 DEBUG: Parsing field dow with value '?W'
@@ -2141,8 +2153,8 @@ DEBUG: Mapping name '?W' for dow
 DEBUG: DOW name '?W' mapped to undef
 DEBUG: Parsing single part '?W' for dow
 DEBUG: Error: Invalid format ?W for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=error}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2150,8 +2162,8 @@ DEBUG: Validation failed due to parsing errors: Invalid format: ?W for dow
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Invalid format: ?W for dow
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='*/5 0 * * * ?', time_zone='UTC'
 DEBUG: Normalized expression: '*/5 0 * * * ?'
 DEBUG: Split into 6 fields: [*/5, 0, *, *, *, ?]
@@ -2162,26 +2174,26 @@ DEBUG: Parsing field 0: seconds with value '*/5'
 DEBUG: Parsing field seconds with value '*/5'
 DEBUG: Parsing single part '*/5' for seconds
 DEBUG: Matched step pattern */5 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=step, min_value=0, max_value=59, start_value=0, step=5}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '*'
 DEBUG: Parsing field hour with value '*'
 DEBUG: Parsing single part '*' for hour
 DEBUG: Matched pattern * for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=wildcard}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2189,7 +2201,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2197,8 +2209,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2210,8 +2222,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 L-5 * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 L-5 * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, L-5, *, ?]
@@ -2222,25 +2234,25 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value 'L-5'
 DEBUG: Parsing field dom with value 'L-5'
 DEBUG: Matched pattern L(-5) for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=last, offset=5}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2248,7 +2260,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2256,8 +2268,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2269,8 +2281,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 32W * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 32W * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, 32W, *, ?]
@@ -2281,26 +2293,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '32W'
 DEBUG: Parsing field dom with value '32W'
 DEBUG: Matched pattern 32W for dom
 DEBUG: Error: Invalid day 32 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=error}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2308,7 +2320,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2316,8 +2328,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2325,8 +2337,8 @@ DEBUG: Validation failed due to parsing errors: Invalid day 32 for dom
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Invalid day 32 for dom
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * 8#3', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * 8#3'
 DEBUG: Split into 6 fields: [0, 0, 0, *, *, 8#3]
@@ -2337,26 +2349,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2364,14 +2376,14 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '8#3'
 DEBUG: Parsing field dow with value '8#3'
 DEBUG: Matched pattern 8#3 for dow
 DEBUG: Error: Invalid nth 3 or day dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=error}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2379,8 +2391,8 @@ DEBUG: Validation failed due to parsing errors: Invalid nth 3 or day 8 for dow
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Invalid nth 3 or day 8 for dow
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * W#3', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * W#3'
 DEBUG: Split into 6 fields: [0, 0, 0, *, *, W#3]
@@ -2391,26 +2403,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2418,7 +2430,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value 'W#3'
 DEBUG: Parsing field dow with value 'W#3'
@@ -2426,8 +2438,8 @@ DEBUG: Mapping name 'W#3' for dow
 DEBUG: DOW name 'W#3' mapped to undef
 DEBUG: Parsing single part 'W#3' for dow
 DEBUG: Error: Invalid format W#3 for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=error}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2435,8 +2447,8 @@ DEBUG: Validation failed due to parsing errors: Invalid format: W#3 for dow
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Invalid format: W#3 for dow
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 15 * MON', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 15 * MON'
 DEBUG: Split into 6 fields: [0, 0, 0, 15, *, MON]
@@ -2447,26 +2459,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '15'
 DEBUG: Parsing field dom with value '15'
 DEBUG: Parsing single part '15' for dom
 DEBUG: Matched single pattern 15 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=single, value=15, min_value=15, max_value=15, step=1}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2474,15 +2486,15 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value 'MON'
 DEBUG: Parsing field dow with value 'MON'
 DEBUG: Mapping name 'MON' for dow
 DEBUG: DOW name 'MON' mapped to 1
 DEBUG: Mapped name MON to 1 for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=single, value=1, min_value=1, max_value=1, step=1}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2491,8 +2503,8 @@ DEBUG: Invalid Quartz DOM-DOW conflict
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Quartz DOM-DOW conflict: both non-trivial
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 ? * 1#5', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 ? * 1#5'
 DEBUG: Split into 6 fields: [0, 0, 0, ?, *, 1#5]
@@ -2503,26 +2515,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '?'
 DEBUG: Parsing field dom with value '?'
 DEBUG: Parsing single part '?' for dom
 DEBUG: Matched pattern ? for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=unspecified}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2530,13 +2542,13 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '1#5'
 DEBUG: Parsing field dow with value '1#5'
 DEBUG: Matched pattern 1#5 for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=nth, day=1, nth=5}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2548,8 +2560,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * ? 1969', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * ? 1969'
 DEBUG: Split into 7 fields: [0, 0, 0, *, *, ?, 1969]
@@ -2560,26 +2572,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2587,7 +2599,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2595,15 +2607,15 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Parsing field 6: year with value '1969'
 DEBUG: Parsing field year with value '1969'
 DEBUG: Parsing single part '1969' for year
 DEBUG: Matched single pattern 1969 for year
 DEBUG: Error: Out of bounds 1969 for year
-DEBUG: Field.pm loaded (mtime: 1759360383) for type year
+DEBUG: Field.pm loaded (mtime: 1759370259) for type year
 DEBUG: Parsed field year: {type=error, value=1969, min_value=1969, max_value=1969, step=1}
 DEBUG: Finished parsing loop, fields count: 7
 DEBUG: Validating expression
@@ -2611,8 +2623,8 @@ DEBUG: Validation failed due to parsing errors: Out of bounds: 1969 for year
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Out of bounds: 1969 for year
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 * * ? 2025-2030', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 * * ? 2025-2030'
 DEBUG: Split into 7 fields: [0, 0, 0, *, *, ?, 2025-2030]
@@ -2623,26 +2635,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '*'
 DEBUG: Parsing field dom with value '*'
 DEBUG: Parsing single part '*' for dom
 DEBUG: Matched pattern * for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=wildcard}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2650,7 +2662,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2658,14 +2670,14 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Parsing field 6: year with value '2025-2030'
 DEBUG: Parsing field year with value '2025-2030'
 DEBUG: Parsing single part '2025-2030' for year
 DEBUG: Matched range pattern 2025-2030 for year
-DEBUG: Field.pm loaded (mtime: 1759360383) for type year
+DEBUG: Field.pm loaded (mtime: 1759370259) for type year
 DEBUG: Parsed field year: {type=range, min_value=2025, max_value=2030, step=1}
 DEBUG: Finished parsing loop, fields count: 7
 DEBUG: Validating expression
@@ -2675,8 +2687,8 @@ DEBUG: is_valid returned: 1
 DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 31 * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 31 * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, 31, *, ?]
@@ -2687,26 +2699,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '31'
 DEBUG: Parsing field dom with value '31'
 DEBUG: Parsing single part '31' for dom
 DEBUG: Matched single pattern 31 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=single, value=31, min_value=31, max_value=31, step=1}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2714,7 +2726,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2722,8 +2734,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2735,8 +2747,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 1,3,31 * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 1,3,31 * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, 1,3,31, *, ?]
@@ -2747,19 +2759,19 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '1,3,31'
 DEBUG: Parsing field dom with value '1,3,31'
@@ -2770,8 +2782,8 @@ DEBUG: Parsing single part '3' for dom
 DEBUG: Matched single pattern 3 for dom
 DEBUG: Parsing single part '31' for dom
 DEBUG: Matched single pattern 31 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=list, sub_patterns=[{type=single, value=1, min_value=1, max_value=1, step=1}, {type=single, value=3, min_value=3, max_value=3, step=1}, {type=single, value=31, min_value=31, max_value=31, step=1}]}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2779,7 +2791,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2787,8 +2799,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2800,8 +2812,8 @@ DEBUG: Validating expression
 DEBUG: DOM validation passed (wildcard DOM or month)
 DEBUG: Skipping year validation (no year field)
 DEBUG: Validation passed
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 32 * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 32 * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, 32, *, ?]
@@ -2812,27 +2824,27 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '32'
 DEBUG: Parsing field dom with value '32'
 DEBUG: Parsing single part '32' for dom
 DEBUG: Matched single pattern 32 for dom
 DEBUG: Error: Out of bounds 32 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=error, value=32, min_value=32, max_value=32, step=1}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2840,7 +2852,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2848,8 +2860,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2857,8 +2869,8 @@ DEBUG: Validation failed due to parsing errors: Out of bounds: 32 for dom
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Out of bounds: 32 for dom
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 0/0 * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 0/0 * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, 0/0, *, ?]
@@ -2869,27 +2881,27 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '0/0'
 DEBUG: Parsing field dom with value '0/0'
 DEBUG: Parsing single part '0/0' for dom
 DEBUG: Matched step pattern 0/0 for dom
 DEBUG: Bounds check failed: start_value=0, step=0 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=error}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2897,7 +2909,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2905,8 +2917,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -2914,8 +2926,8 @@ DEBUG: Validation failed due to parsing errors: Out of bounds: 0/0 for dom
 DEBUG: is_valid returned: 0
 DEBUG: Validating expression
 DEBUG: Validation failed due to parsing errors: Out of bounds: 0/0 for dom
-DEBUG: Quartz.pm loaded (mtime: 1759360383)
-DEBUG: Describe.pm loaded (mtime: 1759360383)
+DEBUG: Quartz.pm loaded (mtime: 1759370259)
+DEBUG: Describe.pm loaded (mtime: 1759370259)
 DEBUG: Initializing with class='Cron::Describe::Quartz', expression='0 0 0 1-31 * ?', time_zone='UTC'
 DEBUG: Normalized expression: '0 0 0 1-31 * ?'
 DEBUG: Split into 6 fields: [0, 0, 0, 1-31, *, ?]
@@ -2926,26 +2938,26 @@ DEBUG: Parsing field 0: seconds with value '0'
 DEBUG: Parsing field seconds with value '0'
 DEBUG: Parsing single part '0' for seconds
 DEBUG: Matched single pattern 0 for seconds
-DEBUG: Field.pm loaded (mtime: 1759360383) for type seconds
+DEBUG: Field.pm loaded (mtime: 1759370259) for type seconds
 DEBUG: Parsed field seconds: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 1: minute with value '0'
 DEBUG: Parsing field minute with value '0'
 DEBUG: Parsing single part '0' for minute
 DEBUG: Matched single pattern 0 for minute
-DEBUG: Field.pm loaded (mtime: 1759360383) for type minute
+DEBUG: Field.pm loaded (mtime: 1759370259) for type minute
 DEBUG: Parsed field minute: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 2: hour with value '0'
 DEBUG: Parsing field hour with value '0'
 DEBUG: Parsing single part '0' for hour
 DEBUG: Matched single pattern 0 for hour
-DEBUG: Field.pm loaded (mtime: 1759360383) for type hour
+DEBUG: Field.pm loaded (mtime: 1759370259) for type hour
 DEBUG: Parsed field hour: {type=single, value=0, min_value=0, max_value=0, step=1}
 DEBUG: Parsing field 3: dom with value '1-31'
 DEBUG: Parsing field dom with value '1-31'
 DEBUG: Parsing single part '1-31' for dom
 DEBUG: Matched range pattern 1-31 for dom
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dom
-DEBUG: DayOfMonth.pm loaded (mtime: 1759360383) for type dom
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dom
+DEBUG: DayOfMonth.pm loaded (mtime: 1759370259) for type dom
 DEBUG: Parsed field dom: {type=range, min_value=1, max_value=31, step=1}
 DEBUG: Parsing field 4: month with value '*'
 DEBUG: Parsing field month with value '*'
@@ -2953,7 +2965,7 @@ DEBUG: Mapping name '*' for month
 DEBUG: Month name '*' mapped to undef
 DEBUG: Parsing single part '*' for month
 DEBUG: Matched pattern * for month
-DEBUG: Field.pm loaded (mtime: 1759360383) for type month
+DEBUG: Field.pm loaded (mtime: 1759370259) for type month
 DEBUG: Parsed field month: {type=wildcard}
 DEBUG: Parsing field 5: dow with value '?'
 DEBUG: Parsing field dow with value '?'
@@ -2961,8 +2973,8 @@ DEBUG: Mapping name '?' for dow
 DEBUG: DOW name '?' mapped to undef
 DEBUG: Parsing single part '?' for dow
 DEBUG: Matched pattern ? for dow
-DEBUG: Field.pm loaded (mtime: 1759360383) for type dow
-DEBUG: DayOfWeek.pm loaded (mtime: 1759360383) for type dow
+DEBUG: Field.pm loaded (mtime: 1759370259) for type dow
+DEBUG: DayOfWeek.pm loaded (mtime: 1759370259) for type dow
 DEBUG: Parsed field dow: {type=unspecified}
 DEBUG: Finished parsing loop, fields count: 6
 DEBUG: Validating expression
@@ -3133,7 +3145,14 @@ ok 31 - Invalid step 0 in DOM
 ok 32 - DOM range 1-31 with wildcard month (valid for some months)
 1..32
 ok
-All tests successful.
-Files=2, Tests=52,  0 wallclock secs ( 0.05 usr  0.01 sys +  0.29 cusr  0.04 csys =  0.39 CPU)
-Result: PASS
-[DZ] all's well; removing .build/UEC22lu_oA
+
+Test Summary Report
+-------------------
+t/cron-describe.t  (Wstat: 65280 (exited 255) Tests: 0 Failed: 0)
+  Non-zero exit status: 255
+  Parse errors: No plan found in TAP output
+Files=3, Tests=52,  0 wallclock secs ( 0.02 usr  0.01 sys +  0.30 cusr  0.04 csys =  0.37 CPU)
+Result: FAIL
+Failed 1/3 test programs. 0/52 subtests failed.
+make: *** [Makefile:836: test_dynamic] Error 255
+error running make test
