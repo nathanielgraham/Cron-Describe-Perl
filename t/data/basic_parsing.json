@@ -2,90 +2,100 @@
   {
     "description": "Every day at midnight",
     "expression": "0 0 0 * * ?",
+    "is_valid": 1,
     "fields": [
       {
         "field_type": "seconds",
         "pattern_type": "single",
-        "value": "0",
-        "min_value": "0",
-        "max_value": "0",
-        "step": "1",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
         "min": 0,
         "max": 59
       },
       {
         "field_type": "minute",
         "pattern_type": "single",
-        "value": "0",
-        "min_value": "0",
-        "max_value": "0",
-        "step": "1",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
         "min": 0,
         "max": 59
       },
       {
         "field_type": "hour",
         "pattern_type": "single",
-        "value": "0",
-        "min_value": "0",
-        "max_value": "0",
-        "step": "1",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
         "min": 0,
         "max": 23
       },
       {
         "field_type": "dom",
         "pattern_type": "wildcard",
+        "min_value": 1,
+        "max_value": 31,
+        "step": 1,
         "min": 1,
         "max": 31
       },
       {
         "field_type": "month",
         "pattern_type": "wildcard",
+        "min_value": 1,
+        "max_value": 12,
+        "step": 1,
         "min": 1,
         "max": 12
       },
       {
         "field_type": "dow",
         "pattern_type": "unspecified",
+        "min_value": 0,
+        "max_value": 7,
+        "step": 1,
         "min": 0,
         "max": 7
       }
     ],
-    "is_valid": 1,
-    "english": "Runs at 00:00:00, every day of month, in every month, every day-of-week"
+    "english": "Runs at 00:00:00, every day of month, in every month, any day-of-week"
   },
   {
     "description": "Days 1-5 and every other day from 10-15",
     "expression": "0 0 0 1-5,10-15/2 * ?",
+    "is_valid": 1,
     "fields": [
       {
         "field_type": "seconds",
         "pattern_type": "single",
-        "value": "0",
-        "min_value": "0",
-        "max_value": "0",
-        "step": "1",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
         "min": 0,
         "max": 59
       },
       {
         "field_type": "minute",
         "pattern_type": "single",
-        "value": "0",
-        "min_value": "0",
-        "max_value": "0",
-        "step": "1",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
         "min": 0,
         "max": 59
       },
       {
         "field_type": "hour",
         "pattern_type": "single",
-        "value": "0",
-        "min_value": "0",
-        "max_value": "0",
-        "step": "1",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
         "min": 0,
         "max": 23
       },
@@ -95,90 +105,112 @@
         "sub_patterns": [
           {
             "pattern_type": "range",
-            "min_value": "1",
-            "max_value": "5"
+            "min": 1,
+            "max": 5,
+            "min_value": 1,
+            "max_value": 5,
+            "step": 1
           },
           {
             "pattern_type": "step",
-            "start_value": "10",
-            "max_value": "15",
-            "step": "2"
+            "base": {
+              "pattern_type": "range",
+              "min": 10,
+              "max": 15,
+              "min_value": 10,
+              "max_value": 15
+            },
+            "step": 2,
+            "start_value": 10,
+            "min_value": 10,
+            "max_value": 15
           }
         ],
         "min": 1,
-        "max": 31
+        "max": 31,
+        "min_value": 1,
+        "max_value": 31
       },
       {
         "field_type": "month",
         "pattern_type": "wildcard",
+        "min_value": 1,
+        "max_value": 12,
+        "step": 1,
         "min": 1,
         "max": 12
       },
       {
         "field_type": "dow",
         "pattern_type": "unspecified",
+        "min_value": 0,
+        "max_value": 7,
+        "step": 1,
         "min": 0,
         "max": 7
       }
     ],
-    "is_valid": 1,
-    "english": "Runs at 00:00:00, on days 1 to 5, every 2 days from 10 of month, in every month, every day-of-week"
+    "english": "Runs at 00:00:00, on days 1 to 5, every 2 days from 10 to 15 of month, in every month, any day-of-week"
   },
   {
     "description": "Standard cron: every day at midnight",
     "expression": "0 0 1 * *",
+    "is_valid": 1,
     "fields": [
       {
         "field_type": "minute",
         "pattern_type": "single",
-        "value": "0",
-        "min_value": "0",
-        "max_value": "0",
-        "step": "1",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
         "min": 0,
         "max": 59
       },
       {
         "field_type": "hour",
         "pattern_type": "single",
-        "value": "0",
-        "min_value": "0",
-        "max_value": "0",
-        "step": "1",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
         "min": 0,
         "max": 23
       },
       {
         "field_type": "dom",
         "pattern_type": "single",
-        "value": "1",
-        "min_value": "1",
-        "max_value": "1",
-        "step": "1",
+        "value": 1,
+        "min_value": 1,
+        "max_value": 1,
+        "step": 1,
         "min": 1,
         "max": 31
       },
       {
         "field_type": "month",
         "pattern_type": "wildcard",
+        "min_value": 1,
+        "max_value": 12,
+        "step": 1,
         "min": 1,
         "max": 12
       },
       {
         "field_type": "dow",
         "pattern_type": "wildcard",
+        "min_value": 0,
+        "max_value": 7,
+        "step": 1,
         "min": 0,
         "max": 7
       }
     ],
-    "is_valid": 1,
     "english": "Runs at 00:00, on day 1 of month, in every month, every day-of-week"
   },
   {
     "description": "Rejects 5-field Quartz expression",
-    "expression": "0 0 1 * ?",
-    "fields": [],
-    "is_valid": 0,
-    "english": ""
+    "expression": "0 0 0 * *",
+    "is_valid": 0
   }
 ]
