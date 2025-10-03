@@ -1,165 +1,61 @@
-# Cron::Describe
-
-A Perl module for parsing, validating, and generating human-readable descriptions of standard and Quartz cron expressions.
+# Cron-Describe-Perl
 
 ## Overview
-
-`Cron::Describe` is a Perl library that processes cron expressions, validates their syntax, and generates clear, human-readable descriptions. It supports both **standard cron** (5 fields: minute, hour, day-of-month, month, day-of-week) and **Quartz Scheduler cron** (6 or 7 fields, including seconds and optional year, with special tokens like `L`, `W`, `#`, `?`). The module provides methods to:
-- Parse cron expressions into structured data.
-- Validate syntax and semantic correctness (e.g., day-of-month/month compatibility, Quartz DOM-DOW conflicts).
-- Generate English descriptions (e.g., `* * * * *` → "Runs at 00:00 on every day-of-month, every month, every day-of-week").
-- Check if a given timestamp matches the expression.
-
-The module is designed for reliability, with robust error handling for invalid inputs (e.g., `60 * * * *`, `ABC * * * *`, incorrect field counts) and efficient validation for use in scheduling applications.
+Cron-Describe-Perl is a Perl module for parsing and describing cron expressions in both standard (5 or 6 fields) and Quartz Scheduler (6 or 7 fields) formats. It provides a factory-based design with a shared base class (Cron::Describe::Base) and supports auto-detection of cron types, explicit constructors for Standard and Quartz classes, and human-readable descriptions via to_english.
 
 ## Features
-- **Standard and Quartz Support**: Handles both standard cron (5 fields) and Quartz cron (6 or 7 fields, with tokens like `L`, `W`, `#`, `?`).
-- **Syntax Validation**: Checks for valid field formats, ranges, and special tokens.
-- **Semantic Validation**: Ensures day-of-month/month compatibility, Quartz DOM-DOW rules, and year constraints (1970–2199).
-- **Human-Readable Descriptions**: Converts cron expressions into clear English (e.g., `*/5 * * * *` → "Runs at every 5 minutes on every hour, every day-of-month, every month, every day-of-week").
-- **Timestamp Matching**: Verifies if a given epoch timestamp matches the cron expression using `DateTime`.
-- **Robust Error Handling**: Gracefully handles malformed inputs (e.g., non-numeric fields, incorrect field counts).
-- **Extensible**: Ready for future features like `next()`/`previous()` for computing upcoming timestamps.
+- Auto-detection: Automatically identifies standard (5 fields: minute, hour, DOM, month, DOW; optional year) or Quartz (6 fields: seconds, minute, hour, DOM, month, DOW; optional year) cron expressions.
+- Validation: Ensures 5-field Quartz expressions are invalid and Quartz expressions include ? in either DOM or DOW.
+- Parsing: Supports patterns like single (e.g., 0), range (e.g., 1-5), step (e.g., 10/2), min-max/step (e.g., 10-15/2), */step (e.g., */2), and Quartz-specific patterns (L, W, #).
+- Human-readable Output: Generates English descriptions (e.g., Runs at 00:00, on day 1 of month, in every month, every day-of-week).
+- Debugging: Includes extensive debug logging for parsing, validation, and description generation.
 
 ## Installation
-
-### Prerequisites
-- Perl 5.10 or higher
-- Required modules:
-  - `DateTime`
-  - `DateTime::TimeZone`
-  - `Test::More` (for testing)
-
-### Using cpanm
-```bash
-cpanm .
-```
-
-### Manual Installation
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/cron-describe.git
-   cd cron-describe
-   ```
+   git clone https://github.com/your-repo/Cron-Describe-Perl.git
 2. Install dependencies:
-   ```bash
-   cpanm DateTime DateTime::TimeZone Test::More
-   ```
-3. Build and install:
-   ```bash
+   cpan Test::More JSON File::Slurp Data::Dumper DateTime DateTime::TimeZone Time::Moment
+3. Build and test:
    perl Makefile.PL
    make
-   make install
-   ```
-
-### Using Dist::Zilla
-If you’re contributing or testing:
-```bash
-dzil build
-dzil install
-dzil test --verbose
-```
+   make test
 
 ## Usage
+use Cron::Describe;
 
-### Basic Example
-```perl
-use Cron::Describe::Standard;
+# Auto-detect cron type
+my $cron = Cron::Describe->new(expression => '0 0 1 * *', debug => 1);
+print "Valid: ", $cron->is_valid, "\n";
+print "English: ", $cron->to_english, "\n";
 
-my $cron = Cron::Describe::Standard->new(expression => '* * * * *');
-print $cron->to_english; # Output: Runs at 00:00 on every day-of-month, every month, every day-of-week
-print $cron->is_valid ? "Valid\n" : "Invalid\n"; # Output: Valid
-```
+# Explicit Quartz constructor
+my $quartz = Cron::Describe::Quartz->new(expression => '0 0 0 * * ?', debug => 1);
+print "English: ", $quartz->to_english, "\n";
 
-### Quartz Example
-```perl
-use Cron::Describe::Quartz;
-
-my $cron = Cron::Describe::Quartz->new(expression => '*/5 * * * * ?');
-print $cron->to_english; # Output: Runs at every 5 seconds:00:00 on every day-of-month, every month, every day-of-week
-print $cron->is_valid ? "Valid\n" : "Invalid\n"; # Output: Valid
-```
-
-### Timestamp Matching
-```perl
-use Cron::Describe::Standard;
-use Time::Local;
-
-my $cron = Cron::Describe::Standard->new(expression => '0 0 1 * *');
-my $epoch = timelocal(0, 0, 0, 1, 0, 125); # 2025-01-01 00:00:00
-print $cron->is_match($epoch) ? "Matches\n" : "Does not match\n"; # Output: Matches
-```
-
-### Error Handling
-```perl
-use Cron::Describe::Standard;
-
-my $cron = Cron::Describe::Standard->new(expression => 'ABC * * * *');
-print $cron->is_valid ? "Valid\n" : "Invalid\n"; # Output: Invalid
-print join(", ", @{$cron->{errors}}); # Output: Invalid format: ABC for minute
-```
+## Recent Changes (October 3, 2025)
+- Fixed Compilation Error: Resolved syntax error in lib/Cron/Describe/Base.pm (line 231, unbalanced parentheses in is_valid), ensuring proper compilation.
+- Improved Parsing:
+  - Updated lib/Cron/Describe/Field.pm to correctly handle single values (0, 1), setting value, min_value, max_value, and step as strings to match test expectations.
+  - Added support for min-max/step (e.g., 10-15/2) and */step patterns to handle complex DOM patterns like 1-5,10-15/2.
+- Enhanced Tests:
+  - Updated t/basic_parsing.t to expect Cron::Describe::Standard for standard cron expressions (0 0 1 * *).
+  - Corrected t/data/basic_parsing.json to align with Field.pm output, ensuring pattern_type => 'single' for minute, hour, and seconds fields.
+- Improved Descriptions: Ensured to_english in Base.pm correctly handles list patterns (e.g., 1-5,10-15/2) and produces expected output (e.g., on days 1 to 5, every 2 days from 10 of month).
+- Debugging: Added comprehensive debug statements to Base.pm, Field.pm, DayOfMonth.pm, and DayOfWeek.pm to trace parsing, validation, and description generation.
 
 ## Testing
-The project includes a comprehensive test suite to ensure reliability:
-- `t/validate.t`: Tests standard cron expressions (19 subtests).
-- `t/validate_quartz.t`: Tests Quartz cron expressions (22 subtests).
+Run the test suite:
+prove -v -Ilib -It/lib t/basic_parsing.t t/quartz_tokens.t t/matching.t t/edge_cases.t
+Debug a specific test:
+perl -Ilib -It/lib -e 'use strict; use warnings; use Cron::Describe; use Data::Dumper; my $cron = Cron::Describe->new(expression => "0 0 1 * *", debug => 1); print Dumper($cron->{fields}); print "Valid: ", $cron->is_valid, "\n"; print "English: ", $cron->to_english, "\n";'
 
-Run tests with:
-```bash
-dzil test --verbose
-```
-
-Expected output:
-```
-All tests successful.
-Files=2, Tests=41, ...
-Result: PASS
-```
-
-The test suite covers:
-- Valid expressions (e.g., `* * * * *`, `*/5 * * * * ?`).
-- Invalid inputs (e.g., `60 * * * *`, `ABC * * * *`, `0 0 * * * * *`).
-- Semantic validation (e.g., `31 2 * *` for February).
-- Quartz-specific tokens (e.g., `L`, `W`, `#`, `?`).
-
-## Project Structure
-```
-cron-describe/
-├── lib/
-│   ├── Cron/
-│   │   ├── Describe.pm
-│   │   ├── Describe/
-│   │   │   ├── Field.pm
-│   │   │   ├── DayOfMonth.pm
-│   │   │   ├── DayOfWeek.pm
-│   │   │   ├── Standard.pm
-│   │   │   ├── Quartz.pm
-├── t/
-│   ├── validate.t
-│   ├── validate_quartz.t
-├── dist.ini
-├── README.md
-```
+## Known Issues
+- Remaining Test Failures: Tests in t/quartz_tokens.t (6 failures for patterns like L, W, #) may require further debugging after resolving t/basic_parsing.t issues.
+- Debug Output: Ensure debug => 1 is enabled to trace parsing issues in test outputs.
 
 ## Contributing
-Contributions are welcome! To contribute:
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/your-feature`).
-3. Commit changes (`git commit -am 'Add your feature'`).
-4. Run tests (`dzil test --verbose`).
-5. Push to the branch (`git push origin feature/your-feature`).
-6. Open a pull request.
-
-Please include tests for new features and ensure all 41 subtests pass.
-
-## Roadmap
-- Implement `next()` and `previous()` methods for computing upcoming/previous timestamps.
-- Enhance `to_english` with detailed error descriptions (e.g., “invalid minute ABC”).
-- Add support for more edge cases (e.g., empty fields, partial expressions).
-- Optimize for production by pruning debug attributes in error patterns.
+- Report issues or submit pull requests at https://github.com/your-repo/Cron-Describe-Perl.
+- Share test outputs with debug logs for faster resolution.
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Contact
-This module was written by Grok4 with guidance from [ngraham@cpan.org](mailto:ngraham@cpan.org). 
+MIT License. See LICENSE file for details.
