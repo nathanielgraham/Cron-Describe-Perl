@@ -1,0 +1,871 @@
+[
+  {
+    "description": "Last day of month",
+    "expression": "0 0 0 L * ?",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "last",
+        "offset": 0,
+        "is_special": 1,
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "unspecified",
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "matches": [
+      { "timestamp": "2025-10-31T00:00:00Z", "matches": 1 },
+      { "timestamp": "2025-10-30T00:00:00Z", "matches": 0 }
+    ],
+    "english": "Runs at 00:00:00, on last day of month, in every month, every day-of-week",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Nearest weekday to 15th",
+    "expression": "0 0 0 15W * ?",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "nearest_weekday",
+        "day": 15,
+        "is_special": 1,
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "unspecified",
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "matches": [
+      { "timestamp": "2025-10-15T00:00:00Z", "matches": 1 },
+      { "timestamp": "2025-10-14T00:00:00Z", "matches": 0 }
+    ],
+    "english": "Runs at 00:00:00, on nearest weekday to day 15 of month, in every month, every day-of-week",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "5th Monday",
+    "expression": "0 0 0 * * 1#5",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "nth",
+        "day": 1,
+        "nth": 5,
+        "is_special": 1,
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "english": "Runs at 00:00:00, every day of month, in every month, on the fifth Monday of month",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Last Monday of month",
+    "expression": "0 0 0 * * 1L",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "last_of_day",
+        "day": 1,
+        "is_special": 1,
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "matches": [
+      { "timestamp": "2025-10-27T00:00:00Z", "matches": 1 },
+      { "timestamp": "2025-10-20T00:00:00Z", "matches": 0 }
+    ],
+    "english": "Runs at 00:00:00, every day of month, in every month, on the last Monday of month",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Last weekday of month",
+    "expression": "0 0 0 LW * ?",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "last_weekday",
+        "offset": 0,
+        "is_special": 1,
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "unspecified",
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "english": "Runs at 00:00:00, on last weekday of month, in every month, every day-of-week",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Last day minus offset",
+    "expression": "0 0 0 L-5 * ?",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "last",
+        "offset": 5,
+        "is_special": 1,
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "unspecified",
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "english": "Runs at 00:00:00, 5 days before the last day of month, in every month, every day-of-week",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Last day minus 10 offset",
+    "expression": "0 0 0 L-10 * ?",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "last",
+        "offset": 10,
+        "is_special": 1,
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "unspecified",
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "english": "Runs at 00:00:00, 10 days before the last day of month, in every month, every day-of-week",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Nearest weekday to 1st",
+    "expression": "0 0 0 1W * ?",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "nearest_weekday",
+        "day": 1,
+        "is_special": 1,
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "unspecified",
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "english": "Runs at 00:00:00, on nearest weekday to day 1 of month, in every month, every day-of-week",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "First Sunday",
+    "expression": "0 0 0 * * 7#1",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "nth",
+        "day": 0,
+        "nth": 1,
+        "is_special": 1,
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "matches": [
+      { "timestamp": "2025-10-05T00:00:00Z", "matches": 1 },
+      { "timestamp": "2025-10-12T00:00:00Z", "matches": 0 }
+    ],
+    "english": "Runs at 00:00:00, every day of month, in every month, on the first Sunday of month",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Third Tuesday",
+    "expression": "0 0 0 * * 2#3",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "nth",
+        "day": 2,
+        "nth": 3,
+        "is_special": 1,
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "english": "Runs at 00:00:00, every day of month, in every month, on the third Tuesday of month",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "DOW list with names",
+    "expression": "0 0 0 ? * MON,WED,FRI",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "unspecified",
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "list",
+        "sub_patterns": [
+          {
+            "field_type": "dow",
+            "pattern_type": "single",
+            "value": 1
+          },
+          {
+            "field_type": "dow",
+            "pattern_type": "single",
+            "value": 3
+          },
+          {
+            "field_type": "dow",
+            "pattern_type": "single",
+            "value": 5
+          }
+        ],
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "english": "Runs at 00:00:00, every day of month, in every month, on Monday, Wednesday, Friday",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Valid nth day",
+    "expression": "0 0 0 ? * 1#5",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "unspecified",
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "nth",
+        "day": 1,
+        "nth": 5,
+        "is_special": 1,
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "english": "Runs at 00:00:00, every day of month, in every month, on the fifth Monday of month",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Nearest weekday to 7th (weekend test)",
+    "expression": "0 0 0 7W * ?",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "nearest_weekday",
+        "day": 7,
+        "is_special": 1,
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "unspecified",
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "matches": [
+      { "timestamp": "2025-10-06T00:00:00Z", "matches": 1 },
+      { "timestamp": "2025-10-07T00:00:00Z", "matches": 0 }
+    ],
+    "english": "Runs at 00:00:00, on nearest weekday to day 7 of month, in every month, every day-of-week",
+    "expected_class": "Cron::Describe::Quartz"
+  },
+  {
+    "description": "Nearest weekday to 8th (weekend test)",
+    "expression": "0 0 0 8W * ?",
+    "fields": [
+      {
+        "field_type": "seconds",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "minute",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 59
+      },
+      {
+        "field_type": "hour",
+        "pattern_type": "single",
+        "value": 0,
+        "min_value": 0,
+        "max_value": 0,
+        "step": 1,
+        "min": 0,
+        "max": 23
+      },
+      {
+        "field_type": "dom",
+        "pattern_type": "nearest_weekday",
+        "day": 8,
+        "is_special": 1,
+        "min": 1,
+        "max": 31
+      },
+      {
+        "field_type": "month",
+        "pattern_type": "wildcard",
+        "min": 1,
+        "max": 12
+      },
+      {
+        "field_type": "dow",
+        "pattern_type": "unspecified",
+        "min": 0,
+        "max": 7
+      }
+    ],
+    "is_valid": 1,
+    "matches": [
+      { "timestamp": "2025-10-08T00:00:00Z", "matches": 1 },
+      { "timestamp": "2025-10-09T00:00:00Z", "matches": 0 }
+    ],
+    "english": "Runs at 00:00:00, on nearest weekday to day 8 of month, in every month, every day-of-week",
+    "expected_class": "Cron::Describe::Quartz"
+  }
+]

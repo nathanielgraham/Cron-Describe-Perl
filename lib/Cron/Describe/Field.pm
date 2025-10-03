@@ -1,72 +1,135 @@
 package Cron::Describe::Field;
 use strict;
 use warnings;
+use Carp qw(croak);
 
 sub new {
     my ($class, %args) = @_;
-    my $self = bless \%args, $class;
-    print STDERR "DEBUG: Field.pm loaded (mtime: " . (stat(__FILE__))[9] . ") for type $args{field_type}\n";
-    $self->{parent} = $args{parent} if $args{parent}; # Store parent for date calculations
+    my $self = {
+        field_type => $args{field_type} || croak "field_type is required",
+        value => $args{value} // croak "value is required",
+        range => $args{range} || [0, 59],
+        pattern_type => 'error',
+        min => $args{range}->[0],
+        max => $args{range}->[1]
+    };
+    print "DEBUG: Field.pm new: field_type=$self->{field_type}, value=", (defined $self->{value} ? "'$self->{value}'" : 'undef'), ", range=[$self->{min},$self->{max}]\n" if $Cron::Describe::Quartz::DEBUG;
+    bless $self, $class;
+    $self->parse($self->{value});
     return $self;
 }
 
-sub to_english {
-    my ($self, %args) = @_;
-    my $type = $self->{field_type};
-    my $pattern = $self->{pattern_type};
-    my $plural = $type =~ /^(seconds|minute)$/ ? 's' : '';
-    my %month_names = (1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December');
-    if ($pattern eq 'single') {
-        if ($type =~ /^(seconds|minute|hour)$/) {
-            return sprintf("%02d", $self->{value});
-        } elsif ($type eq 'month' && exists $month_names{$self->{value}}) {
-            return $month_names{$self->{value}};
-        }
-        return $self->{value};
-    } elsif ($pattern eq 'wildcard') {
-        return "every $type$plural";
-    } elsif ($pattern eq 'unspecified') {
-        return "any $type$plural";
-    } elsif ($pattern eq 'range') {
-        if ($type eq 'month') {
-            return "every $type$plural from $month_names{$self->{min_value}} to $month_names{$self->{max_value}}" . ($self->{step} > 1 ? " stepping by $self->{step}" : "");
-        }
-        return "every $type$plural from $self->{min_value} to $self->{max_value}" . ($self->{step} > 1 ? " stepping by $self->{step}" : "");
-    } elsif ($pattern eq 'step') {
-        return "every $self->{step} $type$plural starting at $self->{start_value}";
-    } elsif ($pattern eq 'list') {
-        my @values = map { $_->{pattern_type} eq 'single' ? ($type eq 'month' && exists $month_names{$_->{value}} ? $month_names{$_->{value}} : $_->{value}) : "$_->{min_value}-$_->{max_value}" } @{$self->{sub_patterns}};
-        return join(", ", @values) . " $type$plural";
+sub parse {
+    my ($self, $value) = @_;
+    print "DEBUG: Parsing field $self->{field_type} with value ", (defined $value ? "'$value'" : 'undef'), "\n" if $Cron::Describe::Quartz::DEBUG;
+
+    if (!defined $value || $value eq '') {
+        $self->{pattern_type} = 'error';
+        print "DEBUG: No pattern matched for $self->{field_type} with undefined or empty value, marking as error\n" if $Cron::Describe::Quartz::DEBUG;
+        return;
     }
-    return "invalid $type$plural";
+    if ($value eq '*') {
+        $self->{pattern_type} = 'wildcard';
+        print "DEBUG: Matched wildcard for $self->{field_type}, pattern_type=wildcard\n" if $Cron::Describe::Quartz::DEBUG;
+        return;
+    }
+    if ($value =~ /^(\d+)$/) {
+        my $num = $1;
+        print "DEBUG: Testing single pattern for $self->{field_type}, value='$num', range=[$self->{min},$self->{max}]\n" if $Cron::Describe::Quartz::DEBUG;
+        if ($num >= $self->{min} && $num <= $self->{max}) {
+            $self->{pattern_type} = 'single';
+            $self->{value} = "$num";
+            $self->{min_value} = "$num";
+            $self->{max_value} = "$num";
+            $self->{step} = "1";
+            print "DEBUG: Matched single for $self->{field_type}, value=$self->{value}, min_value=$self->{min_value}, max_value=$self->{max_value}, step=$self->{step}\n" if $Cron::Describe::Quartz::DEBUG;
+            return;
+        } else {
+            print "DEBUG: Single value '$num' out of range [$self->{min},$self->{max}] for $self->{field_type}\n" if $Cron::Describe::Quartz::DEBUG;
+        }
+    }
+    if ($value =~ /^(\d+)-(\d+)$/) {
+        my ($min, $max) = ($1 + 0, $2 + 0);
+        print "DEBUG: Testing range pattern for $self->{field_type}, min=$min, max=$max, range=[$self->{min},$self->{max}]\n" if $Cron::Describe::Quartz::DEBUG;
+        if ($min >= $self->{min} && $max <= $self->{max} && $min <= $max) {
+            $self->{pattern_type} = 'range';
+            $self->{min_value} = "$min";
+            $self->{max_value} = "$max";
+            print "DEBUG: Matched range for $self->{field_type}, min_value=$self->{min_value}, max_value=$self->{max_value}\n" if $Cron::Describe::Quartz::DEBUG;
+            return;
+        } else {
+            print "DEBUG: Range min=$min, max=$max invalid for $self->{field_type}, range=[$self->{min},$self->{max}]\n" if $Cron::Describe::Quartz::DEBUG;
+        }
+    }
+    if ($value =~ /^(\d+)\/(\d+)$/) {
+        my ($start, $step) = ($1 + 0, $2 + 0);
+        print "DEBUG: Testing step pattern for $self->{field_type}, start=$start, step=$step, range=[$self->{min},$self->{max}]\n" if $Cron::Describe::Quartz::DEBUG;
+        if ($start >= $self->{min} && $start <= $self->{max} && $step > 0) {
+            $self->{pattern_type} = 'step';
+            $self->{start_value} = "$start";
+            $self->{step} = "$step";
+            print "DEBUG: Matched step for $self->{field_type}, start_value=$self->{start_value}, step=$self->{step}\n" if $Cron::Describe::Quartz::DEBUG;
+            return;
+        } else {
+            print "DEBUG: Step start=$start, step=$step invalid for $self->{field_type}, range=[$self->{min},$self->{max}]\n" if $Cron::Describe::Quartz::DEBUG;
+        }
+    }
+    if ($value =~ /^\*\/(\d+)$/) {
+        my $step = $1 + 0;
+        print "DEBUG: Testing wildcard/step pattern for $self->{field_type}, step=$step\n" if $Cron::Describe::Quartz::DEBUG;
+        if ($step > 0) {
+            $self->{pattern_type} = 'step';
+            $self->{start_value} = "$self->{min}";
+            $self->{step} = "$step";
+            print "DEBUG: Matched wildcard/step for $self->{field_type}, start_value=$self->{start_value}, step=$self->{step}\n" if $Cron::Describe::Quartz::DEBUG;
+            return;
+        } else {
+            print "DEBUG: Invalid wildcard/step step=$step for $self->{field_type}\n" if $Cron::Describe::Quartz::DEBUG;
+        }
+    }
+    if ($value =~ /^(\d+)-(\d+)\/(\d+)$/) {
+        my ($min, $max, $step) = ($1 + 0, $2 + 0, $3 + 0);
+        print "DEBUG: Testing range/step pattern for $self->{field_type}, min=$min, max=$max, step=$step, range=[$self->{min},$self->{max}]\n" if $Cron::Describe::Quartz::DEBUG;
+        if ($min >= $self->{min} && $max <= $self->{max} && $min <= $max && $step > 0) {
+            $self->{pattern_type} = 'step';
+            $self->{start_value} = "$min";
+            $self->{max_value} = "$max";
+            $self->{step} = "$step";
+            print "DEBUG: Matched range/step for $self->{field_type}, start_value=$self->{start_value}, max_value=$self->{max_value}, step=$self->{step}\n" if $Cron::Describe::Quartz::DEBUG;
+            return;
+        } else {
+            print "DEBUG: Invalid range/step min=$min, max=$max, step=$step for $self->{field_type}, range=[$self->{min},$self->{max}]\n" if $Cron::Describe::Quartz::DEBUG;
+        }
+    }
+    $self->{pattern_type} = 'error';
+    print "DEBUG: No pattern matched for $self->{field_type} with value '$value', marking as error\n" if $Cron::Describe::Quartz::DEBUG;
 }
 
-sub matches {
-    my ($self, $time_parts) = @_;
-    my $type = $self->{field_type};
-    my $val = $time_parts->{$type};
-    my $pattern = $self->{pattern_type};
-    print STDERR "DEBUG: Matching $type value $val against pattern $pattern\n" if $self->{parent}{debug};
-    if ($pattern eq 'single') {
-        return $val == $self->{value};
-    } elsif ($pattern eq 'wildcard' || $pattern eq 'unspecified') {
+sub is_match {
+    my ($self, $value) = @_;
+    print "DEBUG: is_match for $self->{field_type}, pattern_type=", ($self->{pattern_type} // 'undef'), ", testing value=$value\n" if $Cron::Describe::Quartz::DEBUG;
+    return 0 if ($self->{pattern_type} || '') eq 'error';
+    if (($self->{pattern_type} || '') eq 'wildcard') {
+        print "DEBUG: Wildcard match for $self->{field_type}, value=$value, returning 1\n" if $Cron::Describe::Quartz::DEBUG;
         return 1;
-    } elsif ($pattern eq 'range') {
-        return $val >= $self->{min_value} && $val <= $self->{max_value} && ($val - $self->{min_value}) % $self->{step} == 0;
-    } elsif ($pattern eq 'step') {
-        return $val >= $self->{start_value} && ($val - $self->{start_value}) % $self->{step} == 0;
-    } elsif ($pattern eq 'list') {
-        for my $sub (@{$self->{sub_patterns}}) {
-            if ($sub->{pattern_type} eq 'single') {
-                return 1 if $val == $sub->{value};
-            } elsif ($sub->{pattern_type} eq 'range') {
-                return 1 if $val >= $sub->{min_value} && $val <= $sub->{max_value} && ($val - $sub->{min_value}) % $sub->{step} == 0;
-            } elsif ($sub->{pattern_type} eq 'step') {
-                return 1 if $val >= $sub->{start_value} && ($val - $sub->{start_value}) % $sub->{step} == 0;
-            }
-        }
-        return 0;
     }
+    if (($self->{pattern_type} || '') eq 'single') {
+        my $result = $value == ($self->{value} // 0);
+        print "DEBUG: Single match for $self->{field_type}, value=$value, expected=$self->{value}, result=$result\n" if $Cron::Describe::Quartz::DEBUG;
+        return $result;
+    }
+    if (($self->{pattern_type} || '') eq 'range') {
+        my $result = $value >= ($self->{min_value} // 0) && $value <= ($self->{max_value} // 0);
+        print "DEBUG: Range match for $self->{field_type}, value=$value, range=[$self->{min_value},$self->{max_value}], result=$result\n" if $Cron::Describe::Quartz::DEBUG;
+        return $result;
+    }
+    if (($self->{pattern_type} || '') eq 'step') {
+        my $max_check = defined $self->{max_value} ? $value <= ($self->{max_value} // $self->{max}) : 1;
+        my $result = ($value >= ($self->{start_value} // 0)) && $max_check && (($value - ($self->{start_value} // 0)) % ($self->{step} // 1) == 0);
+        print "DEBUG: Step match for $self->{field_type}, value=$value, start=$self->{start_value}, step=$self->{step}, max=", (defined $self->{max_value} ? $self->{max_value} : 'none'), ", result=$result\n" if $Cron::Describe::Quartz::DEBUG;
+        return $result;
+    }
+    print "DEBUG: No match for $self->{field_type}, returning 0\n" if $Cron::Describe::Quartz::DEBUG;
     return 0;
 }
 
