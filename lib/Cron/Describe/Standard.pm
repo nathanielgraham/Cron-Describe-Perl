@@ -1,7 +1,7 @@
 package Cron::Describe::Standard;
 use strict;
 use warnings;
-use base 'Cron::Describe';
+use parent 'Cron::Describe';
 sub new {
     my ($class, %args) = @_;
     print STDERR "DEBUG: Standard.pm loaded (mtime: " . (stat(__FILE__))[9] . ")\n";
