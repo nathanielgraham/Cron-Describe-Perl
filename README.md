@@ -1,4 +1,3 @@
-'README.md' => <<'END_README',
 # Cron-Describe-Perl
 Cron-Describe-Perl is a Perl library for parsing, validating, and describing cron expressions in both standard and Quartz Scheduler formats. This project provides a robust class hierarchy to accurately represent cron expressions, validate their correctness, and check if specific timestamps match the expression. The current implementation focuses on reliable parsing, validation, and matching, with plans to enhance human-readable descriptions (`to_english`) in the future.
 
@@ -93,4 +92,3 @@ Contributions are welcome! Please submit issues or pull requests to the [GitHub 
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-END_README
