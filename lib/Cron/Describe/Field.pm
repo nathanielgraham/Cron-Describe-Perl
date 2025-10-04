@@ -16,7 +16,6 @@ sub new {
         max          => $args{range}[1],
         value        => $args{value},
         pattern_type => undef,
-        step         => 1,  # Default for test compatibility
     }, $class;
     print "DEBUG: Creating Field object for $args{field_type}, range=[$args{range}[0],$args{range}[1]], value=", (defined $args{value} ? "'$args{value}'" : 'undef'), "\n" if $Cron::Describe::Quartz::DEBUG;
     $self->parse($args{value}) if defined $args{value};
@@ -38,13 +37,28 @@ sub parse {
         $self->{pattern_type} = 'wildcard';
         $self->{min_value} = $self->{min};
         $self->{max_value} = $self->{max};
-        $self->{step} = 1;
+        if ($self->_step_policy('wildcard')) {
+            $self->{step} = 1;
+        }
+        delete $self->{value};
         print "DEBUG: Matched wildcard for $self->{field_type}\n" if $Cron::Describe::Quartz::DEBUG;
         return;
     }
     elsif ($value eq '?') {
         $self->{pattern_type} = 'unspecified';
+        $self->{min_value} = $self->{min};
+        $self->{max_value} = $self->{max};
+        if ($self->_step_policy('unspecified')) {
+            $self->{step} = 1;
+        }
+        delete $self->{value};
         print "DEBUG: Matched unspecified for $self->{field_type}\n" if $Cron::Describe::Quartz::DEBUG;
+        return;
+    }
+
+    my $special_result = $self->_parse_special($value);
+    if ($special_result) {
+        %$self = (%$self, %$special_result);
         return;
     }
 
@@ -53,7 +67,7 @@ sub parse {
         my @sub_patterns;
         for my $part (@parts) {
             print "DEBUG: Parsing list part '$part' for $self->{field_type}\n" if $Cron::Describe::Quartz::DEBUG;
-            my $sub = $self->parse_item($part);
+            my $sub = $self->parse_item($part, 1);
             if ($sub->{pattern_type} eq 'error') {
                 $self->{pattern_type} = 'error';
                 $self->{error} = $sub->{error};
@@ -64,6 +78,12 @@ sub parse {
         }
         $self->{pattern_type} = 'list';
         $self->{sub_patterns} = \@sub_patterns;
+        $self->{min_value} = $self->{min};
+        $self->{max_value} = $self->{max};
+        if ($self->_step_policy('list')) {
+            $self->{step} = 1;
+        }
+        delete $self->{value};
         print "DEBUG: Matched list for $self->{field_type}, sub_patterns count=", scalar(@sub_patterns), "\n" if $Cron::Describe::Quartz::DEBUG;
         return;
     }
@@ -78,16 +98,28 @@ sub parse {
     %$self = (%$self, %$result);
 }
 
+sub _parse_special {
+    my ($self, $value) = @_;
+    # Hook for field-specific patterns (e.g., L, LW, #), to be overridden by derived classes
+    return undef;
+}
+
+sub _step_policy {
+    my ($self, $pattern_type) = @_;
+    # Default policy: include step for single, range, list; exclude for wildcard, unspecified
+    return $pattern_type eq 'single' || $pattern_type eq 'range' || $pattern_type eq 'list';
+}
+
 sub parse_item {
-    my ($self, $item) = @_;
-    my $result = { step => 1, min => $self->{min}, max => $self->{max} };
+    my ($self, $item, $is_sub_pattern) = @_;
+    my $result = {};
 
     if ($item =~ /^(.+)\/(\d+)$/) {
         my ($base, $step) = ($1, $2);
         if ($step <= 0) {
             return { pattern_type => 'error', error => "Step must be >0 in $self->{field_type}" };
         }
-        my $base_parsed = $self->parse_base($base);
+        my $base_parsed = $self->parse_base($base, $is_sub_pattern);
         if ($base_parsed->{pattern_type} eq 'error') {
             return $base_parsed;
         }
@@ -100,12 +132,12 @@ sub parse_item {
         print "DEBUG: Matched step for $self->{field_type}, base_type=$base_parsed->{pattern_type}, step=$step\n" if $Cron::Describe::Quartz::DEBUG;
         return $result;
     }
-    return $self->parse_base($item);
+    return $self->parse_base($item, $is_sub_pattern);
 }
 
 sub parse_base {
-    my ($self, $base) = @_;
-    my $result = { step => 1, min => $self->{min}, max => $self->{max} };
+    my ($self, $base, $is_sub_pattern) = @_;
+    my $result = {};
 
     if ($base =~ /^(\d+)-(\d+)$/) {
         my ($min_val, $max_val) = ($1 + 0, $2 + 0);
@@ -117,6 +149,9 @@ sub parse_base {
         $result->{max} = $max_val;
         $result->{min_value} = $min_val;
         $result->{max_value} = $max_val;
+        if ($self->_step_policy('range')) {
+            $result->{step} = 1;
+        }
         print "DEBUG: Matched range for $self->{field_type}, min=$min_val, max=$max_val\n" if $Cron::Describe::Quartz::DEBUG;
     }
     elsif ($base =~ /^\d+$/) {
@@ -128,6 +163,9 @@ sub parse_base {
         $result->{value} = $val;
         $result->{min_value} = $val;
         $result->{max_value} = $val;
+        if ($self->_step_policy('single')) {
+            $result->{step} = 1;
+        }
         print "DEBUG: Matched single for $self->{field_type}, value=$val\n" if $Cron::Describe::Quartz::DEBUG;
     }
     else {
@@ -142,36 +180,38 @@ sub to_english {
     print "DEBUG: to_english for $self->{field_type}, pattern_type=$type\n" if $Cron::Describe::Quartz::DEBUG;
 
     if ($type eq 'wildcard') {
-        return $self->{field_type} eq 'dom' ? "every day of month" : 
+        return $self->{field_type} eq 'month' ? "every month" :
+               $self->{field_type} eq 'dom' ? "every day of month" :
                $self->{field_type} eq 'dow' ? "every day-of-week" :
-               $self->{field_type} eq 'month' ? "every month" :
                "every $self->{field_type}";
     }
     elsif ($type eq 'unspecified') {
-        return $self->{field_type} eq 'dow' ? "any day-of-week" : "any $self->{field_type}";
+        return $self->{field_type} eq 'dow' ? "any day-of-week" :
+               $self->{field_type} eq 'dom' ? "any day of month" :
+               "any $self->{field_type}";
     }
     elsif ($type eq 'single') {
-        return $self->{field_type} eq 'dom' ? "on day $self->{value} of month" :
-               $self->{field_type} eq 'month' ? "in month $self->{value}" :
+        return $self->{field_type} eq 'month' ? "month $self->{value}" :
+               $self->{field_type} eq 'dom' ? "on day $self->{value} of month" :
                "at $self->{field_type} $self->{value}";
     }
     elsif ($type eq 'range') {
-        return $self->{field_type} eq 'dom' ? "on days $self->{min} to $self->{max} of month" :
-               $self->{field_type} eq 'month' ? "in months $self->{min} to $self->{max}" :
+        return $self->{field_type} eq 'month' ? "months $self->{min} to $self->{max}" :
+               $self->{field_type} eq 'dom' ? "on days $self->{min} to $self->{max} of month" :
                "from $self->{min} to $self->{max} $self->{field_type}";
     }
     elsif ($type eq 'step') {
         my $base_desc = $self->{base}{pattern_type} eq 'range'
             ? "from $self->{base}{min} to $self->{base}{max}"
             : "every $self->{field_type}";
-        return $self->{field_type} eq 'dom' ? "every $self->{step} days $base_desc of month" :
-               $self->{field_type} eq 'month' ? "every $self->{step} months $base_desc" :
+        return $self->{field_type} eq 'month' ? "every $self->{step} months $base_desc" :
+               $self->{field_type} eq 'dom' ? "every $self->{step} days $base_desc of month" :
                "every $self->{step} $self->{field_type} $base_desc";
     }
     elsif ($type eq 'list') {
         my @descs = map { $self->sub_to_english($_) } @{$self->{sub_patterns}};
-        return $self->{field_type} eq 'dom' ? "on " . join(", ", @descs) . " of month" :
-               $self->{field_type} eq 'dow' ? "on " . join(", ", @descs) :
+        return $self->{field_type} eq 'month' ? join(", ", @descs) :
+               $self->{field_type} eq 'dom' ? "on " . join(", ", @descs) . " of month" :
                join(", ", @descs);
     }
     return "invalid $self->{field_type}";
@@ -180,22 +220,22 @@ sub to_english {
 sub sub_to_english {
     my ($self, $sub) = @_;
     if ($sub->{pattern_type} eq 'range') {
-        return $self->{field_type} eq 'dom' ? "days $sub->{min} to $sub->{max}" :
-               $self->{field_type} eq 'month' ? "months $sub->{min} to $sub->{max}" :
+        return $self->{field_type} eq 'month' ? "months $sub->{min} to $sub->{max}" :
+               $self->{field_type} eq 'dom' ? "days $sub->{min} to $sub->{max}" :
                "from $sub->{min} to $sub->{max} $self->{field_type}";
     }
     elsif ($sub->{pattern_type} eq 'step') {
         my $base_desc = $sub->{base}{pattern_type} eq 'range'
             ? "from $sub->{base}{min} to $sub->{base}{max}"
             : "every $self->{field_type}";
-        return $self->{field_type} eq 'dom' ? "every $sub->{step} days $base_desc" :
-               $self->{field_type} eq 'month' ? "every $sub->{step} months $base_desc" :
+        return $self->{field_type} eq 'month' ? "every $sub->{step} months $base_desc" :
+               $self->{field_type} eq 'dom' ? "every $sub->{step} days $base_desc" :
                "every $sub->{step} $self->{field_type} $base_desc";
     }
     elsif ($sub->{pattern_type} eq 'single') {
-        return $self->{field_type} eq 'dom' ? "day $sub->{value}" :
-               $self->{field_type} eq 'month' ? "month $sub->{value}" :
-               "at $self->{field_type} $sub->{value}";
+        return $self->{field_type} eq 'month' ? "month $sub->{value}" :
+               $self->{field_type} eq 'dom' ? "day $sub->{value}" :
+               "at $sub->{value} $self->{field_type}";
     }
     return "invalid $self->{field_type}";
 }
@@ -240,7 +280,7 @@ sub _sub_match {
     }
     elsif ($sub->{pattern_type} eq 'step') {
         my $start = $sub->{base}{min} // $self->{min};
-        return 0 unless $value >= $start && $value <= $sub->{max};
+        return 0 unless $value >= $start && $value <= $self->{max};
         return ($value - $start) % $sub->{step} == 0;
     }
     return 0;

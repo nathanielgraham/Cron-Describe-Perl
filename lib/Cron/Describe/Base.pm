@@ -149,38 +149,51 @@ sub to_english {
     my ($self) = @_;
     my @parts;
    
-    my $field_offset = $self->{type} eq 'quartz' ? 0 : 1;
-    my $seconds = $self->{type} eq 'quartz' ? $self->{fields}->[0] : undef;
+    my $is_quartz = $self->{type} eq 'quartz';
+    my $field_offset = 0;
+    my $seconds = $is_quartz ? $self->{fields}->[0] : undef;
     my $minutes = $self->{fields}->[$field_offset];
     my $hours = $self->{fields}->[$field_offset + 1];
     my $dom = $self->{fields}->[$field_offset + 2];
     my $month = $self->{fields}->[$field_offset + 3];
     my $dow = $self->{fields}->[$field_offset + 4];
-    my $year = @{$self->{fields}} > ($self->{type} eq 'quartz' ? 6 : 5) ? $self->{fields}->[$self->{type} eq 'quartz' ? 6 : 5] : undef;
+    my $year = @{$self->{fields}} > ($is_quartz ? 6 : 5) ? $self->{fields}->[$is_quartz ? 6 : 5] : undef;
    
     print "DEBUG: to_english: type=$self->{type}, field_offset=$field_offset, field_count=", scalar(@{$self->{fields}}), "\n" if $self->{debug};
    
     # Build time part
     my $time_part = "";
-    if ($self->{type} eq 'quartz') {
-        $time_part = sprintf("%02d", ($seconds->{value} // 0)) if ($seconds && ($seconds->{pattern_type} // '') eq 'single');
-        $time_part ||= "00";
-        $time_part .= ":";
+    if ($is_quartz) {
+        my $sec_val = ($seconds && ($seconds->{pattern_type} // '') eq 'single' && defined $seconds->{value}) ? $seconds->{value} : 0;
+        my $min_val = ($minutes && ($minutes->{pattern_type} // '') eq 'single' && defined $minutes->{value}) ? $minutes->{value} : 0;
+        my $hour_val = ($hours && ($hours->{pattern_type} // '') eq 'single' && defined $hours->{value}) ? $hours->{value} : 0;
+        if ($sec_val == 0 && $min_val == 0 && $hour_val == 0) {
+            $time_part = "00:00:00";
+        } else {
+            $time_part = sprintf("%02d:%02d:%02d", $sec_val, $min_val, $hour_val);
+        }
+    } else {
+        my $min_val = ($minutes && ($minutes->{pattern_type} // '') eq 'single' && defined $minutes->{value}) ? $minutes->{value} : 0;
+        my $hour_val = ($hours && ($hours->{pattern_type} // '') eq 'single' && defined $hours->{value}) ? $hours->{value} : 0;
+        if ($min_val == 0 && $hour_val == 0) {
+            $time_part = "00:00";
+        } else {
+            $time_part = sprintf("%02d:%02d", $min_val, $hour_val);
+        }
     }
-    $time_part .= sprintf("%02d", ($minutes->{value} // 0)) if ($minutes && ($minutes->{pattern_type} // '') eq 'single');
-    $time_part ||= "";
-    $time_part .= sprintf(":%02d", ($hours->{value} // 0)) if ($hours && ($hours->{pattern_type} // '') eq 'single');
-    $time_part ||= $self->{type} eq 'quartz' ? "00:00:00" : "00:00";
     push @parts, "at $time_part";
    
     # Delegate to field-specific to_english
     my $dom_desc = $dom->to_english;
-    push @parts, $dom_desc =~ /invalid/ ? "every day of month" : $dom_desc if ($dom->{pattern_type} // '') ne 'unspecified';
+    push @parts, $dom_desc =~ /invalid/ ? "every day of month" : $dom_desc;
     my $month_desc = $month->to_english;
-    push @parts, $month_desc =~ /invalid/ ? "every month" : "in $month_desc";
+    push @parts, $month_desc =~ /invalid/ ? "in every month" : "in $month_desc";
     my $dow_desc = $dow->to_english;
-    push @parts, $dow_desc =~ /invalid/ ? "every day-of-week" : $dow_desc if ($dow->{pattern_type} // '') ne 'unspecified';
-    push @parts, $year->to_english if $year && ($year->{pattern_type} // '') ne 'error';
+    push @parts, $dow_desc =~ /invalid/ ? "every day-of-week" : $dow_desc;
+    if ($year && ($year->{pattern_type} // '') ne 'error') {
+        my $year_desc = $year->to_english;
+        push @parts, $year_desc =~ /invalid/ ? "every year" : "in $year_desc";
+    }
    
     my $result = "Runs " . join(", ", grep { $_ } @parts);
     print "DEBUG: to_english: final result='$result'\n" if $self->{debug};

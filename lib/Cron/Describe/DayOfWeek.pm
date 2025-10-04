@@ -39,6 +39,7 @@ sub parse {
         $self->{min_value} = $self->{min};
         $self->{max_value} = $self->{max};
         $self->{step} = 1;
+        delete $self->{value};  # Remove value for wildcard/unspecified
         print "DEBUG: Matched ", ($value eq '?' ? 'unspecified' : 'wildcard'), " for dow\n" if $Cron::Describe::Quartz::DEBUG;
         return;
     }
@@ -49,6 +50,9 @@ sub parse {
             $self->{pattern_type} = 'nth';
             $self->{day} = $day;
             $self->{nth} = $nth;
+            $self->{min_value} = $self->{min};
+            $self->{max_value} = $self->{max};
+            delete $self->{value};  # Remove value
             print "DEBUG: Matched nth for dow, day=$day, nth=$nth\n" if $Cron::Describe::Quartz::DEBUG;
             return;
         }
@@ -59,12 +63,20 @@ sub parse {
         if ($day >= 0 && $day <= 7) {
             $self->{pattern_type} = 'last_of_day';
             $self->{day} = $day;
+            $self->{min_value} = $self->{min};
+            $self->{max_value} = $self->{max};
+            delete $self->{value};  # Remove value
             print "DEBUG: Matched last_of_day for dow, day=$day\n" if $Cron::Describe::Quartz::DEBUG;
             return;
         }
     }
 
     $self->SUPER::parse($value);
+    if ($self->{pattern_type} eq 'list') {
+        $self->{min_value} = $self->{min};
+        $self->{max_value} = $self->{max};
+        delete $self->{value};  # Remove value for list
+    }
 }
 
 sub to_english {
@@ -83,7 +95,44 @@ sub to_english {
     elsif ($type eq 'single') {
         return "on $dow_names{$self->{value} // 0}";
     }
-    return $self->SUPER::to_english;
+    elsif ($type eq 'wildcard') {
+        return "every day-of-week";
+    }
+    elsif ($type eq 'unspecified') {
+        return "any day-of-week";
+    }
+    elsif ($type eq 'range') {
+        return "on days $self->{min} to $self->{max} of week";
+    }
+    elsif ($type eq 'step') {
+        my $base_desc = $self->{base}{pattern_type} eq 'range'
+            ? "from $self->{base}{min} to $self->{base}{max}"
+            : "every day";
+        return "every $self->{step} days $base_desc of week";
+    }
+    elsif ($type eq 'list') {
+        my @descs = map { $self->sub_to_english($_) } @{$self->{sub_patterns}};
+        return "on " . join(", ", @descs);
+    }
+    return "invalid day-of-week";
+}
+
+sub sub_to_english {
+    my ($self, $sub) = @_;
+    my %dow_names = (0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday');
+    if ($sub->{pattern_type} eq 'range') {
+        return "days $sub->{min} to $sub->{max} of week";
+    }
+    elsif ($sub->{pattern_type} eq 'step') {
+        my $base_desc = $sub->{base}{pattern_type} eq 'range'
+            ? "from $sub->{base}{min} to $sub->{base}{max}"
+            : "every day";
+        return "every $sub->{step} days $base_desc";
+    }
+    elsif ($sub->{pattern_type} eq 'single') {
+        return "$dow_names{$sub->{value} // 0}";
+    }
+    return "invalid day-of-week";
 }
 
 sub is_match {

@@ -7,6 +7,7 @@ use File::Slurp;
 use Data::Dumper;
 use Test::CronPatterns;
 use Cron::Describe;
+use Cron::Describe::Quartz;
 
 plan tests => 4;  # Four subtests: Every day, Days 1-5, Standard cron, Rejects
 
