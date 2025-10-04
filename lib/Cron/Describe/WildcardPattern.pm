@@ -5,12 +5,13 @@ use warnings;
 use parent 'Cron::Describe::Pattern';
 
 sub new {
-    my ($class, $value, $min, $max) = @_;
+    my ($class, $value, $min, $max, $field_type) = @_;
     my $self = bless {
         pattern_type => 'wildcard',
         min_value => $min,
         max_value => $max,
         raw_value => $value,
+        field_type   => $field_type,
         errors => [],
     }, $class;
 

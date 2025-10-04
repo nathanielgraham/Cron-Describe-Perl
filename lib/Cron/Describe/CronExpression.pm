@@ -1,175 +1,128 @@
-# File: lib/Cron/Describe/CronExpression.pm
 package Cron::Describe::CronExpression;
 use strict;
 use warnings;
-use Carp qw(croak);
-use Time::Moment;
+use Carp;
+use Cron::Describe::SinglePattern;
+use Cron::Describe::WildcardPattern;
+use Cron::Describe::UnspecifiedPattern;
+use Cron::Describe::RangePattern;
+use Cron::Describe::StepPattern;
+use Cron::Describe::ListPattern;
+use Cron::Describe::DayOfMonthPattern;
+use Cron::Describe::DayOfWeekPattern;
 
 sub new {
-    my ($class, $expression, $type) = @_;
-    croak "Expression is required" unless defined $expression;
+    my ($class, $expression) = @_;
+    croak "Expression required" unless defined $expression;
 
-    my $self = bless {
-        expression => $expression,
-        type => $type,
-        fields => {},
-        errors => [],
-    }, $class;
+    my @parts = split /\s+/, $expression;
+    my $type = (@parts == 5) ? 'standard' : (@parts == 6 || @parts == 7) ? 'quartz' : croak "Invalid field count: " . @parts;
 
-    $self->_parse();
-    return $self;
-}
+    my @field_types = $type eq 'quartz'
+        ? qw(second minute hour day_of_month month day_of_week year)
+        : qw(minute hour day_of_month month day_of_week);
 
-sub _parse {
-    my ($self) = @_;
-    my $expression = $self->{expression};
-    $expression =~ s/^\s+|\s+$//g;
-
-    my @fields = split /\s+/, $expression;
-    my @standard_fields = qw(minute hour dom month dow year);
-    my @quartz_fields = qw(seconds minute hour dom month dow year);
-
-    # Auto-detect type if not provided
-    unless ($self->{type}) {
-        my $field_count = scalar @fields;
-        my $has_question_mark = grep { $_ eq '?' } @fields;
-        if ($field_count == 5 || ($field_count == 6 && !$has_question_mark)) {
-            $self->{type} = 'standard';
-        } elsif ($field_count == 6 || $field_count == 7 || $has_question_mark) {
-            $self->{type} = 'quartz';
-        } else {
-            push @{$self->{errors}}, "Cannot auto-detect type: invalid field count ($field_count)";
-            return;
-        }
+    if ($type eq 'quartz' && @parts == 6) {
+        push @parts, '*';
     }
 
-    my @field_types = $self->{type} eq 'quartz' ? @quartz_fields : @standard_fields;
-    my $min_fields = $self->{type} eq 'quartz' ? 6 : 5;
-    my $max_fields = $self->{type} eq 'quartz' ? 7 : 6;
-
-    if (@fields < $min_fields || @fields > $max_fields) {
-        push @{$self->{errors}}, "Invalid field count: got " . scalar(@fields) . ", expected $min_fields-$max_fields";
-        return;
-    }
+    croak "Field count mismatch: got " . @parts . ", expected " . @field_types
+        unless @parts == @field_types;
 
     my %ranges = (
-        seconds => [0, 59],
-        minute => [0, 59],
-        hour => [0, 23],
-        dom => [1, 31],
-        month => [1, 12],
-        dow => [0, 7],
-        year => [1970, 2199],
+        second      => [0, 59],
+        minute      => [0, 59],
+        hour        => [0, 23],
+        day_of_month => [1, 31],
+        month       => [1, 12],
+        day_of_week => [0, 7],
+        year        => [1970, 2099],
     );
 
-    for my $i (0 .. $#fields) {
-        my $field_type = $field_types[$i] || 'year';
-        my $value = $fields[$i];
-        my $range = $ranges{$field_type};
+    my @fields;
+    for my $i (0 .. $#parts) {
+        my $value = $parts[$i];
+        my $field_type = $field_types[$i];
+        my ($min, $max) = @{$ranges{$field_type} || croak "Unknown field type: $field_type"};
+        my $pattern;
 
-        my $pattern_class = $field_type eq 'dom' ? 'Cron::Describe::DayOfMonthPattern' :
-                            $field_type eq 'dow' ? 'Cron::Describe::DayOfWeekPattern' :
-                            'Cron::Describe::Pattern';
-        eval "require $pattern_class";
-        croak "Failed to load $pattern_class: $@" if $@;
-
-        my $pattern = $pattern_class->new($value, @$range);
-        if ($pattern->has_errors) {
-            push @{$self->{errors}}, @{ $pattern->{errors} };
+        if ($value eq '*') {
+            $pattern = Cron::Describe::WildcardPattern->new($value, $min, $max, $field_type);
         }
-        $self->{fields}{$field_type} = $pattern;
+        elsif ($value eq '?') {
+            $pattern = Cron::Describe::UnspecifiedPattern->new($value, $min, $max, $field_type);
+        }
+        elsif ($value =~ /^(\d+)-(\d+)\/(\d+)$/) {
+            $pattern = Cron::Describe::StepPattern->new($value, $min, $max, $field_type);
+        }
+        elsif ($value =~ /^(\d+)-(\d+)$/) {
+            $pattern = Cron::Describe::RangePattern->new($value, $min, $max, $field_type);
+        }
+        elsif ($value =~ /,/) {
+            $pattern = Cron::Describe::ListPattern->new($value, $min, $max, $field_type);
+        }
+        elsif ($value =~ /^[LW#]/ || $value =~ /L-\d+$/) {
+            $pattern = $field_type eq 'day_of_month'
+                ? Cron::Describe::DayOfMonthPattern->new($value, $min, $max, $field_type)
+                : Cron::Describe::DayOfWeekPattern->new($value, $min, $max, $field_type);
+        }
+        else {
+            $pattern = Cron::Describe::SinglePattern->new($value, $min, $max, $field_type);
+        }
+        push @fields, $pattern;
     }
+
+    my $self = bless { expression => $expression, type => $type, fields => \@fields }, $class;
+    $self->validate;
+    return $self;
 }
 
 sub validate {
     my ($self) = @_;
-    return 0 if @{$self->{errors}};
-
-    foreach my $field_type (keys %{$self->{fields}}) {
-        my $pattern = $self->{fields}{$field_type};
-        return 0 unless $pattern->validate();
+    for my $i (0 .. $#{$self->{fields}}) {
+        my $field = $self->{fields}[$i];
+        if ($field->has_errors) {
+            croak "Validation failed for field $i ($field->{field_type}): " . join(", ", @{$field->{errors}});
+        }
     }
-
     if ($self->{type} eq 'quartz') {
-        my $dom = $self->{fields}{dom};
-        my $dow = $self->{fields}{dow};
-        my $dom_pattern = $dom->{pattern_type};
-        my $dow_pattern = $dow->{pattern_type};
-        if ($dom_pattern ne 'unspecified' && $dow_pattern ne 'unspecified') {
-            my $valid_dom_types = $dom_pattern eq 'wildcard' || $dom_pattern eq 'list' ||
-                                  $dom_pattern =~ /^(last|last_weekday|nearest_weekday)$/;
-            my $valid_dow_types = $dow_pattern eq 'wildcard' || $dow_pattern eq 'list' ||
-                                  $dow_pattern =~ /^(nth|last_of_day)$/;
-            if (!$valid_dom_types || !$valid_dow_types) {
-                push @{$self->{errors}}, "Quartz: cannot specify both dom and dow unless wildcard or list";
-                return 0;
-            }
-        }
-        if ($dom_pattern eq 'unspecified' && $dow_pattern eq 'unspecified') {
-            push @{$self->{errors}}, "Quartz: either dom or dow must be specified";
-            return 0;
+        my $dom = $self->{fields}[3];
+        my $dow = $self->{fields}[5];
+        if (!$dom->isa('Cron::Describe::UnspecifiedPattern') && !$dow->isa('Cron::Describe::UnspecifiedPattern')) {
+            croak "Quartz: day_of_month and day_of_week cannot both be specific";
         }
     }
-
     return 1;
 }
 
 sub is_match {
-    my ($self, $epoch) = @_;
-    return 0 if @{$self->{errors}};
-
-    my $date = Time::Moment->from_epoch($epoch);
-    foreach my $field_type (keys %{$self->{fields}}) {
-        my $value = $field_type eq 'seconds' ? $date->second :
-                    $field_type eq 'minute' ? $date->minute :
-                    $field_type eq 'hour' ? $date->hour :
-                    $field_type eq 'dom' ? $date->day_of_month :
-                    $field_type eq 'month' ? $date->month :
-                    $field_type eq 'dow' ? $date->day_of_week % 7 :
-                    $field_type eq 'year' ? $date->year : 0;
-        return 0 unless $self->{fields}{$field_type}->is_match($value);
+    my ($self, $tm) = @_;
+    croak "Time::Moment object required" unless $tm->isa('Time::Moment');
+    for my $field (@{$self->{fields}}) {
+        my $field_type = $field->{field_type};
+        my %field_map = (
+            second      => 'second',
+            minute      => 'minute',
+            hour        => 'hour',
+            day_of_month => 'day_of_month',
+            month       => 'month',
+            day_of_week => 'day_of_week',
+            year        => 'year',
+        );
+        my $method = $field_map{$field_type} or croak "Unknown field type: $field_type";
+        return 0 unless $field->is_match($tm->$method());
     }
     return 1;
 }
 
 sub to_english {
     my ($self) = @_;
-    return "Invalid expression" if @{$self->{errors}};
-
-    my @parts;
-    my $is_quartz = $self->{type} eq 'quartz';
-    my @time_fields = $is_quartz ? qw(seconds minute hour) : qw(minute hour);
-    my @time_values = map { $self->{fields}{$_}{value} // 0 } @time_fields;
-
-    my $time_part = @time_values && grep { $_ != 0 } @time_values
-        ? join(":", map { sprintf("%02d", $_) } @time_values)
-        : $is_quartz ? "00:00:00" : "00:00";
-    push @parts, "at $time_part";
-
-    foreach my $field_type (qw(dom month dow)) {
-        my $desc = $self->{fields}{$field_type}->to_english();
-        push @parts, $desc =~ /invalid/ ? "every $field_type" : ($field_type eq 'month' ? "in $desc" : $desc);
-    }
-
-    if ($self->{fields}{year}) {
-        my $desc = $self->{fields}{year}->to_english();
-        push @parts, $desc =~ /invalid/ ? "every year" : "in $desc";
-    }
-
-    return "Runs " . join(", ", grep { $_ } @parts);
+    return join ' ', map { $_->to_english } @{$self->{fields}};
 }
 
 sub to_string {
     my ($self) = @_;
-    my @field_types = $self->{type} eq 'quartz'
-        ? qw(seconds minute hour dom month dow year)
-        : qw(minute hour dom month dow year);
-    my @values;
-    foreach my $field_type (@field_types) {
-        last unless exists $self->{fields}{$field_type};
-        push @values, $self->{fields}{$field_type}->to_string();
-    }
-    return join " ", @values;
+    return $self->{expression};
 }
 
 1;

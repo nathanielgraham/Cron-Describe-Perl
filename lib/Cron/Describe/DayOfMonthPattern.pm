@@ -6,13 +6,13 @@ use parent 'Cron::Describe::Pattern';
 use DateTime;
 
 sub new {
-    my ($class, $value, $min, $max) = @_;
+    my ($class, $value, $min, $max, $field_type) = @_;
     my $self = bless {
         pattern_type => 'special',
         min_value => $min,
         max_value => $max,
         raw_value => $value,
-        field_type => 'dom',
+        field_type => $field_type,
         errors => [],
     }, $class;
 
