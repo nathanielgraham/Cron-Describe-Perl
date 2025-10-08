@@ -1,54 +1,62 @@
-# File: lib/Cron/Describe/ListPattern.pm
 package Cron::Describe::ListPattern;
 use strict;
 use warnings;
-use parent 'Cron::Describe::Pattern';
+use Carp qw(croak);
+use Cron::Describe::SinglePattern;
+use Cron::Describe::RangePattern;
+use Cron::Describe::StepPattern;
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
-    my $self = bless {
-        pattern_type => 'list',
-        min_value => $min,
-        max_value => $max,
-        raw_value => $value,
-        field_type   => $field_type,
-        errors => [],
-    }, $class;
+    print STDERR "DEBUG: ListPattern::new: value='$value', field_type='$field_type'\n";
+    my @values = split /,/, $value;
+    my $self = bless {}, $class;
+    $self->{min} = $min;
+    $self->{max} = $max;
+    $self->{field_type} = $field_type;
+    $self->{sub_patterns} = [];
 
-    my @parts = split /,/, $value;
-    my @sub_patterns;
-    for my $part (@parts) {
-        my $sub = Cron::Describe::Pattern->new($part, $min, $max);
-        if ($sub->has_errors) {
-            push @{$self->{errors}}, @{ $sub->{errors} };
+    foreach my $val (@values) {
+        print STDERR "DEBUG: ListPattern: parsing sub-pattern '$val'\n";
+        my $pattern;
+        if ($val eq '*') {
+            $pattern = Cron::Describe::WildcardPattern->new($val, $min, $max, $field_type);
+        } elsif ($val =~ /^\d+$/) {
+            $pattern = Cron::Describe::SinglePattern->new($val, $min, $max, $field_type);
+        } elsif ($val =~ /^(\d+)-(\d+)$/) {
+            $pattern = Cron::Describe::RangePattern->new($val, $min, $max, $field_type);
+        } elsif ($val =~ /^(\*|\d+|\d+-\d+)\/\d+$/) {
+            $pattern = Cron::Describe::StepPattern->new($val, $min, $max, $field_type);
         } else {
-            push @sub_patterns, $sub;
+            croak "Invalid list element '$val' for $field_type";
         }
+        push @{$self->{sub_patterns}}, $pattern;
+        print STDERR "DEBUG: ListPattern: added sub-pattern " . ref($pattern) . "\n";
     }
-    $self->{sub_patterns} = \@sub_patterns;
+
     return $self;
 }
 
-sub validate {
-    my ($self) = @_;
-    return ! $self->has_errors;
-}
-
 sub is_match {
-    my ($self, $value) = @_;
-    return 0 if $self->has_errors;
-    return grep { $_->is_match($value) } @{$self->{sub_patterns}};
+    my ($self, $value, $tm) = @_;
+    foreach my $pattern (@{$self->{sub_patterns}}) {
+        return 1 if $pattern->is_match($value, $tm);
+    }
+    return 0;
 }
 
-sub to_english {
-    my ($self) = @_;
-    my @descs = map { $_->to_english } @{$self->{sub_patterns}};
-    return join(", ", @descs);
-}
-
-sub to_string {
-    my ($self) = @_;
-    return join(",", map { $_->to_string } @{$self->{sub_patterns}});
+sub to_hash {
+    my $self = shift;
+    my $hash = {
+        field_type => $self->{field_type},
+        pattern_type => 'list',
+        min => $self->{min},
+        max => $self->{max},
+        step => 1,
+        sub_patterns => [ map { my $h = $_->to_hash; $h->{field_type} = $self->{field_type}; $h } @{$self->{sub_patterns}} ]
+    };
+    print STDERR "DEBUG: ListPattern::to_hash: " . join(", ", map { "$_=$hash->{$_}" } keys %$hash) . "\n";
+    return $hash;
 }
 
 1;

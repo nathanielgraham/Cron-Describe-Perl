@@ -1,356 +1,178 @@
 [
-  {
-    "expression": "0 0 0 * * 1#6",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "error", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "6th Monday impossible"
-  },
-  {
-    "expression": "0 60 0 * * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "error", "value": 60, "min_value": 60, "max_value": 60, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "Invalid minute"
-  },
-  {
-    "expression": "0 0 0 31 2 ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "single", "value": 31, "min_value": 31, "max_value": 31, "step": 1, "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "single", "value": 2, "min_value": 2, "max_value": 2, "step": 1, "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "31st of February (valid parse, invalid semantics)"
-  },
-  {
-    "expression": "0 0 0 LW * MON",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "last_weekday", "offset": 0, "min": 1, "max": 31, "is_special": 1},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "single", "value": 1, "min_value": 1, "max_value": 1, "step": 1, "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "LW with specific DOW"
-  },
-  {
-    "expression": "0 0 0 * * ?W",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "error", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "Invalid Quartz token ?W"
-  },
-  {
-    "expression": "0 0 0 32W * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "error", "value": 32, "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "Invalid nearest weekday"
-  },
-  {
-    "expression": "0 0 0 * * 8#3",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "error", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "Invalid nth day"
-  },
-  {
-    "expression": "0 0 0 * * W#3",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "error", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "Malformed Quartz token"
-  },
-  {
-    "expression": "0 0 0 15 * MON",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "single", "value": 15, "min_value": 15, "max_value": 15, "step": 1, "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "single", "value": 1, "min_value": 1, "max_value": 1, "step": 1, "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "Quartz DOM-DOW conflict"
-  },
-  {
-    "expression": "0 0 0 * * ? 1969",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7},
-      {"field_type": "year", "pattern_type": "error", "value": 1969, "min_value": 1969, "max_value": 1969, "step": 1, "min": 1970, "max": 2199}
-    ],
-    "is_valid": 0,
-    "name": "Invalid past year"
-  },
-  {
-    "expression": "0 0 0 31 * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "single", "value": 31, "min_value": 31, "max_value": 31, "step": 1, "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 1,
-    "name": "DOM 31 with wildcard month (valid for some months)"
-  },
-  {
-    "expression": "0 0 0 1,15,31 * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {
-        "field_type": "dom",
-        "pattern_type": "list",
-        "min": 1,
-        "max": 31,
-        "sub_patterns": [
-          {"field_type": "dom", "pattern_type": "single", "value": 1, "min_value": 1, "max_value": 1, "step": 1},
-          {"field_type": "dom", "pattern_type": "single", "value": 15, "min_value": 15, "max_value": 15, "step": 1},
-          {"field_type": "dom", "pattern_type": "single", "value": 31, "min_value": 31, "max_value": 31, "step": 1}
+    {
+        "expression": "0 0 0 * * 1#6",
+        "is_valid": false,
+        "error_message": "Sixth Monday is impossible in any month"
+    },
+    {
+        "expression": "0 60 0 * * ?",
+        "is_valid": false,
+        "error_message": "Invalid value '60' for minute, expected 0-59"
+    },
+    {
+        "expression": "0 0 0 31 2 ?",
+        "is_valid": false,
+        "error_message": "Day 31 is out of range (1-29) for February"
+    },
+    {
+        "expression": "0 0 0 LW * MON",
+        "is_valid": false,
+        "error_message": "Cannot specify both day-of-month (LW) and day-of-week (MON) in Quartz"
+    },
+    {
+        "expression": "0 0 0 * * ?W",
+        "is_valid": false,
+        "error_message": "Invalid day-of-week pattern '?W' for dow"
+    },
+    {
+        "expression": "0 0 0 32W * ?",
+        "is_valid": false,
+        "error_message": "Day 32 is out of range for nearest weekday (1-31)"
+    },
+    {
+        "expression": "0 0 0 * * 8#3",
+        "is_valid": false,
+        "error_message": "Invalid day-of-week pattern '8#3' for dow"
+    },
+    {
+        "expression": "0 0 0 * * W#3",
+        "is_valid": false,
+        "error_message": "Invalid day-of-week pattern 'W#3' for dow"
+    },
+    {
+        "expression": "0 0 0 15 * MON",
+        "is_valid": false,
+        "error_message": "Cannot specify both day-of-month (15) and day-of-week (MON) in Quartz"
+    },
+    {
+        "expression": "0 0 0 * * ? 1969",
+        "is_valid": false,
+        "error_message": "Invalid value '1969' for year, expected 1970-2199"
+    },
+    {
+        "expression": "0 0 0 31 * ?",
+        "is_valid": true,
+        "expected_class": "Cron::Describe::Quartz",
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "single", "value": 31, "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 }
         ]
-      },
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 1,
-    "name": "DOM list with 31 and wildcard month (valid for some months)"
-  },
-  {
-    "expression": "0 0 0 32 * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "error", "value": 32, "min_value": 32, "max_value": 32, "step": 1, "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "DOM 32 with wildcard month (invalid for all months)"
-  },
-  {
-    "expression": "0 0 0 0/0 * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "error", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "Invalid step 0 in DOM"
-  },
-  {
-    "expression": "0 0 0 * 13 ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "error", "value": 13, "min_value": 13, "max_value": 13, "step": 1, "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "Invalid month (13)"
-  },
-  {
-    "expression": "",
-    "expected_fields": [],
-    "is_valid": 0,
-    "name": "Empty expression"
-  },
-  {
-    "expression": "0 0 0 * * ? 2200",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7},
-      {"field_type": "year", "pattern_type": "error", "value": 2200, "min_value": 2200, "max_value": 2200, "step": 1, "min": 1970, "max": 2199}
-    ],
-    "is_valid": 0,
-    "name": "Year beyond max (2200)"
-  },
-  {
-    "expression": "0 0 0 -1 * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "error", "value": -1, "min_value": -1, "max_value": -1, "step": 1, "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 0,
-    "name": "Negative DOM value"
-  },
-  {
-    "expression": "0 0 0 * 2 1#5 2025",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "single", "value": 2, "min_value": 2, "max_value": 2, "step": 1, "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "nth", "day": 1, "nth": 5, "min": 0, "max": 7, "is_special": 1},
-      {"field_type": "year", "pattern_type": "single", "value": 2025, "min_value": 2025, "max_value": 2025, "step": 1, "min": 1970, "max": 2199}
-    ],
-    "is_valid": 0,
-    "name": "5th Monday in February 2025 (impossible)"
-  },
-  {
-    "expression": "0 0 0 29 2 ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "single", "value": 29, "min_value": 29, "max_value": 29, "step": 1, "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "single", "value": 2, "min_value": 2, "max_value": 2, "step": 1, "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 1,
-    "name": "29th of February (valid for leap years)"
-  },
-  {
-    "expression": "0 0 0 * * ? 2025/2",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7},
-      {"field_type": "year", "pattern_type": "step", "start_value": 2025, "min_value": 2025, "max_value": 2199, "step": 2, "min": 1970, "max": 2199}
-    ],
-    "is_valid": 1,
-    "name": "Every other year starting 2025"
-  },
-  {
-    "expression": "59 59 23 * * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 59, "min_value": 59, "max_value": 59, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 59, "min_value": 59, "max_value": 59, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 23, "min_value": 23, "max_value": 23, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 1,
-    "name": "Boundary values for seconds, minutes, hours"
-  },
-  {
-    "expression": "10-20 * * * * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "range", "min_value": 10, "max_value": 20, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "wildcard", "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "wildcard", "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 1,
-    "name": "Seconds range 10-20",
-    "extras": [
-      {"epoch": 1759276815, "matches": 1, "desc": "Runs at every seconds from 10 to 20, every minute, every hour, every day-of-month, every month"},
-      {"epoch": 1759276805, "matches": 0, "desc": "Runs at every seconds from 10 to 20, every minute, every hour, every day-of-month, every month"}
-    ]
-  },
-  {
-    "expression": "5/10 * * * * ?",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "step", "start_value": 5, "min_value": 5, "max_value": 59, "step": 10, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "wildcard", "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "wildcard", "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {"field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7}
-    ],
-    "is_valid": 1,
-    "name": "Seconds step every 10 starting at 5",
-    "extras": [
-      {"epoch": 1759276825, "matches": 1, "desc": "Runs at every 10 seconds starting at 5, every minute, every hour, every day-of-month, every month"},
-      {"epoch": 1759276820, "matches": 0, "desc": "Runs at every 10 seconds starting at 5, every minute, every hour, every day-of-month, every month"}
-    ]
-  },
-  {
-    "expression": "0 0 0 ? * MON,WED,FRI",
-    "expected_fields": [
-      {"field_type": "seconds", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "minute", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 59},
-      {"field_type": "hour", "pattern_type": "single", "value": 0, "min_value": 0, "max_value": 0, "step": 1, "min": 0, "max": 23},
-      {"field_type": "dom", "pattern_type": "unspecified", "min": 1, "max": 31},
-      {"field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12},
-      {
-        "field_type": "dow",
-        "pattern_type": "list",
-        "min": 0,
-        "max": 7,
-        "sub_patterns": [
-          {"field_type": "dow", "pattern_type": "single", "value": 1, "min_value": 1, "max_value": 1, "step": 1},
-          {"field_type": "dow", "pattern_type": "single", "value": 3, "min_value": 3, "max_value": 3, "step": 1},
-          {"field_type": "dow", "pattern_type": "single", "value": 5, "min_value": 5, "max_value": 5, "step": 1}
+    },
+    {
+        "expression": "0 0 0 1,15,31 * ?",
+        "is_valid": true,
+        "expected_class": "Cron::Describe::Quartz",
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "list", "min": 1, "max": 31, "step": 1, "sub_patterns": [
+                { "field_type": "dom", "pattern_type": "single", "value": 1, "min": 1, "max": 31, "step": 1 },
+                { "field_type": "dom", "pattern_type": "single", "value": 15, "min": 1, "max": 31, "step": 1 },
+                { "field_type": "dom", "pattern_type": "single", "value": 31, "min": 1, "max": 31, "step": 1 }
+            ]},
+            { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 }
         ]
-      }
-    ],
-    "is_valid": 1,
-    "name": "DOW list MON,WED,FRI (match test)",
-    "extras": [
-      {"epoch": 1759276800, "matches": 1, "desc": "Runs at 00:00:00 on Monday, Wednesday, Friday, every month"},
-      {"epoch": 1759363200, "matches": 0, "desc": "Runs at 00:00:00 on Monday, Wednesday, Friday, every month"}
-    ]
-  }
+    },
+    {
+        "expression": "0 0 0 32 * ?",
+        "is_valid": false,
+        "error_message": "Invalid value '32' for dom, expected 1-31"
+    },
+    {
+        "expression": "0 0 0 0/0 * ?",
+        "is_valid": false,
+        "error_message": "Step value 0 is invalid for dom"
+    },
+    {
+        "expression": "0 0 0 * 13 ?",
+        "is_valid": false,
+        "error_message": "Invalid value '13' for month, expected 1-12"
+    },
+    {
+        "expression": "",
+        "is_valid": false,
+        "error_message": "Empty cron expression is invalid"
+    },
+    {
+        "expression": "0 0 0 * * ? 2200",
+        "is_valid": false,
+        "error_message": "Invalid value '2200' for year, expected 1970-2199"
+    },
+    {
+        "expression": "0 0 0 -1 * ?",
+        "is_valid": false,
+        "error_message": "Invalid value '-1' for dom, expected 1-31"
+    },
+    {
+        "expression": "0 0 0 * 2 1#5 2025",
+        "is_valid": false,
+        "error_message": "Fifth Monday is impossible in February 2025"
+    },
+    {
+        "expression": "0 0 0 29 2 ?",
+        "is_valid": true,
+        "expected_class": "Cron::Describe::Quartz",
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "single", "value": 29, "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "single", "value": 2, "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 }
+        ]
+    },
+    {
+        "expression": "0 0 0 * * ? 2025/2",
+        "is_valid": true,
+        "expected_class": "Cron::Describe::Quartz",
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "step", "start_value": 2025, "end_value": 2199, "step": 2, "min": 1970, "max": 2199 }
+        ]
+    },
+    {
+        "expression": "59 59 23 * * ?",
+        "is_valid": true,
+        "expected_class": "Cron::Describe::Quartz",
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 59, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 59, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 23, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 }
+        ]
+    },
+    {
+        "expression": "0 0 0 ? * MON,WED,FRI",
+        "is_valid": true,
+        "expected_class": "Cron::Describe::Quartz",
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "unspecified", "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "list", "sub_patterns": [
+                { "field_type": "dow", "pattern_type": "single", "value": 1, "min": 0, "max": 7, "step": 1 },
+                { "field_type": "dow", "pattern_type": "single", "value": 3, "min": 0, "max": 7, "step": 1 },
+                { "field_type": "dow", "pattern_type": "single", "value": 5, "min": 0, "max": 7, "step": 1 }
+            ], "is_special": 1, "min": 0, "max": 7, "step": 1 }
+        ],
+        "matches": [
+            { "timestamp": "2025-10-06T00:00:00Z", "matches": true },
+            { "timestamp": "2025-10-07T00:00:00Z", "matches": false }
+        ]
+    }
 ]

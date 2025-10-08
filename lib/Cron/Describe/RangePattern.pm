@@ -1,54 +1,40 @@
-# File: lib/Cron/Describe/RangePattern.pm
 package Cron::Describe::RangePattern;
 use strict;
 use warnings;
-use parent 'Cron::Describe::Pattern';
+use Carp qw(croak);
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
-    my $self = bless {
-        pattern_type => 'range',
-        min_value => $min,
-        max_value => $max,
-        raw_value => $value,
-        field_type   => $field_type,
-        errors => [],
-    }, $class;
-
-    if ($value =~ m{^(\d+)-(\d+)$}) {
-        my ($start, $end) = ($1 + 0, $2 + 0);
-        if ($start <= $end && $start >= $min && $end <= $max) {
-            $self->{min} = $start;
-            $self->{max} = $end;
-            $self->{min_value} = $start;
-            $self->{max_value} = $end;
-        } else {
-            push @{$self->{errors}}, "Invalid range $start-$end: out of bounds [$min-$max] or start > end";
-        }
-    } else {
-        push @{$self->{errors}}, "Invalid range pattern: $value";
-    }
+    croak "Invalid range '$value' for $field_type" unless $value =~ /^(\d+)-(\d+)$/;
+    my ($start, $end) = ($1, $2);
+    croak "Range start $start out of bounds for $field_type ($min-$max)" unless $start >= $min && $start <= $max;
+    croak "Range end $end out of bounds for $field_type ($min-$max)" unless $end >= $min && $end <= $max;
+    croak "Invalid range: start $start greater than end $end for $field_type" unless $start <= $end;
+    my $self = bless {}, $class;
+    $self->{start_value} = $start;
+    $self->{end_value} = $end;
+    $self->{min} = $min;
+    $self->{max} = $max;
+    $self->{field_type} = $field_type;
     return $self;
 }
 
-sub validate {
-    my ($self) = @_;
-    return ! $self->has_errors;
-}
-
 sub is_match {
-    my ($self, $value) = @_;
-    return $value >= $self->{min} && $value <= $self->{max};
+    my ($self, $value, $tm) = @_;
+    return $value >= $self->{start_value} && $value <= $self->{end_value};
 }
 
-sub to_english {
-    my ($self) = @_;
-    return "from $self->{min} to $self->{max} $self->{field_type}";
-}
-
-sub to_string {
-    my ($self) = @_;
-    return "$self->{min}-$self->{max}";
+sub to_hash {
+    my $self = shift;
+    return {
+        field_type => $self->{field_type},
+        pattern_type => 'range',
+        start_value => $self->{start_value},
+        end_value => $self->{end_value},
+        min => $self->{min},
+        max => $self->{max},
+        step => 1
+    };
 }
 
 1;

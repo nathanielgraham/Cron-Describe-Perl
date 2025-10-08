@@ -1,29 +1,35 @@
-# File: lib/Cron/Describe/WildcardPattern.pm
 package Cron::Describe::WildcardPattern;
 use strict;
 use warnings;
-use parent 'Cron::Describe::Pattern';
+use Carp qw(croak);
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
-    my $self = bless {
-        pattern_type => 'wildcard',
-        min_value => $min,
-        max_value => $max,
-        raw_value => $value,
-        field_type   => $field_type,
-        errors => [],
-    }, $class;
-
-    unless ($value eq '*') {
-        push @{$self->{errors}}, "Invalid wildcard pattern: $value";
-    }
+    print STDERR "DEBUG: WildcardPattern::new: value='$value', field_type='$field_type'\n";
+    croak "Invalid wildcard '$value' for $field_type, expected '*'" unless $value eq '*';
+    my $self = bless {}, $class;
+    $self->{min} = $min;
+    $self->{max} = $max;
+    $self->{field_type} = $field_type;
     return $self;
 }
 
-sub validate { return !shift->has_errors; }
-sub is_match { return 1; }
-sub to_english { return "every " . shift->{field_type}; }
-sub to_string { return "*"; }
+sub is_match {
+    my ($self, $value, $tm) = @_;
+    return $value >= $self->{min} && $value <= $self->{max};
+}
+
+sub to_hash {
+    my $self = shift;
+    my $hash = {
+        field_type => $self->{field_type},
+        pattern_type => 'wildcard',
+        min => $self->{min},
+        max => $self->{max},
+        step => 1
+    };
+    print STDERR "DEBUG: WildcardPattern::to_hash: " . join(", ", map { "$_=$hash->{$_}" } keys %$hash) . "\n";
+    return $hash;
+}
 
 1;
