@@ -2,39 +2,59 @@ package Cron::Describe::RangePattern;
 use strict;
 use warnings;
 use Carp qw(croak);
+use parent 'Cron::Describe::Pattern';
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
-    croak "Invalid range '$value' for $field_type" unless $value =~ /^(\d+)-(\d+)$/;
-    my ($start, $end) = ($1, $2);
-    croak "Range start $start out of bounds for $field_type ($min-$max)" unless $start >= $min && $start <= $max;
-    croak "Range end $end out of bounds for $field_type ($min-$max)" unless $end >= $min && $end <= $max;
-    croak "Invalid range: start $start greater than end $end for $field_type" unless $start <= $end;
-    my $self = bless {}, $class;
-    $self->{start_value} = $start;
-    $self->{end_value} = $end;
-    $self->{min} = $min;
-    $self->{max} = $max;
-    $self->{field_type} = $field_type;
+    my $self = $class->SUPER::new($value, $min, $max, $field_type);
+    $self->{pattern_type} = 'range';
+    unless ($value =~ /^(\d+)-(\d+)$/) {
+        $self->add_error("Invalid range '$value' for $field_type");
+        croak $self->errors->[0];
+    }
+    $self->{start_value} = $1;
+    $self->{end_value} = $2;
+    $self->validate();
     return $self;
+}
+
+sub validate {
+    my ($self) = @_;
+    if ($self->{start_value} < $self->{min} || $self->{start_value} > $self->{max}) {
+        $self->add_error("Range start $self->{start_value} out of bounds for $self->{field_type} ($self->{min}-$self->{max})");
+    }
+    if ($self->{end_value} < $self->{min} || $self->{end_value} > $self->{max}) {
+        $self->add_error("Range end $self->{end_value} out of bounds for $self->{field_type} ($self->{min}-$self->{max})");
+    }
+    if ($self->{start_value} > $self->{end_value}) {
+        $self->add_error("Invalid range: start $self->{start_value} greater than end $self->{end_value} for $self->{field_type}");
+    }
+    croak join("; ", @{$self->errors}) if $self->has_errors;
 }
 
 sub is_match {
     my ($self, $value, $tm) = @_;
-    return $value >= $self->{start_value} && $value <= $self->{end_value};
+    my $result = $value >= $self->{start_value} && $value <= $self->{end_value};
+    $self->_debug("is_match: value=$value, start=$self->{start_value}, end=$self->{end_value}, result=$result");
+    return $result;
 }
 
 sub to_hash {
-    my $self = shift;
-    return {
-        field_type => $self->{field_type},
-        pattern_type => 'range',
-        start_value => $self->{start_value},
-        end_value => $self->{end_value},
-        min => $self->{min},
-        max => $self->{max},
-        step => 1
-    };
+    my ($self) = shift;
+    my $hash = $self->SUPER::to_hash;
+    $hash->{start_value} = $self->{start_value};
+    $hash->{end_value} = $self->{end_value};
+    return $hash;
+}
+
+sub to_string {
+    my ($self) = @_;
+    return "$self->{start_value}-$self->{end_value}";
+}
+
+sub to_english {
+    my ($self) = @_;
+    return "from $self->{start_value} to $self->{end_value}";
 }
 
 1;

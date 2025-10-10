@@ -2,20 +2,21 @@
     {
         "expression": "0 0 0 * * ?",
         "is_valid": true,
-        "expected_class": "Cron::Describe::Quartz",
+        "utc_offset": 0,
         "fields": [
             { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
             { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
             { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
             { "field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31, "step": 1 },
             { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
-            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 }
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
         ]
     },
     {
         "expression": "0 0 0 1-5,10-15/2 * ?",
         "is_valid": true,
-        "expected_class": "Cron::Describe::Quartz",
+        "utc_offset": -300,
         "fields": [
             { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
             { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
@@ -25,24 +26,34 @@
                 { "field_type": "dom", "pattern_type": "step", "start_value": 10, "end_value": 15, "step": 2, "min": 1, "max": 31 }
             ]},
             { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
-            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 }
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
         ]
     },
     {
-        "expression": "0 0 1 * *",
+        "expression": "0 0 0 1 * ? *",
         "is_valid": true,
-        "expected_class": "Cron::Describe::CronExpression",
+        "utc_offset": 0,
         "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
             { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
             { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
             { "field_type": "dom", "pattern_type": "single", "value": 1, "min": 1, "max": 31, "step": 1 },
             { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
-            { "field_type": "dow", "pattern_type": "wildcard", "min": 0, "max": 7, "step": 1 }
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
         ]
     },
     {
-        "expression": "0 0 0 * *",
+        "expression": "0 0 0 0 * ? *",
         "is_valid": false,
+        "utc_offset": 0,
         "error_message": "Invalid value '0' for dom, expected 1-31"
+    },
+    {
+        "expression": "0 0 0 1 * MON ?",
+        "is_valid": false,
+        "utc_offset": 0,
+        "error_message": "Cannot specify both day-of-month (1) and day-of-week (1); one must be '?'"
     }
 ]

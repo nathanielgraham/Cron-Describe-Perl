@@ -1,48 +1,163 @@
 [
     {
-        "expression": "0 0 0 * * ?",
+        "expression": "0 0 0 L * ?",
         "is_valid": true,
-        "expected_class": "Cron::Describe::Quartz",
+        "utc_offset": 0,
         "fields": [
             { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
             { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
             { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
-            { "field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31, "step": 1 },
+            { "field_type": "dom", "pattern_type": "last", "offset": 0, "is_special": 1, "min": 1, "max": 31, "step": 1 },
             { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
-            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 }
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
+        ],
+        "matches": [
+            { "timestamp": 1767139200, "matches": true }
         ]
     },
     {
-        "expression": "0 0 0 1-5,10-15/2 * ?",
+        "expression": "0 0 0 15W * ?",
         "is_valid": true,
-        "expected_class": "Cron::Describe::Quartz",
+        "utc_offset": 0,
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "nearest_weekday", "day": 15, "is_special": 1, "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
+        ],
+        "matches": [
+            { "timestamp": 1765756800, "matches": true }
+        ]
+    },
+    {
+        "expression": "0 0 0 ? * 1#3",
+        "is_valid": true,
+        "utc_offset": 330,
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "unspecified", "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "nth", "day": 1, "nth": 3, "is_special": 1, "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
+        ],
+        "matches": [
+            { "timestamp": 1763317800, "matches": true }
+        ]
+    },
+    {
+        "expression": "0 0 0 ? * 1L",
+        "is_valid": true,
+        "utc_offset": 0,
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "unspecified", "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "last_of_day", "day": 1, "is_special": 1, "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
+        ],
+        "matches": [
+            { "timestamp": 1766966400, "matches": true }
+        ]
+    },
+    {
+        "expression": "0 0 0 LW 2 ? 2024",
+        "is_valid": true,
+        "utc_offset": -300,
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "last_weekday", "offset": 0, "is_special": 1, "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "single", "value": 2, "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "single", "value": 2024, "min": 1970, "max": 2199, "step": 1 }
+        ],
+        "extras": [
+            { "epoch": 1709182800, "matches": true, "desc": "Runs at 00:00:00 on last weekday of month, February, 2024" }
+        ]
+    },
+    {
+        "expression": "0 0 0 LW 2 ? 2025",
+        "is_valid": true,
+        "utc_offset": 0,
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "last_weekday", "offset": 0, "is_special": 1, "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "single", "value": 2, "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "single", "value": 2025, "min": 1970, "max": 2199, "step": 1 }
+        ],
+        "extras": [
+            { "epoch": 1740700800, "matches": true, "desc": "Runs at 00:00:00 on last weekday of month, February, 2025" }
+        ]
+    },
+    {
+        "expression": "10-20 * * * * ?",
+        "is_valid": true,
+        "utc_offset": 0,
+        "fields": [
+            { "field_type": "seconds", "pattern_type": "range", "start_value": 10, "end_value": 20, "min": 0, "max": 59, "step": 1 },
+            { "field_type": "minute", "pattern_type": "wildcard", "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "wildcard", "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31, "step": 1 },
+            { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
+        ],
+        "matches": [
+            { "timestamp": 1764967210, "matches": true },
+            { "timestamp": 1764967205, "matches": false }
+        ]
+    },
+    {
+        "expression": "0 0 0 1,15,30 * ?",
+        "is_valid": true,
+        "utc_offset": 0,
         "fields": [
             { "field_type": "seconds", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
             { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
             { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
             { "field_type": "dom", "pattern_type": "list", "min": 1, "max": 31, "step": 1, "sub_patterns": [
-                { "field_type": "dom", "pattern_type": "range", "start_value": 1, "end_value": 5, "min": 1, "max": 31, "step": 1 },
-                { "field_type": "dom", "pattern_type": "step", "start_value": 10, "end_value": 15, "step": 2, "min": 1, "max": 31 }
+                { "field_type": "dom", "pattern_type": "single", "value": 1, "min": 1, "max": 31, "step": 1 },
+                { "field_type": "dom", "pattern_type": "single", "value": 15, "min": 1, "max": 31, "step": 1 },
+                { "field_type": "dom", "pattern_type": "single", "value": 30, "min": 1, "max": 31, "step": 1 }
             ]},
             { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
-            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 }
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
+        ],
+        "matches": [
+            { "timestamp": 1759276800, "matches": true },
+            { "timestamp": 1765046400, "matches": false }
         ]
     },
     {
-        "expression": "0 0 1 * *",
+        "expression": "5/10 * * * * ?",
         "is_valid": true,
-        "expected_class": "Cron::Describe::CronExpression",
+        "utc_offset": 0,
         "fields": [
-            { "field_type": "minute", "pattern_type": "single", "value": 0, "min": 0, "max": 59, "step": 1 },
-            { "field_type": "hour", "pattern_type": "single", "value": 0, "min": 0, "max": 23, "step": 1 },
-            { "field_type": "dom", "pattern_type": "single", "value": 1, "min": 1, "max": 31, "step": 1 },
+            { "field_type": "seconds", "pattern_type": "step", "start_value": 5, "end_value": 59, "step": 10, "min": 0, "max": 59 },
+            { "field_type": "minute", "pattern_type": "wildcard", "min": 0, "max": 59, "step": 1 },
+            { "field_type": "hour", "pattern_type": "wildcard", "min": 0, "max": 23, "step": 1 },
+            { "field_type": "dom", "pattern_type": "wildcard", "min": 1, "max": 31, "step": 1 },
             { "field_type": "month", "pattern_type": "wildcard", "min": 1, "max": 12, "step": 1 },
-            { "field_type": "dow", "pattern_type": "wildcard", "min": 0, "max": 7, "step": 1 }
+            { "field_type": "dow", "pattern_type": "unspecified", "min": 0, "max": 7, "step": 1 },
+            { "field_type": "year", "pattern_type": "wildcard", "min": 1970, "max": 2199, "step": 1 }
+        ],
+        "extras": [
+            { "epoch": 1764967205, "matches": true, "desc": "Runs at every 10 seconds starting at 5, every minute, every hour, every day-of-month, every month" },
+            { "epoch": 1764967206, "matches": false, "desc": "Runs at every 10 seconds starting at 5, every minute, every hour, every day-of-month, every month" },
+            { "epoch": 1764967215, "matches": true, "desc": "Runs at every 10 seconds starting at 5, every minute, every hour, every day-of-month, every month" }
         ]
-    },
-    {
-        "expression": "0 0 0 * *",
-        "is_valid": false,
-        "error_message": "Invalid value '0' for dom, expected 1-31"
     }
 ]

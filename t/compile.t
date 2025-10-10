@@ -1,11 +1,10 @@
-# File: t/compile.t
 use strict;
 use warnings;
 use Test::More;
 
 # Test compilation of all Cron::Describe modules
 my @modules = qw(
-    Cron::Describe::CronExpression
+    Cron::Describe
     Cron::Describe::Pattern
     Cron::Describe::WildcardPattern
     Cron::Describe::UnspecifiedPattern
