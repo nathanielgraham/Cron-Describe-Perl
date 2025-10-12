@@ -2,80 +2,66 @@ package Cron::Describe::StepPattern;
 use strict;
 use warnings;
 use Carp qw(croak);
-use parent 'Cron::Describe::Pattern';
 use Cron::Describe::SinglePattern;
 use Cron::Describe::RangePattern;
 use Cron::Describe::WildcardPattern;
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
-    print STDERR "DEBUG: StepPattern::new: value='$value', field_type='$field_type'\n" if $Cron::Describe::DEBUG;
-    my $self = $class->SUPER::new($value, $min, $max, $field_type);
-    $self->{pattern_type} = 'step';
-    unless ($value =~ /^(\*|\d+|\d+-\d+)\/(\d+)$/) {
-        $self->add_error("Invalid step pattern '$value' for $field_type");
-        croak $self->errors->[0];
-    }
-    my ($base, $step) = ($1, $2);
-    unless ($step > 0) {
-        $self->add_error("Step value $step is invalid for $field_type");
-        croak $self->errors->[0];
-    }
-    $self->{step} = $step;
+    print STDERR "DEBUG: Cron::Describe::StepPattern: value='$value', field_type='$field_type', min=$min, max=$max\n" if $ENV{Cron_DEBUG};
+    my ($base, $step) = split /\//, $value, 2;
+    croak "Invalid step pattern '$value' for $field_type" unless defined $base && defined $step;
+    croak "Step value $step is invalid for $field_type" unless $step =~ /^\d+$/ && $step > 0;
+
+    my $base_pattern;
     if ($base eq '*') {
-        $self->{base} = Cron::Describe::WildcardPattern->new($base, $min, $max, $field_type);
-        $self->{start_value} = $min;
-        $self->{end_value} = $max;
+        $base_pattern = Cron::Describe::WildcardPattern->new($base, $min, $max, $field_type);
     } elsif ($base =~ /^\d+$/) {
-        $self->{base} = Cron::Describe::RangePattern->new($base . '-' . $max, $min, $max, $field_type);
-        $self->{start_value} = $base;
-        $self->{end_value} = $max;
-    } elsif ($base =~ /^(\d+)-(\d+)$/) {
-        $self->{base} = Cron::Describe::RangePattern->new($base, $min, $max, $field_type);
-        $self->{start_value} = $1;
-        $self->{end_value} = $2;
+        $base_pattern = Cron::Describe::SinglePattern->new($base, $min, $max, $field_type);
+    } elsif ($base =~ /^\d+-\d+$/) {
+        $base_pattern = Cron::Describe::RangePattern->new($base, $min, $max, $field_type);
+    } else {
+        croak "Invalid base pattern '$base' in step pattern for $field_type";
     }
-    $self->validate();
-    print STDERR "DEBUG: StepPattern: start_value=$self->{start_value}, end_value=$self->{end_value}, step=$self->{step}\n" if $Cron::Describe::DEBUG;
+
+    my $self = bless {
+        value => $value,
+        min => $min,
+        max => $max,
+        field_type => $field_type,
+        base => $base_pattern,
+        step => $step,
+    }, $class;
+    print STDERR "DEBUG: Cron::Describe::StepPattern: StepPattern: start_value=" . ($base_pattern->to_hash->{start_value} // $min) . ", end_value=" . ($base_pattern->to_hash->{end_value} // $max) . ", step=$step\n" if $ENV{Cron_DEBUG};
     return $self;
 }
 
-sub validate {
-    my ($self) = @_;
-    unless ($self->{step} > 0) {
-        $self->add_error("Step value $self->{step} is invalid for $self->{field_type}");
-    }
-    $self->{base}->validate();
-    croak join("; ", @{$self->errors}) if $self->has_errors;
-}
-
-sub is_match {
-    my ($self, $value, $tm) = @_;
-    my $base_match = $self->{base}->is_match($value, $tm);
-    my $range_match = $value >= $self->{start_value} && $value <= $self->{end_value};
-    my $step_match = (($value - $self->{start_value}) % $self->{step}) == 0;
-    my $result = $base_match && $range_match && $step_match;
-    $self->_debug("is_match: value=$value, base_match=$base_match, range_match=$range_match, step_match=$step_match, result=$result");
-    return $result;
-}
-
 sub to_hash {
-    my ($self) = shift;
-    my $hash = $self->SUPER::to_hash;
-    $hash->{step} = $self->{step};
-    $hash->{start_value} = $self->{start_value};
-    $hash->{end_value} = $self->{end_value};
-    return $hash;
+    my ($self) = @_;
+    return {
+        field_type => $self->{field_type},
+        pattern_type => 'step',
+        step => $self->{step},
+        min => $self->{min},
+        max => $self->{max},
+        base => $self->{base}->to_hash,
+    };
 }
 
 sub to_string {
     my ($self) = @_;
-    return $self->{base}->to_string . "/$self->{step}";
+    return $self->{value};
 }
 
-sub to_english {
-    my ($self) = @_;
-    return "every $self->{step} starting from " . $self->{base}->to_english;
+sub is_match {
+    my ($self, $value, $tm) = @_;
+    print STDERR "DEBUG: is_match: StepPattern: value=$value, pattern_value=$self->{value}\n" if $ENV{Cron_DEBUG};
+    return 0 unless $self->{base}->is_match($value, $tm);
+    my $base_hash = $self->{base}->to_hash;
+    my $start = $base_hash->{start_value} // $self->{min};
+    my $end = $base_hash->{end_value} // $self->{max};
+    return 0 unless $value >= $start && $value <= $end;
+    return ($value - $start) % $self->{step} == 0;
 }
 
 1;

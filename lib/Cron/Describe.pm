@@ -6,174 +6,238 @@ use Time::Moment;
 use Cron::Describe::SinglePattern;
 use Cron::Describe::RangePattern;
 use Cron::Describe::StepPattern;
-use Cron::Describe::ListPattern;
 use Cron::Describe::WildcardPattern;
 use Cron::Describe::UnspecifiedPattern;
 use Cron::Describe::DayOfMonthPattern;
 use Cron::Describe::DayOfWeekPattern;
-
-our $DEBUG = $ENV{Cron_DEBUG} // 0;
-
-sub trim {
-    my ($str) = @_;
-    $str =~ s/^\s+|\s+$//g;
-    return $str;
-}
+use Cron::Describe::ListPattern;
 
 sub new {
-    my ($class, %args) = @_;
-    my $expression = $args{expression} // croak "Missing required parameter 'expression'";
-    my $utc_offset = defined $args{utc_offset} ? $args{utc_offset} : 0;
-    croak "Invalid utc_offset: must be an integer between -720 and 720 minutes" unless $utc_offset =~ /^-?\d+$/ && $utc_offset >= -720 && $utc_offset <= 720;
-    croak "Empty cron expression is invalid" unless defined $expression && $expression =~ /\S/;
-    my $self = bless { utc_offset => $utc_offset }, $class;
-    # Normalize expression
-    $expression = _normalize_expression($expression);
-    # Split and validate field count
-    my @fields = split /\s+/, $expression;
-    my $field_count = scalar @fields;
-    if ($field_count != 7) {
-        croak "Invalid number of fields: got $field_count, expected 7 (Quartz)";
-    }
+    my ($class, $expression, %args) = @_;
+    print STDERR "DEBUG: Describe::new: expression='$expression', utc_offset=$args{utc_offset}\n" if $ENV{Cron_DEBUG};
+    my $self = bless {
+        expression => $expression,
+        utc_offset => $args{utc_offset} // 0,
+        patterns => [],
+        is_valid => 1,
+        error_message => '',
+    }, $class;
+
+    my $normalized = $self->normalize_expression($expression);
+    print STDERR "DEBUG: Describe::normalize_expression: original='$expression'\n" if $ENV{Cron_DEBUG};
+    print STDERR "DEBUG: Describe::normalize_expression: normalized='$normalized'\n" if $ENV{Cron_DEBUG};
+
+    my @fields = split /\s+/, $normalized;
+    croak "Invalid cron expression: expected 6 or 7 fields, got " . scalar(@fields) unless @fields >= 6 && @fields <= 7;
+
     my @field_types = qw(seconds minute hour dom month dow year);
-    my @field_ranges = ([0, 59], [0, 59], [0, 23], [1, 31], [1, 12], [0, 7], [1970, 2199]);
-    $self->{fields} = [];
-    my $has_dom = 0;
-    my $has_dow = 0;
-    for my $i (0 .. $#fields) {
+    my @min_values = (0, 0, 0, 1, 1, 0, 1970);
+    my @max_values = (59, 59, 23, 31, 12, 7, 2199);
+
+    if (@fields == 6) {
+        push @fields, '*';
+    }
+
+    for my $i (0..6) {
         my $field = $fields[$i];
         my $field_type = $field_types[$i];
-        my ($min, $max) = @{$field_ranges[$i]};
+        print STDERR "DEBUG: Describe::new: field='$field', field_type=$field_type, index=$i\n" if $ENV{Cron_DEBUG};
         my $pattern;
-        $self->_debug("Describe::new: field=$field, field_type=$field_type, index=$i");
+
         eval {
-            if ($field_type eq 'dom' && $field =~ /^(L|LW|(\d{1,2})W|L-\d+)$/) {
-                $self->_debug("trying DayOfMonthPattern for '$field'");
-                $pattern = Cron::Describe::DayOfMonthPattern->new($field, $min, $max, $field_type);
-                $has_dom = 1 unless $field eq '?';
-            } elsif ($field_type eq 'dow' && $field =~ /^[0-7]#[1-5]$|^[0-7]L$|^[0-7](,[0-7])*$|^?$/) {
-                $self->_debug("trying DayOfWeekPattern for '$field'");
-                $pattern = Cron::Describe::DayOfWeekPattern->new($field, $min, $max, $field_type);
-                $has_dow = 1 unless $field eq '?';
-            } elsif ($field eq '?') {
-                $self->_debug("trying UnspecifiedPattern for '$field'");
-                $pattern = Cron::Describe::UnspecifiedPattern->new($field, $min, $max, $field_type);
-            } elsif ($field eq '*') {
-                $self->_debug("trying WildcardPattern for '$field'");
-                $pattern = Cron::Describe::WildcardPattern->new($field, $min, $max, $field_type);
-            } elsif ($field =~ /^-?\d+$/) {
-                $self->_debug("trying SinglePattern for '$field'");
-                $pattern = Cron::Describe::SinglePattern->new($field, $min, $max, $field_type);
-                $has_dom = 1 if $field_type eq 'dom';
-                $has_dow = 1 if $field_type eq 'dow';
-            } elsif ($field =~ /^(\d+)-(\d+)$/) {
-                $self->_debug("trying RangePattern for '$field'");
-                $pattern = Cron::Describe::RangePattern->new($field, $min, $max, $field_type);
-                $has_dom = 1 if $field_type eq 'dom';
-                $has_dow = 1 if $field_type eq 'dow';
+            if ($field =~ /^\d+$/) {
+                print STDERR "DEBUG: trying SinglePattern for '$field'\n" if $ENV{Cron_DEBUG};
+                $pattern = Cron::Describe::SinglePattern->new($field, $min_values[$i], $max_values[$i], $field_type);
+            } elsif ($field =~ /^\d+-\d+$/) {
+                print STDERR "DEBUG: trying RangePattern for '$field'\n" if $ENV{Cron_DEBUG};
+                $pattern = Cron::Describe::RangePattern->new($field, $min_values[$i], $max_values[$i], $field_type);
             } elsif ($field =~ /^(\*|\d+|\d+-\d+)\/\d+$/) {
-                $self->_debug("trying StepPattern for '$field'");
-                $pattern = Cron::Describe::StepPattern->new($field, $min, $max, $field_type);
-                $has_dom = 1 if $field_type eq 'dom';
-                $has_dow = 1 if $field_type eq 'dow';
-            } elsif ($field =~ /^(\*|\d+|\d+-\d+|\*\/\d+|\d+\/\d+|\d+-\d+\/\d+)(,(\*|\d+|\d+-\d+|\*\/\d+|\d+\/\d+|\d+-\d+\/\d+))*$/) {
-                $self->_debug("trying ListPattern for '$field'");
-                $pattern = Cron::Describe::ListPattern->new($field, $min, $max, $field_type);
-                $has_dom = 1 if $field_type eq 'dom' && $field ne '?';
-                $has_dow = 1 if $field_type eq 'dow' && $field ne '?';
+                print STDERR "DEBUG: trying StepPattern for '$field'\n" if $ENV{Cron_DEBUG};
+                $pattern = Cron::Describe::StepPattern->new($field, $min_values[$i], $max_values[$i], $field_type);
+            } elsif ($field eq '*') {
+                print STDERR "DEBUG: trying WildcardPattern for '$field'\n" if $ENV{Cron_DEBUG};
+                $pattern = Cron::Describe::WildcardPattern->new($field, $min_values[$i], $max_values[$i], $field_type);
+            } elsif ($field eq '?') {
+                print STDERR "DEBUG: trying UnspecifiedPattern for '$field'\n" if $ENV{Cron_DEBUG};
+                $pattern = Cron::Describe::UnspecifiedPattern->new($field, $min_values[$i], $max_values[$i], $field_type);
+            } elsif ($field_type eq 'dom' && $field =~ /^[LW\d-]+$/) {
+                print STDERR "DEBUG: trying DayOfMonthPattern for '$field'\n" if $ENV{Cron_DEBUG};
+                $pattern = Cron::Describe::DayOfMonthPattern->new($field, $min_values[$i], $max_values[$i], $field_type);
+            } elsif ($field_type eq 'dow' && $field =~ /^(\d+(L|#\d+))$/) {
+                print STDERR "DEBUG: trying DayOfWeekPattern for '$field'\n" if $ENV{Cron_DEBUG};
+                $pattern = Cron::Describe::DayOfWeekPattern->new($field, $min_values[$i], $max_values[$i], $field_type);
+            } elsif ($field =~ /^[^,]+(,[^,]+)*$/) {
+                print STDERR "DEBUG: trying ListPattern for '$field'\n" if $ENV{Cron_DEBUG};
+                $pattern = Cron::Describe::ListPattern->new($field, $min_values[$i], $max_values[$i], $field_type);
             } else {
                 croak "Invalid pattern '$field' for $field_type";
             }
-            push @{$self->{fields}}, $pattern;
+            push @{$self->{patterns}}, $pattern;
         };
         if ($@) {
-            my $error = $@;
-            $error =~ s/ at \S+ line \d+\.\n?$//;
-            croak $error;
+            print STDERR "DEBUG: Error: $@\n" if $ENV{Cron_DEBUG};
+            $self->{is_valid} = 0;
+            $self->{error_message} = $@;
+            return $self;
         }
     }
-    # Quartz: Ensure exactly one of dom or dow is specified
-    if ($has_dom && $has_dow) {
-        croak "Cannot specify both day-of-month ($fields[3]) and day-of-week ($fields[5]); one must be '?'";
-    }
-    # Validate February-specific constraints
-    if ($fields[4] =~ /^(2|2-\d+)$/) {
-        my $max_dom = defined $fields[6] && $fields[6] =~ /^\d+$/ ? ($fields[6] % 4 == 0 ? 29 : 28) : 29;
-        if ($fields[3] =~ /^(\d+)$/) {
-            croak "Day $1 is out of range (1-$max_dom) for February" if $1 > $max_dom;
-        } elsif ($fields[3] =~ /^(\d+)W$/) {
-            croak "Day $1 is out of range for nearest weekday (1-$max_dom)" if $1 > $max_dom;
+
+    # Validate day-of-month and month combinations
+    my $dom = $self->{patterns}[3]->to_string;
+    my $month = $self->{patterns}[4]->to_string;
+    if ($dom =~ /^\d+$/ && $month =~ /^\d+$/) {
+        my $day = int($dom);
+        my $month_num = int($month);
+        if ($month_num == 2 && $day > 29) {
+            $self->{is_valid} = 0;
+            $self->{error_message} = "Day $day is invalid for February (month $month_num)";
+            return $self;
+        } elsif ($day > 30 && ($month_num == 4 || $month_num == 6 || $month_num == 9 || $month_num == 11)) {
+            $self->{is_valid} = 0;
+            $self->{error_message} = "Day $day is invalid for month $month_num";
+            return $self;
         }
-        if ($fields[5] =~ /^([0-7])#([1-5])$/) {
-            my $days = { 0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday' };
-            croak "Fifth $days->{$1} is impossible in February $fields[6]" if $2 == 5 && defined $fields[6] && $fields[6] == 2025;
+    } elsif ($dom =~ /^(\d+)-(\d+)$/) {
+        my ($start, $end) = ($1, $2);
+        my $month_num = $month =~ /^\d+$/ ? int($month) : undef;
+        if ($month_num && $month_num == 2 && $end > 29) {
+            $self->{is_valid} = 0;
+            $self->{error_message} = "Day range $start-$end is invalid for February (month $month_num)";
+            return $self;
+        } elsif ($month_num && $end > 30 && ($month_num == 4 || $month_num == 6 || $month_num == 9 || $month_num == 11)) {
+            $self->{is_valid} = 0;
+            $self->{error_message} = "Day range $start-$end is invalid for month $month_num";
+            return $self;
+        }
+    } elsif ($dom =~ /^(\*|\d+|\d+-\d+)\/(\d+)$/) {
+        my ($range, $step) = ($1, $2);
+        my $month_num = $month =~ /^\d+$/ ? int($month) : undef;
+        if ($month_num && $month_num == 2 && ($range eq '*' || ($range =~ /^(\d+)-(\d+)$/ && $2 > 29))) {
+            $self->{is_valid} = 0;
+            $self->{error_message} = "Step pattern $dom is invalid for February (month $month_num)";
+            return $self;
+        } elsif ($month_num && ($range eq '*' || ($range =~ /^(\d+)-(\d+)$/ && $2 > 30)) && ($month_num == 4 || $month_num == 6 || $month_num == 9 || $month_num == 11)) {
+            $self->{is_valid} = 0;
+            $self->{error_message} = "Step pattern $dom is invalid for month $month_num";
+            return $self;
+        }
+    } elsif ($dom =~ /^[^,]+(,[^,]+)*$/) {
+        my @days = split /,/, $dom;
+        my $month_num = $month =~ /^\d+$/ ? int($month) : undef;
+        if ($month_num && $month_num == 2) {
+            foreach my $day (@days) {
+                if ($day =~ /^\d+$/ && $day > 29) {
+                    $self->{is_valid} = 0;
+                    $self->{error_message} = "Day $day in list $dom is invalid for February (month $month_num)";
+                    return $self;
+                } elsif ($day =~ /^(\d+)-(\d+)$/) {
+                    my ($start, $end) = ($1, $2);
+                    if ($end > 29) {
+                        $self->{is_valid} = 0;
+                        $self->{error_message} = "Day range $start-$end in list $dom is invalid for February (month $month_num)";
+                        return $self;
+                    }
+                } elsif ($day =~ /^(\*|\d+|\d+-\d+)\/(\d+)$/) {
+                    my ($range, $step) = ($1, $2);
+                    if ($range eq '*' || ($range =~ /^(\d+)-(\d+)$/ && $2 > 29)) {
+                        $self->{is_valid} = 0;
+                        $self->{error_message} = "Step pattern $day in list $dom is invalid for February (month $month_num)";
+                        return $self;
+                    }
+                }
+            }
+        } elsif ($month_num && ($month_num == 4 || $month_num == 6 || $month_num == 9 || $month_num == 11)) {
+            foreach my $day (@days) {
+                if ($day =~ /^\d+$/ && $day > 30) {
+                    $self->{is_valid} = 0;
+                    $self->{error_message} = "Day $day in list $dom is invalid for month $month_num";
+                    return $self;
+                } elsif ($day =~ /^(\d+)-(\d+)$/) {
+                    my ($start, $end) = ($1, $2);
+                    if ($end > 30) {
+                        $self->{is_valid} = 0;
+                        $self->{error_message} = "Day range $start-$end in list $dom is invalid for month $month_num";
+                        return $self;
+                    }
+                } elsif ($day =~ /^(\*|\d+|\d+-\d+)\/(\d+)$/) {
+                    my ($range, $step) = ($1, $2);
+                    if ($range eq '*' || ($range =~ /^(\d+)-(\d+)$/ && $2 > 30)) {
+                        $self->{is_valid} = 0;
+                        $self->{error_message} = "Step pattern $day in list $dom is invalid for month $month_num";
+                        return $self;
+                    }
+                }
+            }
         }
     }
+
+    if ($self->{patterns}[3]->to_string ne '?' && $self->{patterns}[5]->to_string ne '?') {
+        $self->{is_valid} = 0;
+        $self->{error_message} = "Cannot specify both day-of-month and day-of-week; one must be '?'";
+    }
+
     return $self;
 }
 
-sub _normalize_expression {
-    my ($expression) = @_;
-    my $original = $expression;
-    $expression = trim($expression);
-    return '' if $expression eq '';
-    $expression = uc($expression);
-    my %name_map = (
-        JAN => 1, FEB => 2, MAR => 3, APR => 4, MAY => 5, JUN => 6,
-        JUL => 7, AUG => 8, SEP => 9, OCT => 10, NOV => 11, DEC => 12,
-        SUN => 0, MON => 1, TUE => 2, WED => 3, THU => 4, FRI => 5, SAT => 6
-    );
-    $expression =~ s/\b([A-Z]{3})\b(?=[\s,?#L]|$)/$name_map{$1} || $1/ge;
+sub normalize_expression {
+    my ($self, $expression) = @_;
+    $expression =~ s/^\s+|\s+$//g;
+    croak "Empty cron expression is invalid" unless $expression;
     my @fields = split /\s+/, $expression;
-    my $field_count = scalar @fields;
-    if ($field_count == 5) {
-        @fields = (0, $fields[0], $fields[1], $fields[2], $fields[3], '?', '*');
-    } elsif ($field_count == 6) {
+    croak "5-field cron expressions not supported; use 6 or 7-field Quartz format" if @fields == 5;
+    croak "Invalid cron expression: expected 6 or 7 fields, got " . scalar(@fields) unless @fields >= 6 && @fields <= 7;
+    if (@fields == 6) {
         push @fields, '*';
-    } elsif ($field_count != 7) {
-        croak "Invalid number of fields: got $field_count, expected 5 (standard) or 6/7 (Quartz)";
     }
-    $expression = join ' ', @fields;
-    print STDERR "DEBUG: Describe::normalize_expression: original='$original', normalized='$expression'\n" if $DEBUG;
-    return $expression;
+    return join ' ', @fields;
 }
 
 sub is_valid {
-    my ($self) = shift;
-    return 1; # Errors are thrown via croak
+    my ($self) = @_;
+    return $self->{is_valid};
 }
 
-sub fields {
-    my ($self) = shift;
-    return [ map { $_->to_hash } @{$self->{fields} || []} ];
+sub error_message {
+    my ($self) = @_;
+    return $self->{error_message};
+}
+
+sub to_hash {
+    my ($self) = @_;
+    return [ map { $_->to_hash } @{$self->{patterns}} ];
+}
+
+sub to_string {
+    my ($self) = @_;
+    return join ' ', map { $_->to_string } @{$self->{patterns}};
+}
+
+sub quartz_dow {
+    my ($iso_dow) = @_;
+    return $iso_dow == 7 ? 1 : $iso_dow + 1;
 }
 
 sub is_match {
-    my ($self, $seconds) = @_;
-    croak "Invalid epoch seconds: must be a non-negative integer" unless defined $seconds && $seconds =~ /^\d+$/;
-    my $tm = Time::Moment->from_epoch($seconds)->with_offset_same_instant($self->{utc_offset});
-    my @field_values = (
-        $tm->second, $tm->minute, $tm->hour, $tm->day_of_month,
-        $tm->month, $tm->day_of_week % 7, $tm->year
+    my ($self, $tm) = @_;
+    croak "Time::Moment object required" unless ref($tm) eq 'Time::Moment';
+
+    my $tm_adjusted = $tm->with_offset_same_instant($self->{utc_offset});
+    my @values = (
+        $tm_adjusted->second,
+        $tm_adjusted->minute,
+        $tm_adjusted->hour,
+        $tm_adjusted->day_of_month,
+        $tm_adjusted->month,
+        quartz_dow($tm_adjusted->day_of_week),
+        $tm_adjusted->year
     );
-    $self->_debug("is_match: seconds=$seconds, utc_offset=$self->{utc_offset}, tm=" . $tm->strftime('%Y-%m-%dT%H:%M:%S%z'));
-    for my $i (0 .. $#{$self->{fields}}) {
-        my $pattern = $self->{fields}[$i];
-        my $value = $field_values[$i];
-        $self->_debug("is_match: field=$i, field_type=$pattern->{field_type}, value=$value, pattern=" . ref($pattern) . ", pattern_value=" . $pattern->to_string);
-        return 0 unless $pattern->is_match($value, $tm);
+
+    for my $i (0..6) {
+        my $field_type = [qw(seconds minute hour dom month dow year)]->[$i];
+        print STDERR "DEBUG: is_match: field=$i, field_type=$field_type, value=$values[$i], pattern=" . (ref($self->{patterns}[$i]) || 'undef') . ", pattern_value=" . ($self->{patterns}[$i] ? $self->{patterns}[$i]->to_string : 'undef') . "\n" if $ENV{Cron_DEBUG};
+        return 0 unless $self->{patterns}[$i] && $self->{patterns}[$i]->is_match($values[$i], $tm_adjusted);
     }
     return 1;
-}
-
-sub to_english {
-    my ($self) = shift;
-    return "English description not implemented"; # Placeholder
-}
-
-sub _debug {
-    my ($self, $message) = @_;
-    print STDERR "DEBUG: " . ref($self) . ": $message\n" if $DEBUG;
 }
 
 1;

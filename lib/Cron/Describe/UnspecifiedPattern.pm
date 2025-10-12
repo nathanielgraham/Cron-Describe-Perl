@@ -8,30 +8,18 @@ sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
     my $self = $class->SUPER::new($value, $min, $max, $field_type);
     $self->{pattern_type} = 'unspecified';
-    $self->validate();
-    print STDERR "DEBUG: UnspecifiedPattern: Initialized $class with value='$value', field_type='$field_type', min=$min, max=$max\n" if $Cron::Describe::DEBUG;
+    croak "Invalid unspecified pattern '$value' for $field_type" unless $value eq '?';
     return $self;
-}
-
-sub validate {
-    my ($self) = @_;
-    unless ($self->{value} eq '?') {
-        $self->add_error("Invalid unspecified '$self->{value}' for $self->{field_type}, expected '?'");
-        croak $self->errors->[0];
-    }
 }
 
 sub is_match {
     my ($self, $value, $tm) = @_;
-    my $result = 1; # Unspecified matches all values
-    $self->_debug("is_match: value=$value, result=$result");
-    return $result;
+    return 1;
 }
 
-sub to_hash {
-    my ($self) = shift;
-    my $hash = $self->SUPER::to_hash;
-    return $hash;
+sub to_english {
+    my ($self) = @_;
+    return "any $self->{field_type}";
 }
 
 sub to_string {
@@ -39,9 +27,9 @@ sub to_string {
     return '?';
 }
 
-sub to_english {
+sub to_hash {
     my ($self) = @_;
-    return "any";
+    return $self->SUPER::to_hash;
 }
 
 1;
