@@ -44,6 +44,8 @@ sub to_hash {
         step => $self->{step},
         min => $self->{min},
         max => $self->{max},
+        start_value => $self->{base}->to_hash->{start_value} // $self->{min},
+        end_value => $self->{base}->to_hash->{end_value} // $self->{max},
         base => $self->{base}->to_hash,
     };
 }
@@ -56,10 +58,14 @@ sub to_string {
 sub is_match {
     my ($self, $value, $tm) = @_;
     print STDERR "DEBUG: is_match: StepPattern: value=$value, pattern_value=$self->{value}\n" if $ENV{Cron_DEBUG};
-    return 0 unless $self->{base}->is_match($value, $tm);
     my $base_hash = $self->{base}->to_hash;
     my $start = $base_hash->{start_value} // $self->{min};
     my $end = $base_hash->{end_value} // $self->{max};
+
+    # For SinglePattern, use max as end to allow full sequence
+    if ($self->{base}->isa('Cron::Describe::SinglePattern')) {
+        $end = $self->{max};
+    }
     return 0 unless $value >= $start && $value <= $end;
     return ($value - $start) % $self->{step} == 0;
 }

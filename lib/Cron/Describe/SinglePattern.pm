@@ -32,6 +32,8 @@ sub to_hash {
     my ($self) = @_;
     my $hash = $self->SUPER::to_hash;
     $hash->{value} = $self->{value};
+    $hash->{start_value} = $self->{value};
+    $hash->{end_value} = $self->{value};  # For single value, start and end are the same
     return $hash;
 }
 

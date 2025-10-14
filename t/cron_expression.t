@@ -74,7 +74,7 @@ sub test_matches {
             my $tm = $time_moment_cache{$ts . "_" . $offset};
             # Use the provided Cron::Describe object and update its utc_offset
             try {
-                $desc->utc_offset($offset); # CHANGED: Use setter to update utc_offset
+                $desc->utc_offset($offset);
             } catch {
                 diag "Failed to set utc_offset to $offset: $_";
                 fail "Setting utc_offset for match test";
@@ -91,7 +91,7 @@ sub test_matches {
 }
 
 # Run tests
-plan tests => scalar @all_tests;
+plan tests => scalar @all_tests; # Updated to reflect dynamic count (52 tests)
 my $test_number = 0;
 foreach my $test (@all_tests) {
     $test_number++;
@@ -100,7 +100,6 @@ foreach my $test (@all_tests) {
         my $desc;
         my $exception;
         try {
-            # CHANGED: Use default utc_offset of 0 for validation test
             $desc = Cron::Describe->new($test->{expression}, utc_offset => 0);
         } catch {
             $exception = $_;
@@ -113,7 +112,6 @@ foreach my $test (@all_tests) {
         $diag_msg .= "  Status: " . ($desc && $desc->is_valid ? "Valid" : "Invalid") . "\n";
         $diag_msg .= "  Error: " . ($exception ? $exception : ($desc && $desc->error_message ? $desc->error_message : "None")) . "\n";
         $diag_msg .= "  Expected: " . ($test->{is_valid} ? "Valid" : "Invalid") . "\n";
-        # CHANGED: Show utc_offset from matches if available
         $diag_msg .= "  UTC Offset: " . (exists $test->{matches} && @{$test->{matches}} ? join(", ", map { $_->{utc_offset} // 0 } @{$test->{matches}}) : 0) . "\n";
         diag $diag_msg;
 

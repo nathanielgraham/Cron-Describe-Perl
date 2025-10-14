@@ -222,7 +222,7 @@
   },
   {
     "expression": "0 0 0 ? * MON-FRI *",
-    "test_name": "Valid day-of-month range",
+    "test_name": "Valid day-of-week range",
     "is_valid": true
   },
   {
@@ -256,5 +256,125 @@
     "expression": "0 0 0 L-10 * ? *",
     "test_name": "Valid tenth-to-last day Quartz pattern",
     "is_valid": true
+  },
+  {
+    "expression": "0 30 * * * ? *",
+    "test_name": "Valid cron for hourly job at 30 minutes",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1767227400, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767228300, "utc_offset": 0, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0 0 0 * * ? *",
+    "test_name": "Valid cron for daily midnight job in IST",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1767205800, "utc_offset": 330, "matches": 1 },
+      { "timestamp": 1767229200, "utc_offset": 330, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0 0 0 LW * ? *",
+    "test_name": "Valid cron for last weekday of the month",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1764288000, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1764105600, "utc_offset": 0, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0/15 0 9 * * ? *",
+    "test_name": "Valid cron for every 15 seconds in 9 AM hour",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1767258015, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767297620, "utc_offset": 0, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0 0 0 ? 2 1#4 2024",
+    "test_name": "Valid cron for fourth Sunday in February 2024",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1708819200, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1708905600, "utc_offset": 0, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0/0 0 0 * * ? *",
+    "test_name": "Invalid cron with zero step in seconds",
+    "is_valid": false,
+    "error_message": "Step value 0 is invalid for seconds"
+  },
+  {
+    "expression": "0 0 0/2 2 11 ? 2025",
+    "test_name": "Valid cron for every 2 hours on DST fall back",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1762056000, "utc_offset": -240, "matches": 1 },
+      { "timestamp": 1762066800, "utc_offset": -300, "matches": 1 },
+      { "timestamp": 1762059600, "utc_offset": -240, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0 0/5 12 * * ? *",
+    "test_name": "Valid cron for every 5 minutes in 12 PM hour",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1767269100, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767266820, "utc_offset": 0, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0 0 2/4 * * ? *",
+    "test_name": "Valid cron for every 4 hours starting at 2 AM",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1767261600, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767265200, "utc_offset": 0, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0 0 5/3 * * ? *",
+    "test_name": "Valid cron for every 3 hours starting at 5 AM",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1767265200, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767268800, "utc_offset": 0, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0 10-20/5 8 * * ? *",
+    "test_name": "Valid cron for every 5 minutes from 10 to 20 past 8 AM",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1767255300, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767255600, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767255660, "utc_offset": 0, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0/10,30,45 0 10 * * ? *",
+    "test_name": "Valid cron for seconds 0/10,30,45 at 10 AM",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1767260400, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767260430, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767260445, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767260415, "utc_offset": 0, "matches": 0 }
+    ]
+  },
+  {
+    "expression": "0 0/5,15,30 14 * * ? *",
+    "test_name": "Valid cron for minutes 0/5,15,30 at 2 PM",
+    "is_valid": true,
+    "matches": [
+      { "timestamp": 1767273900, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767274200, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767274500, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767274260, "utc_offset": 0, "matches": 0 }
+    ]
   }
 ]
