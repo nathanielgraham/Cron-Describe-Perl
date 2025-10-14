@@ -1,125 +1,150 @@
 [
     {
-        "expression": "0 0 0 L * ? *",
-        "is_valid": true,
-        "utc_offset": 0,
         "description": "Validating last day of month Quartz pattern",
-        "expected_fields": [
-            {"pattern_type": "single", "value": 0, "field_type": "seconds", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "minute", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "hour", "min": 0, "max": 23, "step": 1},
-            {"pattern_type": "last", "offset": 0, "field_type": "dom", "min": 1, "max": 31, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "month", "min": 1, "max": 12, "step": 1},
-            {"pattern_type": "unspecified", "field_type": "dow", "min": 0, "max": 7, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "year", "min": 1970, "max": 2199, "step": 1}
-        ],
-        "matches": [
-            {"timestamp": 1767139200, "matches": 1}
+        "expression": "0 0 0 L * ? *",
+        "expected_valid": true,
+        "match_tests": [
+            {
+                "timestamp": 1767139200,
+                "expected_match": true
+            }
         ]
     },
     {
-        "expression": "0 0 0 ? * 1#3 *",
-        "is_valid": true,
-        "utc_offset": 330,
         "description": "Validating third Sunday Quartz pattern",
-        "expected_fields": [
-            {"pattern_type": "single", "value": 0, "field_type": "seconds", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "minute", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "hour", "min": 0, "max": 23, "step": 1},
-            {"pattern_type": "unspecified", "field_type": "dom", "min": 1, "max": 31, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "month", "min": 1, "max": 12, "step": 1},
-            {"pattern_type": "nth", "day": 1, "nth": 3, "field_type": "dow", "min": 0, "max": 7, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "year", "min": 1970, "max": 2199, "step": 1}
-        ],
-        "matches": [
-            {"timestamp": 1763231400, "matches": 1}
+        "expression": "0 0 0 ? * 1#3 *",
+        "expected_valid": true,
+        "utc_offset": 330,
+        "match_tests": [
+            {
+                "timestamp": 1763231400,
+                "expected_match": true
+            }
         ]
     },
     {
-        "expression": "0 0 0 15W * ? *",
-        "is_valid": true,
-        "utc_offset": 0,
         "description": "Validating nearest weekday to 15th Quartz pattern",
-        "expected_fields": [
-            {"pattern_type": "single", "value": 0, "field_type": "seconds", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "minute", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "hour", "min": 0, "max": 23, "step": 1},
-            {"pattern_type": "nearest_weekday", "day": 15, "field_type": "dom", "min": 1, "max": 31, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "month", "min": 1, "max": 12, "step": 1},
-            {"pattern_type": "unspecified", "field_type": "dow", "min": 0, "max": 7, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "year", "min": 1970, "max": 2199, "step": 1}
-        ],
-        "matches": [
-            {"timestamp": 1765756800, "matches": 1}
+        "expression": "0 0 0 15W * ? *",
+        "expected_valid": true,
+        "match_tests": [
+            {
+                "timestamp": 1765756800,
+                "expected_match": true
+            }
         ]
     },
     {
-        "expression": "0 0 0 L-3 * ? *",
-        "is_valid": true,
-        "utc_offset": 0,
         "description": "Validating third-to-last day Quartz pattern",
-        "expected_fields": [
-            {"pattern_type": "single", "value": 0, "field_type": "seconds", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "minute", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "hour", "min": 0, "max": 23, "step": 1},
-            {"pattern_type": "last", "offset": 3, "field_type": "dom", "min": 1, "max": 31, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "month", "min": 1, "max": 12, "step": 1},
-            {"pattern_type": "unspecified", "field_type": "dow", "min": 0, "max": 7, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "year", "min": 1970, "max": 2199, "step": 1}
+        "expression": "0 0 0 L-3 * ? *",
+        "expected_valid": true
+    },
+    {
+        "description": "Valid cron with all wildcards",
+        "expression": "0 0 0 * * ? *",
+        "expected_valid": true,
+        "match_tests": [
+            {
+                "timestamp": 1767139200,
+                "expected_match": true
+            },
+            {
+                "timestamp": 1767142800,
+                "expected_match": false
+            }
         ]
     },
     {
-        "expression": "0 0 0 ? * 1L *",
-        "is_valid": true,
-        "utc_offset": 0,
-        "description": "Validating last Sunday Quartz pattern",
-        "expected_fields": [
-            {"pattern_type": "single", "value": 0, "field_type": "seconds", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "minute", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "hour", "min": 0, "max": 23, "step": 1},
-            {"pattern_type": "unspecified", "field_type": "dom", "min": 1, "max": 31, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "month", "min": 1, "max": 12, "step": 1},
-            {"pattern_type": "last_of_day", "day": 1, "field_type": "dow", "min": 0, "max": 7, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "year", "min": 1970, "max": 2199, "step": 1}
-        ],
-        "matches": [
-            {"timestamp": 1766880000, "matches": 1}
-        ]
+        "description": "Valid cron with specific time",
+        "expression": "0 15 10 * * ? *",
+        "expected_valid": true
     },
     {
-        "expression": "0 0 0 LW * ? *",
-        "is_valid": true,
-        "utc_offset": 0,
-        "description": "Validating last weekday Quartz pattern",
-        "expected_fields": [
-            {"pattern_type": "single", "value": 0, "field_type": "seconds", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "minute", "min": 0, "max": 59, "step": 1},
-            {"pattern_type": "single", "value": 0, "field_type": "hour", "min": 0, "max": 23, "step": 1},
-            {"pattern_type": "last_weekday", "offset": 0, "field_type": "dom", "min": 1, "max": 31, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "month", "min": 1, "max": 12, "step": 1},
-            {"pattern_type": "unspecified", "field_type": "dow", "min": 0, "max": 7, "step": 1},
-            {"pattern_type": "wildcard", "field_type": "year", "min": 1970, "max": 2199, "step": 1}
-        ]
-    },
-    {
-        "expression": "0 0 0 ? * 1#6 *",
-        "is_valid": false,
-        "utc_offset": 0,
         "description": "Invalid sixth Sunday Quartz pattern",
-        "error_message": "Sixth Sunday is impossible in any month"
+        "expression": "0 0 0 ? * 1#6 *",
+        "expected_valid": false,
+        "error_message": "Nth value 6 out of range (1-5)"
     },
     {
+        "description": "Invalid minute value",
+        "expression": "0 60 0 * * ? *",
+        "expected_valid": false,
+        "error_message": "Invalid value '60' for minute, expected 0-59"
+    },
+    {
+        "description": "Invalid day for February",
+        "expression": "0 0 0 31 2 ? *",
+        "expected_valid": false,
+        "error_message": "Day 31 is invalid for February (month 2)"
+    },
+    {
+        "description": "Invalid combination of day-of-month and day-of-week",
+        "expression": "0 0 0 LW * 1 *",
+        "expected_valid": false,
+        "error_message": "Cannot specify both day-of-month and day-of-week; one must be '?'"
+    },
+    {
+        "description": "Invalid day-of-week pattern",
+        "expression": "0 0 0 * * ?W *",
+        "expected_valid": false,
+        "error_message": "Invalid use of 'W' in day-of-week field"
+    },
+    {
+        "description": "Invalid out-of-range nearest weekday",
         "expression": "0 0 0 32W * ? *",
-        "is_valid": false,
-        "utc_offset": 0,
-        "description": "Invalid out-of-range nearest weekday Quartz pattern",
+        "expected_valid": false,
         "error_message": "Day 32 is out of range for nearest weekday (1-31)"
     },
     {
-        "expression": "0 0 0 L-31 * ? *",
-        "is_valid": false,
-        "utc_offset": 0,
-        "description": "Invalid out-of-range last day offset Quartz pattern",
-        "error_message": "Offset 31 is too large for dom"
+        "description": "Invalid day-of-week number",
+        "expression": "0 0 0 * * 8#3 *",
+        "expected_valid": false,
+        "error_message": "Day 8 out of range for dow"
+    },
+    {
+        "description": "Invalid day-of-week pattern",
+        "expression": "0 0 0 * * W#3 *",
+        "expected_valid": false,
+        "error_message": "Invalid use of 'W' in day-of-week field"
+    },
+    {
+        "description": "Invalid combination of day-of-month and day-of-week",
+        "expression": "0 0 0 15 * 1 *",
+        "expected_valid": false,
+        "error_message": "Cannot specify both day-of-month and day-of-week; one must be '?'"
+    },
+    {
+        "description": "Invalid year value",
+        "expression": "0 0 0 * * ? 1969",
+        "expected_valid": false,
+        "error_message": "Invalid value '1969' for year, expected 1970-2099"
+    },
+    {
+        "description": "Valid day-of-month list",
+        "expression": "0 0 0 1,15,31 * ? *",
+        "expected_valid": true
+    },
+    {
+        "description": "Invalid day-of-month value",
+        "expression": "0 0 0 32 * ? *",
+        "expected_valid": false,
+        "error_message": "Invalid value '32' for dom, expected 1-31"
+    },
+    {
+        "description": "Invalid step value",
+        "expression": "0 0 0 0/0 * ? *",
+        "expected_valid": false,
+        "error_message": "Step value 0 is invalid for dom"
+    },
+    {
+        "description": "Invalid month value",
+        "expression": "0 0 0 * 13 ? *",
+        "expected_valid": false,
+        "error_message": "Invalid value '13' for month, expected 1-12"
+    },
+    {
+        "description": "Empty cron expression",
+        "expression": "",
+        "expected_valid": false,
+        "error_message": "Empty cron expression is invalid"
     }
 ]

@@ -1,93 +1,102 @@
+
 package Cron::Describe::DayOfMonthPattern;
 use strict;
 use warnings;
 use Carp qw(croak);
-use parent 'Cron::Describe::Pattern';
+use Time::Moment;
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
-    my $self = $class->SUPER::new($value, $min, $max, $field_type);
-    $self->{pattern_type} = '';
-    $self->_debug("DayOfMonthPattern::new: value='$value', field_type='$field_type'");
-    if ($value eq 'L') {
-        $self->{pattern_type} = 'last';
-        $self->{offset} = 0;
-    } elsif ($value eq 'LW') {
-        $self->{pattern_type} = 'last_weekday';
-        $self->{offset} = 0;
+    my ($pattern_type, $offset, $day);
+
+    if ($value =~ /^L(-\d+)?$/) {
+        $pattern_type = 'last';
+        $offset = $1 // 0;
     } elsif ($value =~ /^(\d+)W$/) {
-        $self->{pattern_type} = 'nearest_weekday';
-        $self->{day} = $1;
-        croak "Day $1 is out of range for nearest weekday (1-$max)" if $1 < $min || $1 > $max;
-    } elsif ($value =~ /^L-(\d+)$/) {
-        $self->{pattern_type} = 'last';
-        $self->{offset} = $1;
-        croak "Offset $1 is too large for $field_type" if $1 >= $max;
+        $pattern_type = 'nearest_weekday';
+        $day = $1;
+        croak "Day $day is out of range for nearest weekday ($min-$max)" unless $day >= $min && $day <= $max;
+    } elsif ($value eq 'LW') {
+        $pattern_type = 'last_weekday';
     } else {
-        croak "Invalid day-of-month pattern '$value' for $field_type";
+        croak "Invalid pattern '$value' for $field_type";
     }
-    $self->_debug("DayOfMonthPattern: pattern_type=$self->{pattern_type}, offset=" . ($self->{offset} // 'undef') . ", day=" . ($self->{day} // 'undef'));
+
+    my $self = bless {
+        value => $value,
+        min => $min,
+        max => $max,
+        field_type => $field_type,
+        pattern_type => $pattern_type,
+        offset => $offset,
+        day => $day,
+    }, $class;
+
+    print STDERR "DEBUG: DayOfMonthPattern::new: value='$value', field_type='$field_type', pattern_type=$pattern_type, offset=" . ($offset // 'undef') . ", day=" . ($day // 'undef') . "\n" if $ENV{Cron_DEBUG};
     return $self;
 }
 
 sub is_match {
     my ($self, $value, $tm) = @_;
-    if ($self->{pattern_type} eq 'last') {
-        my $last_day = $tm->length_of_month;
-        return $value == $last_day - $self->{offset};
-    } elsif ($self->{pattern_type} eq 'last_weekday') {
-        my $last_day = $tm->length_of_month;
-        my $last_tm = $tm->with_day_of_month($last_day);
-        my $dow = $last_tm->day_of_week;
-        $dow = 7 if $dow == 0; # Map Sunday to 7
-        if ($dow == 6 || $dow == 7) { # Saturday or Sunday
-            return $value == $last_day - ($dow == 6 ? 1 : 2);
-        }
-        return $value == $last_day;
-    } elsif ($self->{pattern_type} eq 'nearest_weekday') {
-        my $target_day = $self->{day};
-        my $tm_day = $tm->with_day_of_month($target_day);
-        my $dow = $tm_day->day_of_week;
-        $dow = 7 if $dow == 0;
-        if ($dow == 6 || $dow == 7) { # Saturday or Sunday
-            my $offset = $dow == 6 ? -1 : ($tm_day->day_of_month == 1 ? 1 : -1);
-            return $value == $target_day + $offset;
-        }
-        return $value == $target_day;
-    }
-    return 0;
-}
+    croak "Time::Moment object required" unless ref($tm) eq 'Time::Moment';
 
-sub to_english {
-    my ($self) = @_;
+    print STDERR "DEBUG: DayOfMonthPattern::is_match: input_time=" . $tm->strftime('%Y-%m-%d %H:%M:%S %Z') . ", year=" . $tm->year . ", month=" . $tm->month . "\n" if $ENV{Cron_DEBUG};
+    my $last_day = $tm->at_last_day_of_month->day_of_month;
+    my $match_day;
+
     if ($self->{pattern_type} eq 'last') {
-        return $self->{offset} ? "the $self->{offset}th-to-last day of the month" : "the last day of the month";
-    } elsif ($self->{pattern_type} eq 'last_weekday') {
-        return "the last weekday of the month";
+        $match_day = $last_day + $self->{offset};
+        print STDERR "DEBUG: DayOfMonthPattern::is_match: pattern_type=last, value=$value, last_day=$last_day, offset=$self->{offset}, match_day=$match_day\n" if $ENV{Cron_DEBUG};
+        my $result = $value == $match_day;
+        print STDERR "DEBUG: DayOfMonthPattern::is_match: result=" . ($result ? 'true' : 'false') . " for value=$value, match_day=$match_day\n" if $ENV{Cron_DEBUG};
+        return $result;
     } elsif ($self->{pattern_type} eq 'nearest_weekday') {
-        return "the nearest weekday to the $self->{day}th";
+        my $day = $self->{day};
+        my $tm_day = $tm->with_day_of_month($day);
+        my $dow = $tm_day->day_of_week;
+        my $adjusted_day = $day;
+        if ($dow == 6) { # Saturday
+            $adjusted_day = $day - 1 if $day > 1;
+        } elsif ($dow == 7) { # Sunday
+            $adjusted_day = $day + 1 if $day < $last_day;
+        }
+        print STDERR "DEBUG: DayOfMonthPattern::is_match: pattern_type=nearest_weekday, value=$value, day=$day, dow=$dow, adjusted_day=$adjusted_day, tm_day=" . $tm_day->strftime('%Y-%m-%d') . "\n" if $ENV{Cron_DEBUG};
+        my $result = $value == $adjusted_day;
+        print STDERR "DEBUG: DayOfMonthPattern::is_match: result=" . ($result ? 'true' : 'false') . " for value=$value, adjusted_day=$adjusted_day\n" if $ENV{Cron_DEBUG};
+        return $result;
+    } elsif ($self->{pattern_type} eq 'last_weekday') {
+        my $day = $last_day;
+        my $tm_last = $tm->at_last_day_of_month;
+        my $dow = $tm_last->day_of_week;
+        my $adjusted_day = $day;
+        if ($dow == 6) { # Saturday
+            $adjusted_day = $day - 1 if $day > 1;
+        } elsif ($dow == 7) { # Sunday
+            $adjusted_day = $day - 2 if $day > 2;
+        }
+        print STDERR "DEBUG: DayOfMonthPattern::is_match: pattern_type=last_weekday, value=$value, last_day=$day, dow=$dow, adjusted_day=$adjusted_day, tm_last=" . $tm_last->strftime('%Y-%m-%d') . "\n" if $ENV{Cron_DEBUG};
+        my $result = $value == $adjusted_day;
+        print STDERR "DEBUG: DayOfMonthPattern::is_match: result=" . ($result ? 'true' : 'false') . " for value=$value, adjusted_day=$adjusted_day\n" if $ENV{Cron_DEBUG};
+        return $result;
     }
-    return "unknown";
+    print STDERR "DEBUG: DayOfMonthPattern::is_match: no matching pattern_type, returning false\n" if $ENV{Cron_DEBUG};
+    return 0;
 }
 
 sub to_string {
     my ($self) = @_;
-    if ($self->{pattern_type} eq 'last') {
-        return $self->{offset} ? "L-$self->{offset}" : 'L';
-    } elsif ($self->{pattern_type} eq 'last_weekday') {
-        return 'LW';
-    } elsif ($self->{pattern_type} eq 'nearest_weekday') {
-        return "$self->{day}W";
-    }
-    return $self->{value} // '';
+    return $self->{value};
 }
 
 sub to_hash {
     my ($self) = @_;
-    my $hash = $self->SUPER::to_hash;
-    $hash->{offset} = $self->{offset} if defined $self->{offset};
-    $hash->{day} = $self->{day} if defined $self->{day};
-    return $hash;
+    return {
+        value => $self->{value},
+        field_type => $self->{field_type},
+        pattern_type => $self->{pattern_type},
+        offset => $self->{offset},
+        day => $self->{day},
+    };
 }
 
 1;
