@@ -360,10 +360,10 @@
     "test_name": "Valid cron for seconds 0/10,30,45 at 10 AM",
     "is_valid": true,
     "matches": [
-      { "timestamp": 1767260400, "utc_offset": 0, "matches": 1 },
-      { "timestamp": 1767260430, "utc_offset": 0, "matches": 1 },
-      { "timestamp": 1767260445, "utc_offset": 0, "matches": 1 },
-      { "timestamp": 1767260415, "utc_offset": 0, "matches": 0 }
+      { "timestamp": 1760436000, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1760436010, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1760436030, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767264015, "utc_offset": 0, "matches": 0 }
     ]
   },
   {
@@ -371,10 +371,10 @@
     "test_name": "Valid cron for minutes 0/5,15,30 at 2 PM",
     "is_valid": true,
     "matches": [
-      { "timestamp": 1767273900, "utc_offset": 0, "matches": 1 },
-      { "timestamp": 1767274200, "utc_offset": 0, "matches": 1 },
-      { "timestamp": 1767274500, "utc_offset": 0, "matches": 1 },
-      { "timestamp": 1767274260, "utc_offset": 0, "matches": 0 }
+      { "timestamp": 1760450400, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1760450700, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1760451300, "utc_offset": 0, "matches": 1 },
+      { "timestamp": 1767264015, "utc_offset": 0, "matches": 0 }
     ]
   }
 ]
