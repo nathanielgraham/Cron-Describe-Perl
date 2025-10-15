@@ -14,6 +14,7 @@ my @modules = qw(
     Cron::Describe::ListPattern
     Cron::Describe::DayOfMonthPattern
     Cron::Describe::DayOfWeekPattern
+    Cron::Describe::Utils
 );
 
 foreach my $module (@modules) {
