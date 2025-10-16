@@ -27,6 +27,11 @@ sub to_string {
     croak "Abstract method 'to_string' not implemented in " . ref($_[0]);
 }
 
+sub is_single {
+    my ($self, $value) = @_;
+    return 0;  # DEFAULT: NOT SINGLE
+}
+
 sub to_hash {
     my ($self) = @_;
     return {

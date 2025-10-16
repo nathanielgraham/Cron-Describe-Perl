@@ -49,6 +49,7 @@ sub new {
         value => $value,
         min => $min,
         max => $max,
+        pattern_type => 'list',
         field_type => $field_type,
         patterns => \@patterns,
     }, $class;

@@ -434,5 +434,53 @@
       { "timestamp": 1701388800, "utc_offset": 0, "matches": 1 },
       { "timestamp": 1701820800, "utc_offset": 0, "matches": 0 }
     ]
+  },
+  {
+    "expression": "0 0 * * 1",
+    "expected": "every Monday at midnight"
+  },
+  {
+    "expression": "30 * * * *",
+    "expected": "every 30 minutes"
+  },
+  {
+    "expression": "0 0 15 * *",
+    "expected": "on the 15th of the month at midnight"
+  },
+  {
+    "expression": "* * * * *",
+    "expected": "every minute"
+  },
+  {
+    "expression": "0 * * * *",
+    "expected": "every hour"
+  },
+  {
+    "expression": "0 0 * * *",
+    "expected": "every day at midnight"
+  },
+  {
+    "expression": "*/15 * * * *",
+    "expected": "every 15 minutes"
+  },
+  {
+    "expression": "0 0 1,15 * *",
+    "expected": "on the first through 15th days of the month at midnight"
+  },
+  {
+    "expression": "0 0 1-5 * *",
+    "expected": "on first through fifth of the month at midnight"
+  },
+  {
+    "expression": "0 0 * * 1,3,5",
+    "expected": "on Monday, Wednesday and Friday at midnight"
+  },
+  {
+    "expression": "0 0 * * 1-5",
+    "expected": "on Sunday through Thursday at midnight"
+  },
+  {
+    "expression": "0 10-20/5 8 * * ? *",
+    "expected": "every 5 minutes from 10 to 20 past 8 AM"
   }
 ]

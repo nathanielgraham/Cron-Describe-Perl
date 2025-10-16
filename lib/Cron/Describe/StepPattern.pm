@@ -5,6 +5,7 @@ use Carp qw(croak);
 use Cron::Describe::SinglePattern;
 use Cron::Describe::RangePattern;
 use Cron::Describe::WildcardPattern;
+use parent 'Cron::Describe::Pattern';
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
@@ -24,11 +25,14 @@ sub new {
         croak "Invalid base pattern '$base' in step pattern for $field_type";
     }
 
+    #$self->{pattern_type} = 'unspecified';
+
     my $self = bless {
         value => $value,
         min => $min,
         max => $max,
         field_type => $field_type,
+        pattern_type => 'step',
         base => $base_pattern,
         step => $step,
     }, $class;

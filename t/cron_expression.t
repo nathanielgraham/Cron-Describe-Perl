@@ -56,6 +56,15 @@ sub test_validation {
    return $ok;
 }
 
+sub test_english {
+    my ($desc, $test) = @_;
+    if ($test->{expected_english}) {
+        is($desc->to_english, $test->{expected_english}, "English: $test->{test_name}");
+    } else {
+        pass("No English test");
+    }
+}
+
 sub test_fields {
    my ( $desc, $test ) = @_;
    if ( $test->{expected_fields} ) {
@@ -147,6 +156,8 @@ foreach my $test (@all_tests) {
 
          # Timestamp matching test
          test_matches( $desc, $test );
+
+         test_english($desc, $test);
       }
    };
 }

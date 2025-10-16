@@ -28,6 +28,11 @@ sub to_string {
     return "$self->{value}";
 }
 
+sub is_single {
+    my ($self, $value) = @_;
+    return defined $value ? $self->{value} == $value : 1;
+}
+
 sub to_hash {
     my ($self) = @_;
     my $hash = $self->SUPER::to_hash;

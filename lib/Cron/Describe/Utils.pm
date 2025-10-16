@@ -4,13 +4,13 @@ use warnings;
 use Exporter qw(import);
 
 our @EXPORT_OK = qw(
-    format_time num_to_ordinal field_unit join_parts
+    format_time num_to_ordinal field_unit join_parts fill_template format_list
     %month_map %dow_map @month_names @day_names %nth_names %time_specials %unit_labels
-    %ordinal_suffix %day_ordinal %prepositions %joiners %frequency_words
+    %ordinal_suffix %day_ordinal %prepositions %joiners %frequency_words %templates
 );
 
 our %EXPORT_TAGS = (
-    constants => [qw(%month_map %dow_map @month_names @day_names %nth_names %time_specials %unit_labels %ordinal_suffix %day_ordinal %prepositions %joiners %frequency_words)],
+    constants => [qw(%month_map %dow_map @month_names @day_names %nth_names %time_specials %unit_labels %ordinal_suffix %day_ordinal %prepositions %joiners %frequency_words %templates)],
     helpers   => [qw(format_time num_to_ordinal field_unit join_parts)],
     all       => [@EXPORT_OK]
 );
@@ -84,12 +84,45 @@ our %day_ordinal = (map { $_ => $nth_names{$_} || "$_".($ordinal_suffix{$_}||'')
 our %prepositions = (second => 'at', minute => 'at', hour => 'at', dom => 'on the', month => 'in', dow => 'on', year => 'in');
 our %joiners = (list => 'and', range => 'through');
 
+# ALL TEMPLATES: PHASE 1 + 2
+our %templates = (
+    # PHASE 1 (6)
+    every_minute      => 'every minute',
+    every_day_name    => 'every {day_name}',
+    every_day_time    => 'every day at {time}',
+    every_hour_time   => 'every hour at {time}',
+    every_30_minutes  => 'every 30 minutes',
+    dom_time          => 'on the {value} of the month at {time}',
+
+    # PHASE 2 (6)
+    every_step        => 'every {interval} {unit}',
+    dom_list          => 'on the {list} of the month',
+    dom_range         => 'on {start} through {end} of the month',
+    dow_list          => 'on {list}',
+    dow_range         => 'on {start} through {end}',
+    step_range        => 'every {interval} {unit} from {start} to {end}',
+);
+
+# PHASE 2 HELPER
+sub format_list {
+    my ($field, @items) = @_;
+    return join_parts(map { num_to_ordinal($_) } @items) . " " . field_unit($field, scalar @items);
+}
+
+# TEMPLATE HELPER
+sub fill_template {
+    my ($template_id, %data) = @_;
+    my $tpl = $templates{$template_id} or return '';
+    $tpl =~ s/{(\w+)}/$data{$1} || ''/ge;
+    return $tpl;
+}
+
 # English helpers
 sub format_time {
     my ($hour, $min) = @_;
     return '' unless defined $hour && defined $min;
     $hour = $hour % 12 || 12;
-    return sprintf('%d:%02d %s', $hour, $min, $hour < 12 ? 'AM' : 'PM');
+    return sprintf('%d:%02d %s', $hour, $min, ($hour % 12) ? ($hour < 12 ? 'AM' : 'PM') : 'AM');
 }
 
 sub num_to_ordinal { 

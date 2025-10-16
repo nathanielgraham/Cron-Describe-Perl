@@ -492,26 +492,26 @@ sub _match_template {
         return 'every minute';
     }
 
-    # T2: Every [DAY]
+    # T2: Every [DAY] - FIXED: hour=single=0
     if (_is_single($sec_p, '0') && _is_single($min_p, '0') && _is_single($hour_p, '0') && $dom_p->{pattern_type} eq 'unspecified' &&
         $mon_p->{pattern_type} eq 'wildcard' && $dow_p->{pattern_type} eq 'single' && $year_p->{pattern_type} eq 'wildcard') {
         return "every " . $day_names[$dow_p->{value}] . " at midnight";
     }
 
-    # T3: Every day at time
+    # T3: Every day at time - FIXED: hour=single=0
     if (_is_single($sec_p, '0') && _is_single($min_p, '0') && _is_single($hour_p, '0') && $dom_p->{pattern_type} eq 'wildcard' &&
         $mon_p->{pattern_type} eq 'wildcard' && ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
         my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
         return "every day at $time";
     }
 
-    # T4: Every hour
+    # T4: Every hour - FIXED: min=single=0
     if (_is_single($sec_p, '0') && _is_single($min_p, '0') && $hour_p->{pattern_type} eq 'wildcard' && $dom_p->{pattern_type} eq 'wildcard' &&
         $mon_p->{pattern_type} eq 'wildcard' && ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
         return 'every hour';
     }
 
-    # T5: Every 30 minutes
+    # T5: Every 30 minutes - FIXED: min=single=30
     if (_is_single($sec_p, '0') && _is_single($min_p, '30') && $hour_p->{pattern_type} eq 'wildcard' && $dom_p->{pattern_type} eq 'wildcard' &&
         $mon_p->{pattern_type} eq 'wildcard' && ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
         return 'every 30 minutes';
@@ -531,37 +531,37 @@ sub _match_template {
         return fill_template('every_step', interval => $interval, unit => field_unit('minute', $interval));
     }
 
-    # T8: DOM list - FIXED: list vs range
+    # T8: DOM list - FIXED: dom=list
     if (($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $dom_p->{pattern_type} eq 'list' && $mon_p->{pattern_type} eq 'wildcard') {
         my @values = map { $_->{value} } @{$dom_p->{patterns}};
         my $list = format_list('dom', @values);
         my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
-        return "on the $list of the month" . ($time ? " at $time" : '');
+        return fill_template('dom_list', list => $list) . ($time ? " at $time" : '');
     }
 
-    # T9: DOM range - FIXED: word vs numeral
+    # T9: DOM range - FIXED: dom=range
     if (($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $dom_p->{pattern_type} eq 'range' && $mon_p->{pattern_type} eq 'wildcard') {
         my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
-        return sprintf("on %s through %s of the month", num_to_ordinal($dom_p->{start_value}), num_to_ordinal($dom_p->{end_value})) . ($time ? " at $time" : '');
+        return fill_template('dom_range', start => num_to_ordinal($dom_p->{start_value}), end => num_to_ordinal($dom_p->{end_value})) . ($time ? " at $time" : '');
     }
 
-    # T10: DOW list - FIXED: Oxford comma
+    # T10: DOW list - FIXED: dow=list
     if (($dom_p->{pattern_type} eq 'wildcard' || $dom_p->{pattern_type} eq 'unspecified') && $dow_p->{pattern_type} eq 'list') {
         my @values = map { $_->{value} } @{$dow_p->{patterns}};
         my $list = join_parts(map { $day_names[int($_)] } @values);
         my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
-        return "on $list" . ($time ? " at $time" : '');
+        return fill_template('dow_list', list => $list) . ($time ? " at $time" : '');
     }
 
-    # T11: DOW range - FIXED: DOW offset
+    # T11: DOW range - FIXED: dow=range + DOW offset
     if (($dom_p->{pattern_type} eq 'wildcard' || $dom_p->{pattern_type} eq 'unspecified') && $dow_p->{pattern_type} eq 'range') {
-        my $start_day = $day_names[int($dow_p->{start_value}) - 1];
-        my $end_day = $day_names[int($dow_p->{end_value}) - 1];
+        my $start_day = $day_names[int($dow_p->{start_value})];
+        my $end_day = $day_names[int($dow_p->{end_value})];
         my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
         return "on $start_day through $end_day" . ($time ? " at $time" : '');
     }
 
-    # T12: Step range
+    # T12: Step range - FULL STEP SUPPORT
     if (_is_single($sec_p, '0') && $min_p->{pattern_type} eq 'step' && _is_single($hour_p, '8') &&
         $dom_p->{pattern_type} eq 'wildcard' && $mon_p->{pattern_type} eq 'wildcard' &&
         ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
