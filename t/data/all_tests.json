@@ -482,5 +482,41 @@
   {
     "expression": "0 10-20/5 8 * * ? *",
     "expected": "every 5 minutes from 10 to 20 past 8 AM"
-  }
+  },
+  {
+    "expression": "0 0 1 * * ?",
+    "expected": "on the 1st of every month at midnight"
+  },
+  {
+    "expression": "0 0 * * MON",
+    "expected": "every Monday at midnight"
+  },
+  {
+    "expression": "0 0 0 L * ?",
+    "expected": "last day of every month at midnight"
+  },
+  {
+    "expression": "0 0 1-5/2 8-18/3 * ? *",
+    "expected": "every 2nd day from 1-5, every 3rd hour from 8-18 at midnight"
+  },
+  {"expression": "0 0 0 LW * ?", "expected": "last weekday of every month at midnight"},
+  {"expression": "0 0 0 ? * 1#3", "expected": "third Monday of every month at midnight"},
+  {"expression": "0 0 0 * * ? 2025", "expected": "every day in 2025 at midnight"},
+  {"expression": "*/5 * * ? * *", "expected": "every 5 seconds"},
+  {"expression": "30 45 14 LW * ?", "expected": "last weekday of every month at 2:45:30 PM"},
+  {"expression": "15 30 9 ? * 1#1", "expected": "first Monday of every month at 9:30:15 AM"},
+  {"expression": "0 15 6 ? * 1#2", "expected": "second Monday of every month at 6:15:00 AM"},
+  {"expression": "45 0 16 ? * 1#3", "expected": "third Monday of every month at 4:00:45 PM"},
+  {"expression": "20 45 11 ? * 1#4", "expected": "fourth Monday of every month at 11:45:20 AM"},
+  {"expression": "10 20 7 ? * 1#5", "expected": "fifth Monday of every month at 7:20:10 AM"},
+  {"expression": "25 50 3 * * ? 2024", "expected": "every day in 2024 at 3:50:25 AM"},
+  {"expression": "5 25 19 * * ? 2025", "expected": "every day in 2025 at 7:25:05 PM"},
+  {"expression": "40 10 22 * * ? 2024-2025", "expected": "every day from 2024-2025 at 10:10:40 PM"},
+  {"expression": "*/15 * * ? * *", "expected": "every 15 seconds"},
+  {"expression": "0 */15 * ? * *", "expected": "every 15 minutes"},
+  {"expression": "0 0 */3 ? * *", "expected": "every 3 hours"},
+  {"expression": "30 0 10 1-5/2 * ?", "expected": "every 2nd day from 1st-5th of every month at 10:00:30 AM"},
+  {"expression": "15 30 13 ? 1-6/2 *", "expected": "every 2nd month from January-June at 1:30:15 PM"},
+  {"expression": "25 45 8 ? * 1-5/2", "expected": "every 2nd weekday at 8:45:25 AM"},
+  {"expression": "10 20 0 * * ? */2", "expected": "every even year at 12:20:10 AM"}
 ]

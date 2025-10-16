@@ -25,7 +25,8 @@ use constant {
     DOM_SPECIAL_RE    => qr/^(L(?:-\d+)?|LW|\d+W)$/,
     DOW_SPECIAL_RE    => qr/^\d+(L|#\d+)$/,
     MONTH_PATTERN_RE  => qr/^(\d+|\d+-\d+|[\d,]+|\*|\d+-\d+\/\d+|\d+\/\d+)$/,
-    DOW_PATTERN_RE    => qr/^(\d+L|\d+#\d+|[\d,]+|\*|\?|\d+-\d+)$/,
+    #DOW_PATTERN_RE    => qr/^(\d+L|\d+#\d+|[\d,]+|\*|\?|\d+-\d+)$/,
+    DOW_PATTERN_RE    => qr/^(\d+L|\d+#\d+|[\d,]+|\*|\?|\d+-\d+|(\d+-\d+|\d+|\*)\/\d+)$/,
     MONTH_NAME_RE     => do {
         my $month_re = join '|', map { quotemeta } sort { length($b) <=> length($a) } keys %month_map;
         qr/($month_re)/i;
