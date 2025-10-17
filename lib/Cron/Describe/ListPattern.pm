@@ -5,6 +5,17 @@ use Carp qw(croak);
 use Cron::Describe::SinglePattern;
 use Cron::Describe::RangePattern;
 use Cron::Describe::StepPattern;
+use parent 'Cron::Describe::Pattern';
+use Cron::Describe::Utils qw(:all);
+
+sub to_english {
+    my ($self, $field_type) = @_;
+    my @values = map { $_->{value} } @{$self->{patterns}};
+    if ($field_type eq 'dow') {
+        return join_parts(map { $day_names[$_] } @values);
+    }
+    return join_parts(map { num_to_ordinal($_) } @values);
+}
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;

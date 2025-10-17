@@ -2,6 +2,13 @@ package Cron::Describe::DayOfWeekPattern;
 use strict;
 use warnings;
 use Carp qw(croak);
+use parent 'Cron::Describe::Pattern';
+use Cron::Describe::Utils qw(:all);
+
+sub to_english {
+    my ($self) = @_;
+    return num_to_ordinal($self->{nth}) . " " . $day_names[$self->{day}];
+}
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;

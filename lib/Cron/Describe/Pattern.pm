@@ -2,6 +2,7 @@ package Cron::Describe::Pattern;
 use strict;
 use warnings;
 use Carp qw(croak);
+use Cron::Describe::Utils qw(:all);
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
@@ -17,10 +18,6 @@ sub new {
 
 sub is_match {
     croak "Abstract method 'is_match' not implemented in " . ref($_[0]);
-}
-
-sub to_english {
-    croak "Abstract method 'to_english' not implemented in " . ref($_[0]);
 }
 
 sub to_string {
@@ -41,6 +38,11 @@ sub to_hash {
         max => $self->{max},
         step => $self->{step} // 1,
     };
+}
+
+sub to_english {
+    my ($self, $field_type) = @_;
+    return "every " . field_unit($self->{field_type});
 }
 
 sub _debug {

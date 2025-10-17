@@ -3,10 +3,7 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use Time::Moment;
-use Cron::Describe::Utils qw(
-    %month_map %dow_map
-);
-use Cron::Describe::Utils qw(fill_template @day_names num_to_ordinal format_list format_time field_unit join_parts);
+use Cron::Describe::Utils qw( :all );
 use Cron::Describe::SinglePattern;
 use Cron::Describe::RangePattern;
 use Cron::Describe::StepPattern;
@@ -16,7 +13,6 @@ use Cron::Describe::DayOfMonthPattern;
 use Cron::Describe::DayOfWeekPattern;
 use Cron::Describe::ListPattern;
 
-# Pre-compiled regex constants (Describe.pm only)
 use constant {
     SINGLE_RE         => qr/^\d+$/,
     RANGE_RE          => qr/^\d+-\d+$/,
@@ -25,7 +21,6 @@ use constant {
     DOM_SPECIAL_RE    => qr/^(L(?:-\d+)?|LW|\d+W)$/,
     DOW_SPECIAL_RE    => qr/^\d+(L|#\d+)$/,
     MONTH_PATTERN_RE  => qr/^(\d+|\d+-\d+|[\d,]+|\*|\d+-\d+\/\d+|\d+\/\d+)$/,
-    #DOW_PATTERN_RE    => qr/^(\d+L|\d+#\d+|[\d,]+|\*|\?|\d+-\d+)$/,
     DOW_PATTERN_RE    => qr/^(\d+L|\d+#\d+|[\d,]+|\*|\?|\d+-\d+|(\d+-\d+|\d+|\*)\/\d+)$/,
     MONTH_NAME_RE     => do {
         my $month_re = join '|', map { quotemeta } sort { length($b) <=> length($a) } keys %month_map;
@@ -36,6 +31,27 @@ use constant {
         qr/($dow_re)/i;
     },
 };
+
+# Pre-compiled regex constants (Describe.pm only)
+#use constant {
+#    SINGLE_RE         => qr/^\d+$/,
+#    RANGE_RE          => qr/^\d+-\d+$/,
+#    STEP_RE           => qr/^(\*|\d+|\d+-\d+)\/\d+$/,
+#    LIST_RE           => qr/^[^,]+(,[^,]+)+$/,
+#    DOM_SPECIAL_RE    => qr/^(L(?:-\d+)?|LW|\d+W)$/,
+#    DOW_SPECIAL_RE    => qr/^\d+(L|#\d+)$/,
+#    MONTH_PATTERN_RE  => qr/^(\d+|\d+-\d+|[\d,]+|\*|\d+-\d+\/\d+|\d+\/\d+)$/,
+    #DOW_PATTERN_RE    => qr/^(\d+L|\d+#\d+|[\d,]+|\*|\?|\d+-\d+)$/,
+#    DOW_PATTERN_RE    => qr/^(\d+L|\d+#\d+|[\d,]+|\*|\?|\d+-\d+|(\d+-\d+|\d+|\*)\/\d+)$/,
+#    MONTH_NAME_RE     => do {
+#        my $month_re = join '|', map { quotemeta } sort { length($b) <=> length($a) } keys %month_map;
+#        qr/($month_re)/i;
+#    },
+#    DOW_NAME_RE       => do {
+#        my $dow_re = join '|', map { quotemeta } sort { length($b) <=> length($a) } keys %dow_map;
+#        qr/($dow_re)/i;
+#    },
+#};
 
 sub new_from_quartz {
     my ($class, %args) = @_;
@@ -471,129 +487,340 @@ sub is_match {
 
 sub to_english {
     my ($self) = @_;
-    return $self->{error_message} unless $self->is_valid;
+    my ($sec_p, $min_p, $hour_p, $dom_p, $mon_p, $dow_p, $year_p) = @{$self->{patterns}};
+    return $self->_match_template($sec_p, $min_p, $hour_p, $dom_p, $mon_p, $dow_p, $year_p);
+}
 
-    my @patterns = @{$self->{patterns}};  # RAW OBJECTS
-    use Data::Dumper;
-    print STDERR Dumper(\@patterns);
-    return $self->_match_template(@patterns);
+sub _time_phrase {
+    my ($self, $min_p, $hour_p, $sec_p) = @_;
+    my $sec = $self->_extract_first($sec_p) || 0;
+    my $min = $self->_extract_first($min_p) || 0;
+    my $hour = $self->_extract_first($hour_p) || 0;
+    return $self->_format_time($sec, $min, $hour);
+}
+
+sub _extract_first {
+    my ($self, $p) = @_;
+    return $p->{value} if $p->{pattern_type} eq 'single';
+    return $p->{start_value} if $p->{pattern_type} eq 'range';
+    return $p->{base}{start_value} || 0 if $p->{pattern_type} eq 'step';
+    return 0;
+}
+
+sub _format_time {
+    my ($self, $sec, $min, $hour) = @_;
+    return 'midnight' if $hour == 0 && $min == 0 && $sec == 0;
+    return 'noon' if $hour == 12 && $min == 0 && $sec == 0;
+    my $h12 = $hour == 0 ? 12 : $hour > 12 ? $hour - 12 : $hour;
+    my $ampm = $hour >= 12 ? 'PM' : 'AM';
+    return sprintf("%d:%02d:%02d %s", $h12, $min, $sec, $ampm);
 }
 
 sub _match_template {
     my ($self, $sec_p, $min_p, $hour_p, $dom_p, $mon_p, $dow_p, $year_p) = @_;
-    use Cron::Describe::Utils qw(fill_template format_list num_to_ordinal @day_names field_unit join_parts);
 
-    # SAFE SINGLE CHECKS
-    sub _is_single { my ($p, $val) = @_; $p->{pattern_type} eq 'single' && $p->{value} eq $val }
+    my $time = $self->_time_phrase($min_p, $hour_p, $sec_p);
+    my $is_midnight = (($hour_p->is_single(0)) && ($min_p->is_single(0)) && ($sec_p->is_single(0)));
 
-    # T1: Every minute (min=wildcard, hour=wildcard ONLY)
-    if (_is_single($sec_p, '0') && $min_p->{pattern_type} eq 'wildcard' && $hour_p->{pattern_type} eq 'wildcard' &&
-        $dom_p->{pattern_type} eq 'wildcard' && $mon_p->{pattern_type} eq 'wildcard' &&
-        ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
-        return 'every minute';
+    # GENERALIZED SPECIALS
+    my @specials = (
+        [$sec_p, 'wildcard', 'every_minute', {}],
+        [$sec_p, 'step', 'every_N_sec', {step => $sec_p->{step}}],
+        [$min_p, 'step', 'every_N_min', {step => $min_p->{step}}],
+        [$hour_p, 'step', 'every_N_hour', {step => $hour_p->{step}}],
+    );
+    for (@specials) {
+        return fill_template($_->[2], $_->[3]) if $_->[0]{pattern_type} eq $_->[1];
     }
 
-    # T2: Every [DAY]
-    if (_is_single($sec_p, '0') && _is_single($min_p, '0') && _is_single($hour_p, '0') && $dom_p->{pattern_type} eq 'unspecified' &&
-        $mon_p->{pattern_type} eq 'wildcard' && $dow_p->{pattern_type} eq 'single' && $year_p->{pattern_type} eq 'wildcard') {
-        return "every " . $day_names[$dow_p->{value}] . " at midnight";
-    }
-
-    # T3: Every day at time
-    if (_is_single($sec_p, '0') && _is_single($min_p, '0') && _is_single($hour_p, '0') && $dom_p->{pattern_type} eq 'wildcard' &&
-        $mon_p->{pattern_type} eq 'wildcard' && ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
-        my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
-        return "every day at $time";
-    }
-
-    # T4: Every hour
-    if (_is_single($sec_p, '0') && _is_single($min_p, '0') && $hour_p->{pattern_type} eq 'wildcard' && $dom_p->{pattern_type} eq 'wildcard' &&
-        $mon_p->{pattern_type} eq 'wildcard' && ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
-        return 'every hour';
-    }
-
-    # T5: Every 30 minutes
-    if (_is_single($sec_p, '0') && _is_single($min_p, '30') && $hour_p->{pattern_type} eq 'wildcard' && $dom_p->{pattern_type} eq 'wildcard' &&
-        $mon_p->{pattern_type} eq 'wildcard' && ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
-        return 'every 30 minutes';
-    }
-
-    # T6: DOM at time
-    if (($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $dom_p->{pattern_type} eq 'single' && $mon_p->{pattern_type} eq 'wildcard') {
-        my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
-        return sprintf("on the %s of the month at $time", num_to_ordinal($dom_p->{value}));
-    }
-
-    # T7: Every step
-    if (_is_single($sec_p, '0') && $min_p->{pattern_type} eq 'step' && $hour_p->{pattern_type} eq 'wildcard' &&
-        $dom_p->{pattern_type} eq 'wildcard' && $mon_p->{pattern_type} eq 'wildcard' &&
-        ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
-        my $interval = $min_p->{step};
-        return fill_template('every_step', interval => $interval, unit => field_unit('minute', $interval));
-    }
-
-    # T8: DOM list - FIXED: list vs range
-    if (($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $dom_p->{pattern_type} eq 'list' && $mon_p->{pattern_type} eq 'wildcard') {
-        my @values = map { $_->{value} } @{$dom_p->{patterns}};
-        my $list = format_list('dom', @values);
-        my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
-        return "on the $list of the month" . ($time ? " at $time" : '');
-    }
-
-    # T9: DOM range - FIXED: word vs numeral
-    if (($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $dom_p->{pattern_type} eq 'range' && $mon_p->{pattern_type} eq 'wildcard') {
-        my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
-        return sprintf("on %s through %s of the month", num_to_ordinal($dom_p->{start_value}), num_to_ordinal($dom_p->{end_value})) . ($time ? " at $time" : '');
-    }
-
-    # T10: DOW list - FIXED: Oxford comma
-    if (($dom_p->{pattern_type} eq 'wildcard' || $dom_p->{pattern_type} eq 'unspecified') && $dow_p->{pattern_type} eq 'list') {
-        my @values = map { $_->{value} } @{$dow_p->{patterns}};
-        my $list = join_parts(map { $day_names[int($_)] } @values);
-        my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
-        return "on $list" . ($time ? " at $time" : '');
-    }
-
-    # T11: DOW range - FIXED: DOW offset
-    if (($dom_p->{pattern_type} eq 'wildcard' || $dom_p->{pattern_type} eq 'unspecified') && $dow_p->{pattern_type} eq 'range') {
-        my $start_day = $day_names[int($dow_p->{start_value}) - 1];
-        my $end_day = $day_names[int($dow_p->{end_value}) - 1];
-        my $time = $self->_time_phrase($min_p->{value}, $hour_p->{value});
-        return "on $start_day through $end_day" . ($time ? " at $time" : '');
-    }
-
-    # T12: Step range
-    if (_is_single($sec_p, '0') && $min_p->{pattern_type} eq 'step' && _is_single($hour_p, '8') &&
-        $dom_p->{pattern_type} eq 'wildcard' && $mon_p->{pattern_type} eq 'wildcard' &&
-        ($dow_p->{pattern_type} eq 'wildcard' || $dow_p->{pattern_type} eq 'unspecified') && $year_p->{pattern_type} eq 'wildcard') {
-        my $base_type = $min_p->{base}{pattern_type};
-        my ($start, $end);
-        if ($base_type eq 'single') {
-            $start = $end = $min_p->{base}{value};
-        } elsif ($base_type eq 'range') {
-            $start = $min_p->{base}{start_value};
-            $end = $min_p->{base}{end_value};
-        } else {  # wildcard
-            $start = $min_p->{min};
-            $end = $min_p->{max};
+    # PRIORITY + TEMPLATE LOOKUP
+    my @fields = qw(second minute hour dom dow month year);
+    my ($pattern, $field) = ('', '');
+    for my $i (0..6) {
+        my $p = ($i==0?$sec_p:$i==1?$min_p:$i==2?$hour_p:$i==3?$dom_p:$i==4?$dow_p:$i==5?$mon_p:$year_p);
+        if (my $eng = $p->to_english($fields[$i])) {
+            $pattern = $p; $field = $fields[$i]; last;
         }
-        my $interval = $min_p->{step};
-        return fill_template('step_range', interval => $interval, unit => 'minutes', start => $start, end => $end) . " past 8 AM";
     }
 
-    return '';
+    my $suffix = $field eq 'dom' && $is_midnight ? '_midnight' : $field eq 'dom' ? '_every' : '';
+    my $template_id = $field . '_' . $pattern->{pattern_type} . $suffix;
+    my $schedule = $pattern ? fill_template($template_id, $pattern->to_hash) : 'every day';
+
+    return fill_template('schedule_time', {schedule => $schedule, time => $time});
 }
 
-sub _time_phrase {
-    my ($self, $min, $hour) = @_;
-    use Cron::Describe::Utils qw(format_time);
+sub next {
+    my ($self, $epoch) = @_;
+    croak "Epoch seconds required (integer)" unless defined $epoch && $epoch =~ /^\d+$/;
+    croak "Cron expression must be valid for next()" unless $self->is_valid;
 
-    my $h = int($hour eq '*' ? 0 : $hour);
-    my $m = int($min eq '*' ? 0 : $min);
+    my $tm = Time::Moment->from_epoch($epoch, offset => $self->{utc_offset});
+    my $current = $tm->plus_seconds(1);
+    while (1) {
+        $current = $self->_next_match($current);
+        if ($self->is_match($current)) {
+            return $current->epoch;
+        }
+        $current = $current->plus_seconds(1);
+    }
+}
 
-    #return 'midnight' if $h == 0 && $m == 0;
-    #return format_time(0, 0);
-    return 'midnight'
+sub previous {
+    my ($self, $epoch) = @_;
+    croak "Epoch seconds required (integer)" unless defined $epoch && $epoch =~ /^\d+$/;
+    croak "Cron expression must be valid for previous()" unless $self->is_valid;
+
+    my $tm = Time::Moment->from_epoch($epoch, offset => $self->{utc_offset});
+    my $current = $tm->minus_seconds(1);  # Start from previous second
+    my $max_iterations = 1_000_000;  # Safety to prevent infinite loops
+    my $iterations = 0;
+
+    while ($iterations++ < $max_iterations) {
+        $current = $self->_previous_match($current);
+        if ($self->is_match($current)) {
+            return $current->epoch;
+        }
+        $current = $current->minus_seconds(1);  # Decrement if no match
+    }
+    croak "No previous match found after $max_iterations iterations - possible infinite loop";
+}
+
+sub _next_match {
+    my ($self, $tm) = @_;
+
+    my $year = $tm->year;
+    my $month = $tm->month;
+    my $dom = $tm->day_of_month;
+    my $dow = $self->quartz_dow($tm->day_of_week);
+    my $hour = $tm->hour;
+    my $minute = $tm->minute;
+    my $second = $tm->second;
+
+    my $year_pattern = $self->{patterns}[6];
+    while (1) {
+        while (!$year_pattern->is_match($year, $tm)) {
+            $year++;
+        }
+
+        my $month_pattern = $self->{patterns}[4];
+        while (1) {
+            while (!$month_pattern->is_match($month, $tm)) {
+                $month++;
+                if ($month > 12) {
+                    $month = 1;
+                    $year++;
+                    $tm = $tm->with_year($year)->with_month($month);
+                    last if !$year_pattern->is_match($year, $tm);
+                } else {
+                    $tm = $tm->with_month($month);
+                }
+            }
+
+            my $dom_pattern = $self->{patterns}[3];
+            my $dow_pattern = $self->{patterns}[5];
+            while (1) {
+                while (!$dom_pattern->is_match($dom, $tm) || !$dow_pattern->is_match($dow, $tm)) {
+                    $dom++;
+                    my $days_in_month = $tm->length_of_month;
+                    if ($dom > $days_in_month) {
+                        $dom = 1;
+                        $month++;
+                        if ($month > 12) {
+                            $month = 1;
+                            $year++;
+                            $tm = $tm->with_year($year)->with_month($month);
+                            last if !$year_pattern->is_match($year, $tm);
+                        } else {
+                            $tm = $tm->with_month($month);
+                        }
+                        $days_in_month = $tm->length_of_month;
+                    } else {
+                        $tm = $tm->with_day_of_month($dom);
+                    }
+                    $dow = $self->quartz_dow($tm->day_of_week);
+                }
+
+                my $hour_pattern = $self->{patterns}[2];
+                while (1) {
+                    while (!$hour_pattern->is_match($hour, $tm)) {
+                        $hour++;
+                        if ($hour > 23) {
+                            $hour = 0;
+                            $dom++;
+                            my $days_in_month = $tm->length_of_month;
+                            if ($dom > $days_in_month) {
+                                $dom = 1;
+                                $month++;
+                                if ($month > 12) {
+                                    $month = 1;
+                                    $year++;
+                                    $tm = $tm->with_year($year)->with_month($month);
+                                    last if !$year_pattern->is_match($year, $tm);
+                                } else {
+                                    $tm = $tm->with_month($month);
+                                }
+                                $days_in_month = $tm->length_of_month;
+                            } else {
+                                $tm = $tm->with_day_of_month($dom);
+                            }
+                            $dow = $self->quartz_dow($tm->day_of_week);
+                            last;
+                        }
+                    }
+
+                    my $minute_pattern = $self->{patterns}[1];
+                    while (1) {
+                        while (!$minute_pattern->is_match($minute, $tm)) {
+                            $minute++;
+                            if ($minute > 59) {
+                                $minute = 0;
+                                $hour++;
+                                last if !$hour_pattern->is_match($hour, $tm);
+                            }
+                        }
+
+                        my $second_pattern = $self->{patterns}[0];
+                        while (1) {
+                            while (!$second_pattern->is_match($second, $tm)) {
+                                $second++;
+                                if ($second > 59) {
+                                    $second = 0;
+                                    $minute++;
+                                    last if !$minute_pattern->is_match($minute, $tm);
+                                }
+                            }
+
+                            # Full match found
+                            return $tm->with_second($second)->with_minute($minute)->with_hour($hour)->with_day_of_month($dom)->with_month($month)->with_year($year);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+# _previous_match similar, but decrementing from coarse to fine
+sub _previous_match {
+    my ($self, $tm) = @_;
+
+    my $year = $tm->year;
+    my $month = $tm->month;
+    my $dom = $tm->day_of_month;
+    my $dow = $self->quartz_dow($tm->day_of_week);
+    my $hour = $tm->hour;
+    my $minute = $tm->minute;
+    my $second = $tm->second;
+
+    my $year_pattern = $self->{patterns}[6];
+    while (1) {
+        while (!$year_pattern->is_match($year, $tm)) {
+            $year--;
+            if ($year < 1970) {
+                croak "Year $year is out of range (1970-2199)";
+            }
+        }
+
+        my $month_pattern = $self->{patterns}[4];
+        while (1) {
+            while (!$month_pattern->is_match($month, $tm)) {
+                $month--;
+                if ($month < 1) {
+                    $month = 12;
+                    $year--;
+                    $tm = $tm->with_year($year)->with_month($month);
+                    last if !$year_pattern->is_match($year, $tm);
+                } else {
+                    $tm = $tm->with_month($month);
+                }
+            }
+
+            my $dom_pattern = $self->{patterns}[3];
+            my $dow_pattern = $self->{patterns}[5];
+            while (1) {
+                while (!$dom_pattern->is_match($dom, $tm) || !$dow_pattern->is_match($dow, $tm)) {
+                    $dom--;
+                    if ($dom < 1) {
+                        $month--;
+                        if ($month < 1) {
+                            $month = 12;
+                            $year--;
+                            $tm = $tm->with_year($year)->with_month($month);
+                            last if !$year_pattern->is_match($year, $tm);
+                        } else {
+                            $tm = $tm->with_month($month);
+                        }
+                        $dom = $tm->length_of_month;
+                        $tm = $tm->with_day_of_month($dom);
+                    } else {
+                        $tm = $tm->with_day_of_month($dom);
+                    }
+                    $dow = $self->quartz_dow($tm->day_of_week);
+                }
+
+                my $hour_pattern = $self->{patterns}[2];
+                while (1) {
+                    while (!$hour_pattern->is_match($hour, $tm)) {
+                        $hour--;
+                        if ($hour < 0) {
+                            $hour = 23;
+                            $dom--;
+                            if ($dom < 1) {
+                                $month--;
+                                if ($month < 1) {
+                                    $month = 12;
+                                    $year--;
+                                    $tm = $tm->with_year($year)->with_month($month);
+                                    last if !$year_pattern->is_match($year, $tm);
+                                } else {
+                                    $tm = $tm->with_month($month);
+                                }
+                                $dom = $tm->length_of_month;
+                                $tm = $tm->with_day_of_month($dom);
+                            } else {
+                                $tm = $tm->with_day_of_month($dom);
+                            }
+                            $dow = $self->quartz_dow($tm->day_of_week);
+                            last;
+                        }
+                    }
+
+                    my $minute_pattern = $self->{patterns}[1];
+                    while (1) {
+                        while (!$minute_pattern->is_match($minute, $tm)) {
+                            $minute--;
+                            if ($minute < 0) {
+                                $minute = 59;
+                                $hour--;
+                                last if !$hour_pattern->is_match($hour, $tm);
+                            }
+                        }
+
+                        my $second_pattern = $self->{patterns}[0];
+                        while (1) {
+                            while (!$second_pattern->is_match($second, $tm)) {
+                                $second--;
+                                if ($second < 0) {
+                                    $second = 59;
+                                    $minute--;
+                                    last if !$minute_pattern->is_match($minute, $tm);
+                                }
+                            }
+
+                            # Full match found
+                            return $tm->with_second($second)->with_minute($minute)->with_hour($hour)->with_day_of_month($dom)->with_month($month)->with_year($year);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+sub month_range {
+    my ($start, $end) = @_;
+    return $month_names[$start-1] . '-' . $month_names[$end-1];
 }
 
 1;

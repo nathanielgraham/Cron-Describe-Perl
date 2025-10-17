@@ -3,6 +3,16 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use parent 'Cron::Describe::Pattern';
+use Cron::Describe::Utils qw(:all);
+
+sub to_english {
+    my ($self, $field_type) = @_;
+    my $value = $self->{value};
+    return $day_names[$value] if $field_type eq 'dow';
+    return $month_names[$value] if $field_type eq 'month';
+    return num_to_ordinal($value) if $field_type eq 'dom';
+    return $value;
+}
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
@@ -16,11 +26,6 @@ sub new {
 sub is_match {
     my ($self, $value, $tm) = @_;
     return $value == $self->{value};
-}
-
-sub to_english {
-    my ($self) = @_;
-    return "exactly $self->{value}";
 }
 
 sub to_string {

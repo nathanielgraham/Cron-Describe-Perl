@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use parent 'Cron::Describe::Pattern';
+use Cron::Describe::Utils qw(:all);
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;

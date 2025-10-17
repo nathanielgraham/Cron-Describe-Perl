@@ -6,6 +6,17 @@ use Cron::Describe::SinglePattern;
 use Cron::Describe::RangePattern;
 use Cron::Describe::WildcardPattern;
 use parent 'Cron::Describe::Pattern';
+use Cron::Describe::Utils qw(:all);
+
+sub to_english {
+    my ($self, $field_type) = @_;
+    my $step = $self->{step};
+    my $base = $self->{base};
+    if ($base->{pattern_type} eq 'range') {
+        return "$step" . step_ordinal($step) . " " . field_unit($field_type) . " from " . $base->to_english($field_type);
+    }
+    return "$step" . step_ordinal($step) . " " . field_unit($field_type);
+}
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;

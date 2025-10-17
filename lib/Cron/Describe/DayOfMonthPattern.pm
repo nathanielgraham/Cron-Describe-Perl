@@ -4,6 +4,30 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use Time::Moment;
+use parent 'Cron::Describe::Pattern';
+use Cron::Describe::Utils qw(:all);
+
+sub to_english {
+    my ($self, $is_midnight) = @_;
+    if ($self->{pattern_type} eq 'last_weekday') {
+        return $self->{is_midnight} ? 'last weekday of the month' : 'last weekday of every month';
+    }
+    if ($self->{pattern_type} eq 'last' && $self->{offset} == 0) {
+        return $self->{is_midnight} ? 'last day of the month' : 'last day of every month';
+    }
+    if ($self->{pattern_type} eq 'last' && $self->{offset}) {
+        return num_to_ordinal(abs($self->{offset})) . " last day of every month";
+    }
+    if ($self->{pattern_type} eq 'nth_last') {
+        return num_to_ordinal($self->{nth}) . " last day of every month";
+    }
+    return $self->{value} || '';
+}
+
+sub is_midnight {
+    my ($self) = @_;
+    return $self->{hour} == 0 && $self->{minute} == 0 && $self->{second} == 0;
+}
 
 sub new {
     my ($class, $value, $min, $max, $field_type) = @_;
@@ -21,7 +45,7 @@ sub new {
     } else {
         croak "Invalid pattern '$value' for $field_type";
     }
-
+    my $nth = $pattern_type eq 'last' && $offset ? abs($offset) : 0;
     my $self = bless {
         value => $value,
         min => $min,
@@ -30,6 +54,7 @@ sub new {
         pattern_type => $pattern_type,
         offset => $offset,
         day => $day,
+        nth => $nth,
     }, $class;
 
     print STDERR "DEBUG: DayOfMonthPattern::new: value='$value', field_type='$field_type', pattern_type=$pattern_type, offset=" . ($offset // 'undef') . ", day=" . ($day // 'undef') . "\n" if $ENV{Cron_DEBUG};

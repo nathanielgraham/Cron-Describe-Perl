@@ -56,10 +56,20 @@ sub test_validation {
    return $ok;
 }
 
+#sub test_english {
+#    my ($desc, $test) = @_;
+#    if ($test->{expected_english}) {
+#        is($desc->to_english, $test->{expected_english}, "English: $test->{test_name}");
+#    } else {
+#        pass("No English test");
+#    }
+#}
+
 sub test_english {
     my ($desc, $test) = @_;
-    if ($test->{expected_english}) {
-        is($desc->to_english, $test->{expected_english}, "English: $test->{test_name}");
+    if ($test->{expected} || $test->{expected_english}) {
+        my $expected = $test->{expected_english} || $test->{expected};
+        is($desc->to_english, $expected, "English: $expected");
     } else {
         pass("No English test");
     }
@@ -158,6 +168,15 @@ foreach my $test (@all_tests) {
          test_matches( $desc, $test );
 
          test_english($desc, $test);
+
+         # NEW: next()/previous()
+         SKIP: {
+             skip "No next/previous tests", 2 unless $test->{test_next};
+             my $next_epoch = eval { $desc->next($test->{test_next}) };
+             is $next_epoch, $test->{expected_next}, "next()";
+             my $prev_epoch = eval { $desc->previous($test->{test_previous}) };
+             is $prev_epoch, $test->{expected_previous}, "previous()";
+         }
       }
    };
 }
