@@ -43,12 +43,18 @@ sub to_english {
 }
 
 sub dump_tree {
-    my ($node, $indent) = @_;
-    $indent //= 0;  # Default to 0 if undef
-    my $prefix = '  ' x $indent;
-    print $prefix, "Type: ", $node->{type}, ", Value: '", $node->{value} || '', "'\n";
-    for my $child (@{$node->{children} || []}) {
-        dump_tree($child, $indent + 1);
+    my ($node, $indent, $prefix) = @_;
+    $indent //= 0; $prefix //= '';
+    my $line = $prefix . "├── " . ucfirst($node->{type});
+    $line .= " ($node->{value})" if $node->{value};
+    print "$line\n";
+
+    return unless $node->{children} && @{$node->{children}};
+    my $last = $node->{children}[-1];
+    for my $i (0 .. $#{ $node->{children} }) {
+        my $child = $node->{children}[$i];
+        my $new_prefix = $prefix . ($child eq $last ? '    ' : '│   ');
+        dump_tree($child, $indent + 2, $new_prefix . '├── ');
     }
 }
 

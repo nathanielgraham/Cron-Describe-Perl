@@ -5,8 +5,8 @@ use Cron::Describe;
 
 my @tests = (
     { expr => '0 */15 * * * ? *', field => 1, expected_type => 'step', expected_value => undef, expected_children => 2, expected_step_value => '15', english => 'every 15 minutes' },
-    { expr => '0 0 0 1-5 * ? *', field => 3, expected_type => 'range', expected_value => undef, expected_children => 2, expected_step_value => undef, english => 'at midnight on the 1st through 5th of every month' },
-    { expr => '0 0 0 * * 1,3,5 *', field => 5, expected_type => 'list', expected_value => undef, expected_children => 3, expected_step_value => undef, english => 'at midnight every Sunday, Tuesday, and Thursday' },
+    { expr => '0 0 0 1-5 * ? *', field => 3, expected_type => 'range', expected_value => undef, expected_children => 2, expected_step_value => undef, english => 'at midnight on the first through fifth of every month' },
+    { expr => '0 0 0 * * 1,3,5 *', field => 5, expected_type => 'list', expected_value => undef, expected_children => 3, expected_step_value => undef, english => 'at midnight every Sunday, Tuesday and Thursday' },
     { expr => '0 10-20/5 8 * * ? *', field => 1, expected_type => 'step', expected_value => undef, expected_children => 2, expected_step_value => '5', english => 'every 5 minutes from 10 to 20 past 8' },
     { expr => '0 0 0 L * ? *', field => 3, expected_type => 'last', expected_value => 'L', expected_children => 0, expected_step_value => undef, english => 'at midnight on the last day of every month' },
     { expr => '0 0 0 LW * ? *', field => 3, expected_type => 'lastW', expected_value => 'LW', expected_children => 0, expected_step_value => undef, english => 'at midnight on the last weekday of every month' },
@@ -31,7 +31,7 @@ for my $test (@tests) {
             my $step_child = $node->{children}[1];
             is($step_child->{value}, $test->{expected_step_value}, "Step value for $test->{expr}");
         }
-        is($cron->to_english, $test->{english}, "English for $test->{expr}");
+        is($cron->describe, $test->{english}, "English for $test->{expr}");
     };
     if ($@) {
         fail("Built: $test->{expr}");
