@@ -89,7 +89,7 @@ my @tests = (
    {
       expr => '0 0 0 L-3 * ? *',
       valid => 1, field => 3, expected_type => 'last', expected_value => 'L-3', expected_children => 0,
-      english => trim('at midnight on the 3rd last day of every month')
+      english => trim('at midnight on the third last day of every month')
    },
    {
       expr => '0 0 0 15W * ? *',
@@ -120,7 +120,7 @@ my @tests = (
    {
       expr => '0 0 0 1 JAN ? *',
       valid => 1, field => 4, expected_type => 'single', expected_value => '1', expected_children => 0,
-      english => trim('at midnight on the 1st of every month in January')
+      english => trim('at midnight on the first of every month in January')
    },
    {
       expr => '0 0 0 ? * SUN *',
@@ -130,7 +130,7 @@ my @tests = (
    {
       expr => '0 0 0 1,15 * ? *',
       valid => 1, field => 3, expected_type => 'list', expected_value => undef, expected_children => 2,
-      english => trim('at midnight on the 1st and 15th of every month')
+      english => trim('at midnight on the first and 15th of every month')
    },
    {
       expr => '0 0 0 ? * 2-6 *',

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Loop through each file in the directory
-for file in "lib/Cron/Describe"/* "lib/Cron/Describe/Tree"/* "t"/*; do
+for file in "lib/Cron" "lib/Cron/Describe"/* "lib/Cron/Describe/Tree"/* "t"/*; do
     # Check if it is a file
     if [[ -f "$file" ]]; then
         # Echo the filename

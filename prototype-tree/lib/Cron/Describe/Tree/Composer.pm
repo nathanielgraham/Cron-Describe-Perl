@@ -25,6 +25,7 @@ sub describe {
     for my $field (@fields) {
         push @phrases, $self->template_for_field($field, \@fields);
     }
+    push @phrases, $time_prefix if $time_prefix;
 
     # 🔥 COMBO LOGIC - SIMPLIFIED!
     $self->_fuse_combos(\@phrases, \@fields);
@@ -159,10 +160,17 @@ sub template_for_field {
         $data->{end} = $month_names{$field->{children}[1]{value}};
         return fill_template('month_range', $data);
     }
+    elsif ($type eq 'single' && $ft eq 'month') {
+        return "in " . $month_names{$field->{value}};
+    }
     elsif ($type eq 'range' && $ft eq 'dow') {
         $data->{start} = $day_names{$field->{children}[0]{value}};
         $data->{end} = $day_names{$field->{children}[1]{value}};
         return fill_template('dow_range', $data);
+    }
+    elsif ($type eq 'single' && $ft eq 'dow') {
+        $data->{day} = $day_names{$field->{value}};
+        return fill_template('dow_single', $data);
     }
     elsif ($type eq 'last' && $ft eq 'dom') {
         if ($field->{value} =~ /L-(\d+)/) {

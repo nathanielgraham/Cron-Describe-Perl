@@ -3,16 +3,15 @@ use strict;
 use warnings;
 use Cron::Describe::Tree::CompositePattern;
 use Cron::Describe::Tree::LeafPattern;
-use Cron::Describe::Tree::Utils qw(validate);  # 🔥 ADD THIS!
+use Cron::Describe::Tree::Utils qw(validate);
 use Carp qw(croak);
 
 sub parse_field {
     my ($class, $field, $field_type) = @_;
     return unless defined $field && $field ne '';
-    validate($field, $field_type);  # 🔥 CHANGE THIS LINE!
+    validate($field, $field_type);
     print STDERR "DEBUG PARSER: '$field' ($field_type)\n";
-    
-    # [REST OF YOUR EXISTING CODE - UNCHANGED!]
+   
     if ($field eq '*') {
         return Cron::Describe::Tree::LeafPattern->new(type => 'wildcard', value => '*');
     } elsif ($field eq '?') {
@@ -20,7 +19,12 @@ sub parse_field {
     } elsif ($field =~ /^L(W?)(-\d+)?$/) {
         return Cron::Describe::Tree::LeafPattern->new(type => "last$1", value => $field);
     } elsif ($field =~ /^\d+$/) {
-        return Cron::Describe::Tree::LeafPattern->new(type => 'single', value => $field);
+        # 🔥 1-LINE FIX: Force DOW recognition!
+        return Cron::Describe::Tree::LeafPattern->new(
+            type => 'single', 
+            value => $field, 
+            is_dow => $field_type eq 'dow'
+        );
     } elsif ($field =~ /^(\d+)#(\d+)$/) {
         return Cron::Describe::Tree::LeafPattern->new(type => 'nth', value => $field);
     } elsif ($field =~ /^(\d+)W$/) {
