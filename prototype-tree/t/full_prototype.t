@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use Test::More;
 use Cron::Describe;
-
 my @tests = (
     { expr => '0 */15 * * * ? *', field => 1, expected_type => 'step', expected_value => undef, expected_children => 2, expected_step_value => '15', english => 'every 15 minutes' },
     { expr => '0 0 0 1-5 * ? *', field => 3, expected_type => 'range', expected_value => undef, expected_children => 2, expected_step_value => undef, english => 'at midnight on the first through fifth of every month' },
@@ -17,13 +16,18 @@ my @tests = (
     { expr => '15 30 9 ? * 1#1 *', field => 5, expected_type => 'nth', expected_value => '1#1', expected_children => 0, expected_step_value => undef, english => 'at 9:30:15 AM on the first Sunday of every month' },
     { expr => '0 15 6 ? * 1#2 *', field => 5, expected_type => 'nth', expected_value => '1#2', expected_children => 0, expected_step_value => undef, english => 'at 6:15:00 AM on the second Sunday of every month' },
 );
-
 for my $test (@tests) {
     eval {
         my $cron = Cron::Describe->new(expression => $test->{expr});
         ok(1, "Built: $test->{expr}");
         my @children = @{$cron->{root}->{children}};
         my $node = $children[$test->{field}];
+        
+        # 🔥 DUMP_TREE ADDED HERE! 🔥
+        diag "\n=== TREE DUMP for $test->{expr} FIELD $test->{field} ===";
+        $node->dump_tree();
+        diag "=== END TREE DUMP ===\n";
+        
         is($node->{type}, $test->{expected_type}, "Type for $test->{expr}: $test->{field}");
         is($node->{value}, $test->{expected_value}, "Value for $test->{expr}: $test->{field}");
         is(scalar @{$node->{children} || []}, $test->{expected_children}, "Children count for $test->{expr}: $test->{field}");
@@ -38,5 +42,4 @@ for my $test (@tests) {
         diag "Error: $@";
     }
 }
-
 done_testing();

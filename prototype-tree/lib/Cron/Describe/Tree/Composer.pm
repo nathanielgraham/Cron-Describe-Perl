@@ -4,36 +4,38 @@ use warnings;
 use Cron::Describe::Tree::Utils qw(
     num_to_ordinal join_parts %day_names format_time fill_template
 );
-
 sub new { bless {}, shift }
 
 sub describe {
     my ($self, $root) = @_;
     my @fields = @{$root->{children}};
-    
-    # FIXED #4: FALLBACK EXTRACTION
-    my $sec  = $fields[0]{value} // $fields[0]{children}[0]{value} // 0;
-    my $min  = $fields[1]{value} // $fields[1]{children}[0]{value} // 0;
-    my $hour = $fields[2]{value} // $fields[2]{children}[0]{value} // 0;
-    my $time_prefix = format_time($sec, $min, $hour) . ' ';
+   
+    # 🔥 FIXED: SAFE EXTRACTION (only for singles; undef for steps/wildcards)
+    my $sec = ($fields[0]{type} eq 'single') ? $fields[0]{value} : undef;
+    my $min = ($fields[1]{type} eq 'single') ? $fields[1]{value} : undef;
+    my $hour = ($fields[2]{type} eq 'single') ? $fields[2]{value} : undef;
+    my $time_prefix = format_time($sec // 0, $min // 0, $hour // 0);  # Default 0 for format only
+    $time_prefix = "at $time_prefix" if $time_prefix;
+   
     my @phrases;
     for my $field (@fields) {
         push @phrases, $self->template_for_field($field, \@fields);
     }
-    
-    # FIXED #1: STEP REGEX
+   
+    # 🔥 FIXED: STEP PRIORITY
     my @time_phrases = grep { $_ } @phrases[0..2];
     my $time_str = join(' ', @time_phrases);
-    return $time_str if $time_str =~ /^every \d+ (minutes|seconds|from)/;
+    return $time_str if $time_str =~ /^every \d+ (seconds|minutes|hours|from)/;
+   
     my @date_phrases = grep { $_ } @phrases[3..6];
     my $date_str = join(' ', @date_phrases);
     $date_str = "on $date_str" if $date_str && $date_phrases[0] =~ /^(the|last)/;
-    
-    if ($sec == 0 && $min == 0 && $hour == 0) {
+   
+    # 🔥 FIXED: MIDNIGHT ONLY IF ALL DEFINED SINGLES == 0
+    if (defined $sec && defined $min && defined $hour && $sec == 0 && $min == 0 && $hour == 0) {
         $time_prefix = 'at midnight' . ($date_str ? ' ' : '');
     }
-    
-    return join(' ', grep { $_ } ($time_prefix, $date_str)) || 'every second';
+    return (join(' ', grep { $_ } ($time_prefix, $date_str)) || 'every second') =~ s/\s+/ /gr;
 }
 
 sub template_for_field {
@@ -41,9 +43,9 @@ sub template_for_field {
     my $type = $field->{type};
     my $ft = $field->{field_type};
     return '' if $type eq 'wildcard' || $type eq 'unspecified';
-    
+   
     my $data = {};
-    
+   
     if ($type eq 'single' && $ft eq 'dom') {
         $data->{ordinal} = num_to_ordinal($field->{value});
         return fill_template('dom_single_every', $data);
@@ -53,7 +55,11 @@ sub template_for_field {
         my $base = $field->{children}[0];
         if ($base->{type} eq 'wildcard') {
             $data->{step} = $step;
-            return fill_template("every_N_$ft", $data);
+            # 🔥 FIXED: TEMPLATE MATCH (assume ft='minute'/'second')
+            my $tmpl = ($ft eq 'minute' || $ft eq 'min') ? 'every_N_minute' 
+                     : ($ft eq 'second' || $ft eq 'sec') ? 'every_N_second' 
+                     : "every_N_$ft";
+            return fill_template($tmpl, $data);
         } else {
             $data->{step} = $step;
             $data->{start} = $base->{children}[0]{value};
@@ -88,8 +94,7 @@ sub template_for_field {
         $data->{year} = $field->{value};
         return fill_template('year_in', $data);
     }
-    
+   
     return '';
 }
-
 1;

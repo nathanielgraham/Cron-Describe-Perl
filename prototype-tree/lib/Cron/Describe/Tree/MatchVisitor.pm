@@ -17,9 +17,12 @@ sub visit {
     } elsif ($node->{type} eq 'range') {
         $self->{result} = ($self->{value} >= $child_results[0] && $self->{value} <= $child_results[1]) ? 1 : 0;
     } elsif ($node->{type} eq 'step') {
-        my $base_result = $child_results[0];
-        my $step = $child_results[1];
-        $self->{result} = (($self->{value} - $base_result) % $step == 0) ? 1 : 0;
+       my $base_result = $child_results[0];  # 1 for wildcard
+       my $step = $child_results[1];
+       $self->{result} = (($self->{value} % $step == 0) ? 1 : 0) if $base_result == 1;
+       # my $base_result = $child_results[0];
+       # my $step = $child_results[1];
+       # $self->{result} = (($self->{value} - $base_result) % $step == 0) ? 1 : 0;
     } elsif ($node->{type} eq 'list') {
         $self->{result} = (grep { $_ } @child_results) ? 1 : 0;
     } elsif ($node->{type} eq 'unspecified') {
