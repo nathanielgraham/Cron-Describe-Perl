@@ -138,11 +138,11 @@ Monthly Backup - Last Weekday:
 
 =head1 AUTHOR
 
-Broom <broom@example.com>
+Nathaniel J Graham <ngraham@cpan.org>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2025 Broom.
+Copyright 2025 Nathaniel J Graham.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the the Artistic License (2.0).
