@@ -2,11 +2,10 @@ package Cron::Describe;
 use strict;
 use warnings;
 use Time::Moment;
-use Cron::Describe::Tree::Utils qw(normalize validate);
+use Cron::Describe::Tree::Utils qw(:all);
 use Cron::Describe::Tree::CompositePattern;
 use Cron::Describe::Tree::TreeParser;
 use Cron::Describe::Tree::Composer;
-use Carp qw(croak);
 
 =head1 NAME
 
@@ -149,11 +148,120 @@ under the terms of the the Artistic License (2.0).
 
 =cut
 
+sub new_from_unix {
+    my ($class, %args) = @_;
+    $args{is_quartz} = 0;
+    my $self = $class->_new(%args);
+}
+
+sub new_from_quartz {
+    my ($class, %args) = @_;
+    $args{is_quartz} = 1;
+    my $self = $class->_new(%args);
+}
+
 sub new {
+    my ($class, %args) = @_;
+    die "expression required" unless defined $args{expression};
+
+    # count fields to detect type  
+    my @fields = split /\s+/, $args{expression};
+
+    if (@fields == 6 || @fields == 7) {
+       $args{is_quartz} = 1;
+    }
+    elsif (@fields == 5) {
+       $args{is_quartz} = 0;
+    }
+    else {
+       die "expected 5-7 fields";
+    }
+    my $self = $class->_new(%args);
+}
+
+sub _new {
+    my ($class, %args) = @_;
+
+    die "expression required" unless defined $args{expression};
+
+    my $expr = uc $args{expression};
+    $expr =~ s/\s+/ /g;
+    $expr =~ s/^\s+|\s+$//g;
+
+    # Convert dom names to quartz numerical equivalent 
+    while ( my ( $name, $num ) = each %month_map ) { $expr =~ s/\b\Q$name\E\b/$num/gi; }
+
+    my @fields = split /\s+/, $expr;
+
+    # Convert dow names to quartz numerical equivalent 
+    # and normalize expression to 7-field quartz
+    if ( $args{is_quartz} ) {
+       die "expected 6-7 fields, got " . scalar(@fields) unless @fields == 6 || @fields == 7;
+       push (@fields, '*') if @fields == 6; # year
+       $fields[5] = quartz_dow_normalize($fields[5]);
+    }
+    else {
+       die "expected 5 fields, got " . scalar(@fields) unless @fields == 5;
+       while ( my ( $name, $num ) = each %dow_map_unix ) { $expr =~ s/\b\Q$name\E\b/$num/gi; }
+       unshift (@fields, 0); # seconds
+       push (@fields, '*'); # year
+       $fields[5]= unix_dow_normalize($fields[5]);
+
+       # $fields[3] = dom,  $fields[5] = dow
+       if ($fields[3] eq '*') {
+          if ($fields[5] eq '*') {
+             $fields[5] = '?';
+          }
+          else {
+             $fields[3] = '?';
+          }
+       }
+       elsif ( $fields[5] eq '*' ) {
+          $fields[5] = '?';
+       }
+       elsif ( $fields[5] ne '?' && $fields[3] ne '?' ) {
+         die "dow and dom cannot both be specified\n";   
+       }
+    }
+
+    # stitch it back together
+    $expr = join(' ', @fields);
+    die "Invalid characters" unless $expr =~ /^[#LW\d\?\*\s\-\/,]+$/; 
+
+    # DEFAULTS: UTC (0 minutes)
+    my $utc_offset = $args{utc_offset} // 0;
+    my $time_zone = $args{time_zone};
+
+    # AUTO-CALC OFFSET FROM TIMEZONE (RETURNS MINUTES!)
+    if ( defined $time_zone && !defined $utc_offset ) {
+        $utc_offset = Time::Moment->now_utc->with_time_zone($time_zone)->offset;
+    }
+
+    my $self = bless {
+        expression => $expr,
+        is_quartz => $args{is_quartz},
+        utc_offset => $utc_offset,
+        time_zone => $time_zone // 'UTC'
+    }, $class;
+
+    #$self->utc_offset($utc_offset);
+
+    my @types = qw(second minute hour dom month dow year);
+    $self->{root} = Cron::Describe::Tree::CompositePattern->new(type => 'root');
+    for my $i (0..6) {
+        validate($fields[$i], $types[$i]);
+        my $node = Cron::Describe::Tree::TreeParser->parse_field($fields[$i], $types[$i]);
+        $node->{field_type} = $types[$i];
+        $self->{root}->add_child($node);
+    }
+    return $self;
+}
+
+sub new2 {
     my ($class, %args) = @_;
 
     # 🔥 REQUIRE expression
-    croak "expression required" unless defined $args{expression};
+    die "expression required" unless defined $args{expression};
 
     # 🔥 DEFAULTS: UTC (0 minutes)
     my $utc_offset = $args{utc_offset} // 0;
@@ -191,7 +299,7 @@ sub utc_offset {
     my ($self, $new_offset) = @_;
     if (@_ > 1) {
         if (!defined $new_offset || $new_offset !~ /^-?\d+$/ || $new_offset < -1080 || $new_offset > 1080) {
-            croak "Invalid utc_offset '$new_offset': must be an integer between -1080 and 1080 minutes";
+            die "Invalid utc_offset '$new_offset': must be an integer between -1080 and 1080 minutes";
         }
         $self->{utc_offset} = $new_offset;
         print STDERR "DEBUG: utc_offset: set to $new_offset\n" if $ENV{Cron_DEBUG};

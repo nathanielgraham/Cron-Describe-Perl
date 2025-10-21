@@ -330,12 +330,12 @@ my @tests = (
    {
       expr         => '0 0 0 @ * ? *',
       valid        => 0,
-      expect_error => qr/Syntax: Invalid chars in dom: @/
+      expect_error => qr/Invalid characters/
    },
    {
       expr         => '0 0 0 L-X * ? *',
       valid        => 0,
-      expect_error => qr/Syntax: Invalid chars in dom: L-X/
+      expect_error => qr/Invalid characters/
    },
 
    # 🔥 HYBRID LIST TESTS (8 NEW)
