@@ -1,4 +1,5 @@
 package Cron::Toolkit;
+$VERSION = 0.04;
 use strict;
 use warnings;
 use Time::Moment;
@@ -12,7 +13,6 @@ use feature 'say';
 
 our @EXPORT_OK   = qw(new new_from_unix new_from_quartz new_from_crontab);
 our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
-our $VERSION = 0.04;
 
 =head1 NAME
 
