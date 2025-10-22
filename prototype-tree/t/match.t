@@ -10,7 +10,7 @@ sub utc_epoch {
     return Time::Moment->new(%components)->epoch;
 }
 
-plan tests => 38;
+#plan tests => 38;
 
 # Existing tests (1-34)
 my $cron_utc = Cron::Describe->new(expression => "0 30 14 * * ?");

@@ -26,9 +26,23 @@ sub get_children {
 
 sub traverse {
     my ($self, $visitor) = @_;
+    my $type = $self->{type};
+    # Direct for range (raw in visit)
+    if ($type eq 'range') {
+        return $visitor->visit($self, ());
+    }
+    # Recurse for list/step (flags/extract)
     my @child_results = map { $_->traverse($visitor) } @{$self->{children}};
     return $visitor->visit($self, @child_results);
 }
+
+#sub traverse {
+#    my ($self, $visitor) = @_;
+#    my $type = $self->{type};
+#    return $visitor->visit($self, ()) if $type eq 'single' || $type eq 'last' || $type eq 'nth' || $type eq 'nearest_weekday' || $type eq 'lastW';  # Leaves/specials, no children
+#    my @child_results = map { $_->traverse($visitor) } @{$self->{children}};
+#    return $visitor->visit($self, @child_results);
+#}
 
 sub is_match {
     my ($self, $value, $tm) = @_;

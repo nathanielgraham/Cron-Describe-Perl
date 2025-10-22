@@ -17,18 +17,20 @@ sub new {
 sub match {
    my ( $self, $epoch_seconds ) = @_;
    return 0 unless defined $epoch_seconds;
-  
+
    my $tm_utc = Time::Moment->from_epoch($epoch_seconds);
    my $tm_local = $tm_utc->with_offset_same_instant($self->{utc_offset});
-  
+
    my @fields = @{ $self->{tree}{children} };
    my @field_types = qw(second minute hour dom month dow year);
-  
+
    foreach my $i ( 0 .. 6 ) {
       my $field = $fields[$i] or next;
       next if $field->{type} eq 'wildcard';
       my $value = $self->_field_value($tm_local, $field_types[$i]);
-      return 0 unless $self->_matches_field($field, $value, $tm_local, $field_types[$i]);
+      # Visitor-wired: Traverse for match
+      my $visitor = Cron::Describe::Tree::MatchVisitor->new(value => $value, tm => $tm_local);
+      return 0 unless $field->traverse($visitor);
    }
    return 1;
 }
@@ -42,129 +44,6 @@ sub _field_value {
    return $tm->month if $type eq 'month';
    return quartz_dow($tm->day_of_week) if $type eq 'dow';
    return $tm->year if $type eq 'year';
-}
-
-sub _matches_field {
-   my ( $self, $field, $value, $tm, $field_type ) = @_;
-   my $type = $field->{type};
-  
-   return 1 if $type eq 'wildcard';
-   return 1 if $type eq 'unspecified';
-  
-   if ( $type eq 'single' ) {
-      if ($field_type eq 'month' && $field->{value} =~ /^[A-Z]{3}$/) {
-         my %month_map = (JAN => 1, FEB => 2, MAR => 3, APR => 4, MAY => 5, JUN => 6,
-                          JUL => 7, AUG => 8, SEP => 9, OCT => 10, NOV => 11, DEC => 12);
-         return $value == $month_map{$field->{value}};
-      }
-      return $value == $field->{value};
-   }
-   if ( $type eq 'range' ) {
-      my ($min, $max) = map { $_->{value} } @{$field->{children}};
-      return $value >= $min && $value <= $max;
-   }
-   if ( $type eq 'list' ) {
-      return any { $_->{value} == $value } @{$field->{children}};
-   }
-   if ( $type eq 'step' ) {
-      return $self->_matches_step($field->{children}[0], $field->{children}[1]{value}, $value);
-   }
-   if ( $type eq 'last' ) { return $self->_matches_last($field, $tm); }
-   if ( $type eq 'lastW' ) { return $self->_matches_lastw($field, $tm); }
-   if ( $type eq 'nth' ) { return $self->_matches_nth($field, $tm); }
-   if ( $type eq 'nearest_weekday' ) { return $self->_matches_nearest_weekday($field, $tm); }
-  
-   return 0;
-}
-
-sub _matches_step {
-   my ( $self, $base, $step, $value ) = @_;
-   if ( $base->{type} eq 'wildcard' ) {
-      return $value % $step == 0;
-   } elsif ( $base->{type} eq 'single' ) {
-      return $value >= $base->{value} && ($value - $base->{value}) % $step == 0;
-   } elsif ( $base->{type} eq 'range' ) {
-      my ($min, $max) = map { $_->{value} } @{$base->{children}};
-      return $value >= $min && $value <= $max && ($value - $min) % $step == 0;
-   }
-   return 0;
-}
-
-sub _matches_last {
-   my ( $self, $field, $tm ) = @_;
-   my $dom = $tm->day_of_month;
-   my $days_in_month = $tm->length_of_month;
-  
-   if ( $field->{value} eq 'L' ) {
-      return $dom == $days_in_month;
-   }
-   if ( $field->{value} =~ /L-(\d+)/ ) {
-      my $offset = $1;
-      return $dom == $days_in_month - $offset;
-   }
-   return 0;
-}
-
-sub _matches_lastw {
-   my ( $self, $field, $tm ) = @_;
-   my $dom = $tm->day_of_month;
-   my $days_in_month = $tm->length_of_month;
-   my $candidate = $days_in_month;
-   while ( $candidate >= 1 ) {
-      my $test_tm = $tm->with_day_of_month($candidate);
-      my $test_dow = quartz_dow($test_tm->day_of_week);
-      if ( $test_dow >= 2 && $test_dow <= 6 ) {
-         return $dom == $candidate;
-      }
-      $candidate--;
-   }
-   return 0;  # Theoretically impossible (months have weekdays), but safe
-}
-
-sub _matches_nth {
-   my ( $self, $field, $tm ) = @_;
-   my ( $dow, $nth ) = $field->{value} =~ /(\d+)#(\d+)/;
-   my $target_dow = $dow;
-   my $actual_nth = 0;
-   my $current_dom = $tm->day_of_month;
-   for ( my $d = 1; $d <= $current_dom; $d++ ) {
-      my $test_tm = $tm->with_day_of_month($d);
-      if ( quartz_dow($test_tm->day_of_week) == $target_dow ) {
-         $actual_nth++;
-      }
-   }
-   my $is_target = ( quartz_dow($tm->day_of_week) == $target_dow );
-   return $is_target && $actual_nth == $nth;
-}
-
-sub _matches_nearest_weekday {
-   my ( $self, $field, $tm ) = @_;
-   my ($day) = $field->{value} =~ /(\d+)W/;
-   my $dom = $tm->day_of_month;
-   my $dow = quartz_dow($tm->day_of_week);
-   my $days_in_month = $tm->length_of_month;
-  
-   return 0 if $day < 1 || $day > $days_in_month;
-   
-   my $target_tm = $tm->with_day_of_month($day);
-   my $target_dow = quartz_dow($target_tm->day_of_week);
-   
-   if ($target_dow >= 2 && $target_dow <= 6) {
-      return $dom == $day;
-   }
-   
-   my $before = $target_tm->minus_days(1);
-   my $after = $target_tm->plus_days(1);
-   my $before_dow = quartz_dow($before->day_of_week);
-   my $after_dow = quartz_dow($after->day_of_week);
-   
-   if ($before_dow >= 2 && $before_dow <= 6 && $dom == $day - 1) {
-      return 1;
-   }
-   if ($after_dow >= 2 && $after_dow <= 6 && $dom == $day + 1 && $day + 1 <= $days_in_month) {
-      return 1;
-   }
-   return 0;
 }
 
 sub _find_next {
