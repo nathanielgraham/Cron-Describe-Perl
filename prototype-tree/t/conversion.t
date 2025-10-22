@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Test::More tests => 15;
+use Test::More;
 use Test::Exception;
 use Cron::Describe;
 use Cron::Describe::Tree::Utils qw(:all);
@@ -96,8 +96,8 @@ subtest 'new() auto-detect' => sub {
 };
 
 subtest 'Additional edge cases' => sub {
-    #plan tests => 20;
-    
+    plan tests => 22;
+
     # Mixed-case names
     lives_ok { Cron::Describe->new( expression => '30 14 * jan Mon', type => 'unix' ) } 'No die: mixed-case single names';
     is( Cron::Describe->new( expression => '30 14 * jan Mon', type => 'unix' )->{expression}, '0 30 14 ? 1 2 *', 'Output: mixed-case single names' );
@@ -105,38 +105,68 @@ subtest 'Additional edge cases' => sub {
     is( Cron::Describe->new( expression => '30 14 * JaN-MaR *', type => 'unix' )->{expression}, '0 30 14 * 1-3 ? *', 'Output: mixed-case month range' );
     lives_ok { Cron::Describe->new( expression => '30 14 * * mOn,WeD,fRi', type => 'unix' ) } 'No die: mixed-case dow list';
     is( Cron::Describe->new( expression => '30 14 * * mOn,WeD,fRi', type => 'unix' )->{expression}, '0 30 14 ? * 2,4,6 *', 'Output: mixed-case dow list' );
-    
+
     # Invalid names
     throws_ok { Cron::Describe->new( expression => '30 14 * XYZ MON', type => 'unix' ) } qr/Invalid characters/, 'Dies: invalid month name';
     throws_ok { Cron::Describe->new( expression => '30 14 * JAN FOO', type => 'unix' ) } qr/Invalid characters/, 'Dies: invalid dow name';
-    
+
     # Unix SUN=0
     lives_ok { Cron::Describe->new( expression => '30 14 * * 0', type => 'unix' ) } 'No die: SUN=0';
     is( Cron::Describe->new( expression => '30 14 * * 0', type => 'unix' )->{expression}, '0 30 14 ? * 1 *', 'Output: SUN=0' );
-    
+
     # Unix dow steps
     lives_ok { Cron::Describe->new( expression => '30 14 * * 1-5/2', type => 'unix' ) } 'No die: dow step';
     is( Cron::Describe->new( expression => '30 14 * * 1-5/2', type => 'unix' )->{expression}, '0 30 14 ? * 2-6/2 *', 'Output: dow step' );
-    
+
     # Unix dom=?
     lives_ok { Cron::Describe->new( expression => '30 14 ? * MON', type => 'unix' ) } 'No die: dom=?';
     is( Cron::Describe->new( expression => '30 14 ? * MON', type => 'unix' )->{expression}, '0 30 14 ? * 2 *', 'Output: dom=?' );
-    
+
     # Unix dow=?
     lives_ok { Cron::Describe->new( expression => '30 14 15 * ?', type => 'unix' ) } 'No die: dow=?';
     is( Cron::Describe->new( expression => '30 14 15 * ?', type => 'unix' )->{expression}, '0 30 14 15 * ? *', 'Output: dow=?' );
-    
+
     # Unix complex dom step
     lives_ok { Cron::Describe->new( expression => '30 14 1-15/5 * *', type => 'unix' ) } 'No die: dom step';
     is( Cron::Describe->new( expression => '30 14 1-15/5 * *', type => 'unix' )->{expression}, '0 30 14 1-15/5 * ? *', 'Output: dom step' );
-    
+
+    # Invalid ranges
+    throws_ok { Cron::Describe->new( expression => '30 14 5-1 * *', type => 'unix' ) } qr/invalid dom range: 5-1/, 'Dies: invalid dom range';
+    throws_ok { Cron::Describe->new( expression => '30 14 * * 5-1', type => 'unix' ) } qr/invalid dow range: 6-2/, 'Dies: invalid dow range';
+
     # Malformed inputs
     throws_ok { Cron::Describe->new( expression => '', type => 'unix' ) } qr/expected 5-7 fields/, 'Dies: empty input';
     throws_ok { Cron::Describe->new( expression => '0 30 14 * * ? * *', type => 'quartz' ) } qr/expected 5-7 fields/, 'Dies: too many fields';
-    
-    # Invalid ranges
-    #throws_ok { Cron::Describe->new( expression => '30 14 5-1 * *', type => 'unix' ) } qr/invalid dow range/, 'Dies: invalid dom range';
-    #throws_ok { Cron::Describe->new( expression => '30 14 * * 5-1', type => 'unix' ) } qr/invalid dow range/, 'Dies: invalid dow range';
+};
+
+subtest 'new_from_unix' => sub {
+    lives_ok { 
+        my $obj = Cron::Describe->new_from_unix(expression => '30 14 * * *');
+        is( $obj->{expression}, '0 30 14 * * ? *', 'Basic numeric: * * * * * → 0 * * * * ? *' );
+    } 'No die: basic numeric';
+
+    lives_ok { 
+        my $obj = Cron::Describe->new_from_unix(expression => '30 14 * * MON');
+        is( $obj->{expression}, '0 30 14 ? * 2 *', 'Day name: MON → 2' );
+    } 'No die: day name MON';
+
+    lives_ok { 
+        my $obj = Cron::Describe->new_from_unix(expression => '* * * * MON-FRI');
+        is( $obj->{expression}, '0 * * ? * 2-6 *', 'Range: MON-FRI → 2-6' );
+    } 'No die: DOW range';
+
+    lives_ok { 
+        my $obj = Cron::Describe->new_from_unix(expression => '*/10 * * * *');
+        is( $obj->{expression}, '0 */10 * * * ? *', 'Step: */10 minutes' );
+    } 'No die: minute step';
+
+    throws_ok { 
+        Cron::Describe->new_from_unix(expression => '30 14 1-5 * 1-5');
+    } qr/dow and dom cannot both be specified/, 'Dies: DOM and DOW both specified';
+
+    throws_ok { 
+        Cron::Describe->new_from_unix(expression => '30 14 * *');
+    } qr/expected 5 fields/, 'Dies: too few fields';
 };
 
 done_testing();
