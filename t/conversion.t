@@ -169,4 +169,22 @@ subtest 'new_from_unix' => sub {
     } qr/expected 5 fields/, 'Dies: too few fields';
 };
 
+subtest 'aliases in new()' => sub {
+    plan tests => 11;  # Dropped the is for @bogus
+    # Valid maps (Quartz-normalized)
+    lives_ok { Cron::Toolkit->new(expression => '@hourly') } 'No die: @hourly';
+    is( Cron::Toolkit->new(expression => '@hourly')->{expression}, '0 0 * * * ? *', '@hourly → 0 0 * * * ? *' );
+    lives_ok { Cron::Toolkit->new(expression => '@daily') } 'No die: @daily';
+    is( Cron::Toolkit->new(expression => '@daily')->{expression}, '0 0 0 * * ? *', '@daily → 0 0 0 * * ? *' );
+    lives_ok { Cron::Toolkit->new(expression => '@monthly') } 'No die: @monthly (L dom)';
+    is( Cron::Toolkit->new(expression => '@monthly')->{expression}, '0 0 0 L ? * *', '@monthly → 0 0 0 L ? * *' );
+    lives_ok { Cron::Toolkit->new(expression => '@yearly') } 'No die: @yearly';
+    is( Cron::Toolkit->new(expression => '@yearly')->{expression}, '0 0 0 1 1 ? *', '@yearly → 0 0 0 1 1 ? *' );
+    # Mixed: @alias + TZ
+    lives_ok { Cron::Toolkit->new(expression => '@hourly', time_zone => 'UTC') } 'No die: @hourly + TZ';
+    is( Cron::Toolkit->new(expression => '@hourly', time_zone => 'UTC')->utc_offset, 0, '@alias + TZ recalc' );
+    # Invalid: Unknown @alias dies on field count
+    throws_ok { Cron::Toolkit->new(expression => '@bogus') } qr/expected 5-7 fields/, 'Dies: unknown @alias (invalid expr)';
+};
+
 done_testing();

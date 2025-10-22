@@ -1,3 +1,11 @@
+# Build
+*.tar.gz
+Cron-Toolkit-*
+blib/
+_build/
+MYMETA.*
 grok_prompt
-.build
-out.log
+
+# Test
+cover_db/
+.nyc_output

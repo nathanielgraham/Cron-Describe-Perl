@@ -1,0 +1,19 @@
+# Ignore build artifacts
+^Cron-Toolkit-[\d\.\-]*
+^_build
+^blib
+^Build$
+^MYMETA\.
+^cover_db
+
+# Ignore dev scripts
+code_share\.sh
+grok_prompts
+
+# Ignore git
+\.git
+\.gitignore
+
+# Ignore temp/editor
+\.swp$
+~$

@@ -2,10 +2,18 @@ package Cron::Toolkit::Tree::Composer;
 use strict;
 use warnings;
 use Cron::Toolkit::Tree::Utils qw(:all);
-sub new { bless {}, shift }
 
+sub new {
+    my ($class, %args) = @_;
+    bless { locale => $args{locale} // 'en' }, $class;
+}
 sub describe {
-   my ( $self, $root ) = @_;
+    my ($self, $root, $locale) = @_;
+    $locale //= $self->{locale};
+    if ($locale ne 'en') {
+        warn "Locale stub: English fallback.";
+        $locale = 'en';
+    }
    my @fields      = @{ $root->{children} };
    my @field_types = qw(second minute hour dom month dow year);
    for my $i ( 0 .. 6 ) {

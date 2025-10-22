@@ -143,4 +143,24 @@ is $bounded_cron->end_epoch, utc_epoch(year => 2025, month => 1, day => 2), "40.
 is $bounded_cron->next(utc_epoch(year => 2024, month => 12, day => 31, hour => 23, minute => 59, second => 59)), utc_epoch(year => 2025, month => 1, day => 1), "41. next clamped to begin_epoch";
 is $bounded_cron->next(utc_epoch(year => 2025, month => 1, day => 2, hour => 0, minute => 0, second => 1)), undef, "42. next after end_epoch returns undef";
 
+subtest 'Phase 2 utils' => sub {
+    plan tests => 6;  # Include warn check
+    my $cron = Cron::Toolkit->new(expression => '0 0 * * * ?');
+    is $cron->as_string, '0 0 * * * ? *', 'as_string normalized';
+    like $cron->to_json, qr/"expression":"0 0 \* \* \* \? \*"/, 'to_json expr';
+    is_deeply $cron->next_occurrences(1), $cron->next_n(1), 'next_occurrences alias';
+    # dump_tree no die (capture output for check)
+    local *STDOUT;
+    open my $out_fh, '>', \my $out or die $!;
+    *STDOUT = $out_fh;
+    $cron->dump_tree;
+    close $out_fh;
+    like $out, qr/Root/, 'dump_tree output';
+    # Locale stub (warn expected, but desc still works)
+    my $warn;
+    local $SIG{__WARN__} = sub { $warn = $_[0] };
+    like $cron->describe(locale => 'fr'), qr/AM/, 'locale fallback English desc';  # Matches "12:00:00 AM"
+    like $warn // '', qr/Locale 'fr' not supported/, 'locale warn fires';
+};
+
 done_testing;

@@ -4,7 +4,7 @@ use warnings;
 use Exporter qw(import);
 our @EXPORT_OK = qw(
   format_time num_to_ordinal field_unit join_parts fill_template is_midnight time_suffix quartz_dow
-  quartz_dow_normalize unix_dow_normalize
+  quartz_dow_normalize unix_dow_normalize %aliases
   ordinal_list step_ordinal complex_join normalize validate generate_list_desc %limits %dow_map_unix
   %month_map %dow_map_quartz %month_names %day_names %nth_names %unit_labels %ordinal_suffix %joiners %templates
 );
@@ -100,6 +100,17 @@ our %limits = (
    dow => [ 1, 7 ],
    year => [ 1970, 2099 ]
 );
+
+our %aliases = (
+    '@yearly' => '0 0 0 1 1 ? *',
+    '@annually' => '0 0 0 1 1 ? *',
+    '@monthly' => '0 0 0 L ? * *',
+    '@weekly' => '0 0 0 ? * ? *',
+    '@daily' => '0 0 0 * * ? *',
+    '@midnight' => '0 0 0 * * ? *',
+    '@hourly' => '0 0 * * * ? *',
+);
+
 our %ordinal_suffix = ( 1 => 'st', 21 => 'st', 31 => 'st', 2 => 'nd', 22 => 'nd', 3 => 'rd', 23 => 'rd', map { $_ => 'th' } grep { !/1[123]$/ } 4 .. 30 );
 our %joiners = ( list => 'and', range => 'through' );
 our %templates = (
