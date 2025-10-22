@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 use String::Util qw(trim);
-use Cron::Describe;
+use Cron::Toolkit;
 
 my @tests = (
 
@@ -418,7 +418,7 @@ for my $test (@tests) {
    subtest "Test: $test->{expr} (valid: $test->{valid})" => sub {
       my $raw     = $test->{expr};
       my $success = eval {
-         my $cron       = Cron::Describe->new( expression => $raw );
+         my $cron       = Cron::Toolkit->new( expression => $raw );
          my $normalized = join( ' ', split /\s+/, $cron->{expression} );
          diag "RAW: '$raw' → NORMALIZED: '$normalized'";
 

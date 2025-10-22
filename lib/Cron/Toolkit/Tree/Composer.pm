@@ -1,7 +1,7 @@
-package Cron::Describe::Tree::Composer;
+package Cron::Toolkit::Tree::Composer;
 use strict;
 use warnings;
-use Cron::Describe::Tree::Utils qw(:all);
+use Cron::Toolkit::Tree::Utils qw(:all);
 sub new { bless {}, shift }
 
 sub describe {

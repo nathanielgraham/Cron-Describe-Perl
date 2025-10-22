@@ -1,11 +1,7 @@
 #!/bin/bash
 
-# Specify the directory (change this to your desired directory)
-#DIRECTORY="./lib/Cron/Describe"
-
 # Loop through each file in the directory
-#for file in "lib/Cron/Describe"/* "lib/Cron"/* "t"/* "t/data"/*json; do
-for file in "lib/Cron/Describe"/*; do
+for file in "lib/Cron/Toolkit"/* "lib/Cron"/* "t"/*; do
     # Check if it is a file
     if [[ -f "$file" ]]; then
         # Echo the filename

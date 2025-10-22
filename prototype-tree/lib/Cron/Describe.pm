@@ -136,219 +136,231 @@ under the terms of the the Artistic License (2.0).
 =cut
 
 sub new_from_unix {
-    my ($class, %args) = @_;
-    $args{is_quartz} = 0;
-    my $self = $class->_new(%args);
+   my ( $class, %args ) = @_;
+   $args{is_quartz} = 0;
+   my $self = $class->_new(%args);
 }
 
 sub new_from_quartz {
-    my ($class, %args) = @_;
-    $args{is_quartz} = 1;
-    my $self = $class->_new(%args);
+   my ( $class, %args ) = @_;
+   $args{is_quartz} = 1;
+   my $self = $class->_new(%args);
 }
 
 sub new {
-    my ($class, %args) = @_;
-    die "expression required" unless defined $args{expression};
-    my @fields = split /\s+/, $args{expression};
-    if (@fields == 6 || @fields == 7) {
-       $args{is_quartz} = 1;
-    }
-    elsif (@fields == 5) {
-       $args{is_quartz} = 0;
-    }
-    else {
-       die "expected 5-7 fields";
-    }
-    my $self = $class->_new(%args);
+   my ( $class, %args ) = @_;
+   die "expression required" unless defined $args{expression};
+   my @fields = split /\s+/, $args{expression};
+   if ( @fields == 6 || @fields == 7 ) {
+      $args{is_quartz} = 1;
+   }
+   elsif ( @fields == 5 ) {
+      $args{is_quartz} = 0;
+   }
+   else {
+      die "expected 5-7 fields";
+   }
+   my $self = $class->_new(%args);
 }
 
 sub _new {
-    my ($class, %args) = @_;
-    die "expression required" unless defined $args{expression};
-    my $expr = uc $args{expression};
-    $expr =~ s/\s+/ /g;
-    $expr =~ s/^\s+|\s+$//g;
-    # Convert month names to quartz numerical equivalent
-    while ( my ( $name, $num ) = each %month_map ) { $expr =~ s/\b\Q$name\E\b/$num/gi; }
-    my @fields = split /\s+/, $expr;
-    # Convert dow names to quartz numerical equivalent
-    # and normalize expression to 7-field quartz
-    if ( $args{is_quartz} ) {
-       die "expected 6-7 fields, got " . scalar(@fields) unless @fields == 6 || @fields == 7;
-       push (@fields, '*') if @fields == 6; # year
-       $fields[5] = quartz_dow_normalize($fields[5]);
-    }
-    else {
-       die "expected 5 fields, got " . scalar(@fields) unless @fields == 5;
-       while ( my ( $name, $num ) = each %dow_map_unix ) { $expr =~ s/\b\Q$name\E\b/$num/gi; }
-       unshift (@fields, 0); # seconds
-       push (@fields, '*'); # year
-       $fields[5]= unix_dow_normalize($fields[5]);
-       # $fields[3] = dom, $fields[5] = dow
-       if ($fields[3] eq '*') {
-          if ($fields[5] eq '*') {
-             $fields[5] = '?';
-          }
-          else {
-             $fields[3] = '?';
-          }
-       }
-       elsif ( $fields[5] eq '*' ) {
-          $fields[5] = '?';
-       }
-       elsif ( $fields[5] ne '?' && $fields[3] ne '?' ) {
+   my ( $class, %args ) = @_;
+   die "expression required" unless defined $args{expression};
+   my $expr = uc $args{expression};
+   $expr =~ s/\s+/ /g;
+   $expr =~ s/^\s+|\s+$//g;
+
+   # Convert month names to quartz numerical equivalent
+   while ( my ( $name, $num ) = each %month_map ) { $expr =~ s/\b\Q$name\E\b/$num/gi; }
+   my @fields = split /\s+/, $expr;
+
+   # Convert dow names to quartz numerical equivalent
+   # and normalize expression to 7-field quartz
+   if ( $args{is_quartz} ) {
+      die "expected 6-7 fields, got " . scalar(@fields) unless @fields == 6 || @fields == 7;
+      push( @fields, '*' ) if @fields == 6;    # year
+      $fields[5] = quartz_dow_normalize( $fields[5] );
+   }
+   else {
+      die "expected 5 fields, got " . scalar(@fields) unless @fields == 5;
+      while ( my ( $name, $num ) = each %dow_map_unix ) { $expr =~ s/\b\Q$name\E\b/$num/gi; }
+      unshift( @fields, 0 );                   # seconds
+      push( @fields, '*' );                    # year
+      $fields[5] = unix_dow_normalize( $fields[5] );
+
+      # $fields[3] = dom, $fields[5] = dow
+      if ( $fields[3] eq '*' ) {
+         if ( $fields[5] eq '*' ) {
+            $fields[5] = '?';
+         }
+         else {
+            $fields[3] = '?';
+         }
+      }
+      elsif ( $fields[5] eq '*' ) {
+         $fields[5] = '?';
+      }
+      elsif ( $fields[5] ne '?' && $fields[3] ne '?' ) {
          die "dow and dom cannot both be specified\n";
-       }
-    }
-    # stitch it back together
-    $expr = join(' ', @fields);
-    die "Invalid characters" unless $expr =~ /^[#LW\d\?\*\s\-\/,]+$/;
-    # DEFAULTS: UTC (0 minutes)
-    my $utc_offset = $args{utc_offset} // 0;
-    my $time_zone = $args{time_zone};
-    # AUTO-CALC OFFSET FROM TIMEZONE (RETURNS MINUTES!)
-    if ( defined $time_zone && !defined $utc_offset ) {
-        $utc_offset = Time::Moment->now_utc->with_time_zone($time_zone)->offset;
-    }
-    my $self = bless {
-        expression => $expr,
-        is_quartz => $args{is_quartz},
-        utc_offset => $utc_offset,
-        time_zone => $time_zone // 'UTC'
-    }, $class;
-    my @types = qw(second minute hour dom month dow year);
-    $self->{root} = Cron::Describe::Tree::CompositePattern->new(type => 'root');
-    for my $i (0..6) {
-        validate($fields[$i], $types[$i]);
-        my $node = Cron::Describe::Tree::TreeParser->parse_field($fields[$i], $types[$i]);
-        $node->{field_type} = $types[$i];
-        $self->{root}->add_child($node);
-    }
-    return $self;
+      }
+   }
+
+   # stitch it back together
+   $expr = join( ' ', @fields );
+   die "Invalid characters" unless $expr =~ /^[#LW\d\?\*\s\-\/,]+$/;
+
+   # DEFAULTS: UTC (0 minutes)
+   my $utc_offset = $args{utc_offset} // 0;
+   my $time_zone  = $args{time_zone};
+
+   # AUTO-CALC OFFSET FROM TIMEZONE (RETURNS MINUTES!)
+   if ( defined $time_zone && !defined $utc_offset ) {
+      $utc_offset = Time::Moment->now_utc->with_time_zone($time_zone)->offset;
+   }
+   my $self = bless {
+      expression  => $expr,
+      is_quartz   => $args{is_quartz},
+      begin_epoch => $args{begin_epoch},
+      end_epoch   => $args{end_epoch},
+      utc_offset  => $utc_offset,
+      time_zone   => $time_zone // 'UTC'
+   }, $class;
+
+   my @types = qw(second minute hour dom month dow year);
+   $self->{root} = Cron::Describe::Tree::CompositePattern->new( type => 'root' );
+   for my $i ( 0 .. 6 ) {
+      validate( $fields[$i], $types[$i] );
+      my $node = Cron::Describe::Tree::TreeParser->parse_field( $fields[$i], $types[$i] );
+      $node->{field_type} = $types[$i];
+      $self->{root}->add_child($node);
+   }
+   return $self;
 }
 
-sub new2 {
-    my ($class, %args) = @_;
-    die "expression required" unless defined $args{expression};
-    my $utc_offset = $args{utc_offset} // 0;
-    my $time_zone = $args{time_zone};
-    if ( defined $time_zone && !defined $utc_offset ) {
-        $utc_offset = Time::Moment->now_utc->with_time_zone($time_zone)->offset;
-    }
-    my $self = bless {
-        expression => $args{expression},
-        utc_offset => 0,
-        time_zone => $time_zone // 'UTC'
-    }, $class;
-    $self->utc_offset($utc_offset);
-    $self->{expression} = normalize($self->{expression});
-    my @fields = split /\s+/, $self->{expression};
-    my @types = qw(second minute hour dom month dow year);
-    $self->{root} = Cron::Describe::Tree::CompositePattern->new(type => 'root');
-    for my $i (0..6) {
-        validate($fields[$i], $types[$i]);
-        my $node = Cron::Describe::Tree::TreeParser->parse_field($fields[$i], $types[$i]);
-        $node->{field_type} = $types[$i];
-        $self->{root}->add_child($node);
-    }
-    return $self;
+sub begin_epoch {
+   my ( $self, $new_begin ) = @_;
+   if ( @_ > 1 ) {
+      die "Invalid begin_epoch '$new_begin': must be a non-negative integer" unless defined $new_begin && $new_begin =~ /^\d+$/ && $new_begin >= 0;
+      $self->{begin_epoch} = $new_begin;
+   }
+   return $self->{begin_epoch};
+}
+
+sub end_epoch {
+   my ( $self, $new_end ) = @_;
+   if ( @_ > 1 ) {
+      die "Invalid end_epoch '$new_end': must be undef or a non-negative integer" unless !defined $new_end || ( $new_end =~ /^\d+$/ && $new_end >= 0 );
+      $self->{end_epoch} = $new_end;
+   }
+   return $self->{end_epoch};
 }
 
 sub utc_offset {
-    my ($self, $new_offset) = @_;
-    if (@_ > 1) {
-        if (!defined $new_offset || $new_offset !~ /^-?\d+$/ || $new_offset < -1080 || $new_offset > 1080) {
-            die "Invalid utc_offset '$new_offset': must be an integer between -1080 and 1080 minutes";
-        }
-        $self->{utc_offset} = $new_offset;
-        print STDERR "DEBUG: utc_offset: set to $new_offset\n" if $ENV{Cron_DEBUG};
-    }
-    print STDERR "DEBUG: utc_offset: returning $self->{utc_offset}\n" if $ENV{Cron_DEBUG};
-    return $self->{utc_offset};
+   my ( $self, $new_offset ) = @_;
+   if ( @_ > 1 ) {
+      if ( !defined $new_offset || $new_offset !~ /^-?\d+$/ || $new_offset < -1080 || $new_offset > 1080 ) {
+         die "Invalid utc_offset '$new_offset': must be an integer between -1080 and 1080 minutes";
+      }
+      $self->{utc_offset} = $new_offset;
+      print STDERR "DEBUG: utc_offset: set to $new_offset\n" if $ENV{Cron_DEBUG};
+   }
+   print STDERR "DEBUG: utc_offset: returning $self->{utc_offset}\n" if $ENV{Cron_DEBUG};
+   return $self->{utc_offset};
 }
 
 sub describe {
-   my ( $self ) = @_;
+   my ($self) = @_;
    my $composer = Cron::Describe::Tree::Composer->new;
-   return $composer->describe($self->{root});
+   return $composer->describe( $self->{root} );
 }
 
 sub is_match {
    my ( $self, $epoch_seconds ) = @_;
    return unless $self->{root};
+
    require Cron::Describe::Tree::Matcher;
    my $matcher = Cron::Describe::Tree::Matcher->new(
-      tree => $self->{root},
-      utc_offset => $self->utc_offset
+      tree       => $self->{root},
+      utc_offset => $self->utc_offset,
+      owner      => $self                # Add this
    );
+
    return $matcher->match($epoch_seconds);
 }
 
 sub next {
-    my ($self, $epoch_seconds) = @_;
-    $epoch_seconds //= time;
-    die "Invalid epoch_seconds: must be non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
-    require Cron::Describe::Tree::Matcher;
-    my $matcher = Cron::Describe::Tree::Matcher->new(
-        tree => $self->{root},
-        utc_offset => $self->utc_offset
-    );
-    my ($window, $step) = $self->_estimate_window;
-    return $matcher->_find_next($epoch_seconds, $epoch_seconds + $window, $step, 1);
+   my ( $self, $epoch_seconds ) = @_;
+   $epoch_seconds //= time;
+   die "Invalid epoch_seconds: must be non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
+
+   require Cron::Describe::Tree::Matcher;
+   my $matcher = Cron::Describe::Tree::Matcher->new(
+      tree       => $self->{root},
+      utc_offset => $self->utc_offset,
+      owner      => $self                # Add this
+   );
+   my ( $window, $step ) = $self->_estimate_window;
+   return $matcher->_find_next( $epoch_seconds, $epoch_seconds + $window, $step, 1 );
 }
 
 sub next_n {
-    my ($self, $epoch_seconds, $n) = @_;
-    $epoch_seconds //= time;
-    $n //= 1;
-    die "Invalid epoch_seconds: must be non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
-    die "Invalid n: must be positive integer" unless defined $n && $n =~ /^\d+$/ && $n > 0;
-    my @results;
-    my $current = $epoch_seconds;
-    for (1 .. $n) {
-        my $next = $self->next($current);
-        last unless defined $next;
-        push @results, $next;
-        $current = $next + 1;
-    }
-    return \@results;
+   my ( $self, $epoch_seconds, $n ) = @_;
+   $epoch_seconds //= time;
+   $n             //= 1;
+   die "Invalid epoch_seconds: must be non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
+   die "Invalid n: must be positive integer"                 unless defined $n             && $n             =~ /^\d+$/ && $n > 0;
+   my @results;
+   my $current = $epoch_seconds;
+   for ( 1 .. $n ) {
+      my $next = $self->next($current);
+      last unless defined $next;
+      push @results, $next;
+      $current = $next + 1;
+   }
+   return \@results;
 }
 
 sub previous {
-    my ($self, $epoch_seconds) = @_;
-    $epoch_seconds //= time;
-    die "Invalid epoch_seconds: must be non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
-    require Cron::Describe::Tree::Matcher;
-    my $matcher = Cron::Describe::Tree::Matcher->new(
-        tree => $self->{root},
-        utc_offset => $self->utc_offset
-    );
-    my ($window, $step) = $self->_estimate_window;
-    return $matcher->_find_next($epoch_seconds, $epoch_seconds - $window, $step, -1);
+   my ( $self, $epoch_seconds ) = @_;
+   $epoch_seconds //= time;
+   die "Invalid epoch_seconds: must be non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
+
+   require Cron::Describe::Tree::Matcher;
+   my $matcher = Cron::Describe::Tree::Matcher->new(
+      tree       => $self->{root},
+      utc_offset => $self->utc_offset,
+      owner      => $self                # Add this
+   );
+   my ( $window, $step ) = $self->_estimate_window;
+   return $matcher->_find_next( $epoch_seconds, $epoch_seconds - $window, $step, -1 );
 }
 
 sub _estimate_window {
-    my ($self) = @_;
-    my @fields = split /\s+/, $self->{expression};
-    # Dom constrained or DOW special: 2-month window, daily step (covers cross-month, intra-month)
-    if ($fields[3] ne '*' || $fields[5] =~ /^(L|LW|\d+W|\d+#\d+)$/) {
-        return (62 * 24 * 3600, 24 * 3600);
-    }
-    # Year or month constrained (no dom/DOW special): yearly window, monthly step
-    if ($fields[4] ne '*' || $fields[6] ne '*') {
-        return (365 * 24 * 3600, 30 * 24 * 3600);
-    }
-    # Second or minute steps: daily window, second step
-    if ($fields[0] =~ /\/\d+/ || $fields[1] =~ /\/\d+/) {
-        return (24 * 3600, 1);
-    }
-    # Every-second schedules: immediate window, second step
-    if ($fields[0] eq '*' && $fields[1] eq '*' && $fields[2] eq '*' && $fields[3] eq '*' && $fields[4] eq '*' && $fields[5] eq '?' && $fields[6] eq '*') {
-        return (1, 1);
-    }
-    # Default: monthly window, daily step
-    return (31 * 24 * 3600, 24 * 3600);
+   my ($self) = @_;
+   my @fields = split /\s+/, $self->{expression};
+
+   # Dom constrained or DOW special: 2-month window, daily step (covers cross-month, intra-month)
+   if ( $fields[3] ne '*' || $fields[5] =~ /^(L|LW|\d+W|\d+#\d+)$/ ) {
+      return ( 62 * 24 * 3600, 24 * 3600 );
+   }
+
+   # Year or month constrained (no dom/DOW special): yearly window, monthly step
+   if ( $fields[4] ne '*' || $fields[6] ne '*' ) {
+      return ( 365 * 24 * 3600, 30 * 24 * 3600 );
+   }
+
+   # Second or minute steps: daily window, second step
+   if ( $fields[0] =~ /\/\d+/ || $fields[1] =~ /\/\d+/ ) {
+      return ( 24 * 3600, 1 );
+   }
+
+   # Every-second schedules: immediate window, second step
+   if ( $fields[0] eq '*' && $fields[1] eq '*' && $fields[2] eq '*' && $fields[3] eq '*' && $fields[4] eq '*' && $fields[5] eq '?' && $fields[6] eq '*' ) {
+      return ( 1, 1 );
+   }
+
+   # Default: monthly window, daily step
+   return ( 31 * 24 * 3600, 24 * 3600 );
 }
 
 1;
