@@ -331,13 +331,13 @@ sub previous {
 sub _estimate_window {
     my ($self) = @_;
     my @fields = split /\s+/, $self->{expression};
-    # Year or month constrained: yearly window, monthly step
+    # Dom constrained or DOW special: 2-month window, daily step (covers cross-month, intra-month)
+    if ($fields[3] ne '*' || $fields[5] =~ /^(L|LW|\d+W|\d+#\d+)$/) {
+        return (62 * 24 * 3600, 24 * 3600);
+    }
+    # Year or month constrained (no dom/DOW special): yearly window, monthly step
     if ($fields[4] ne '*' || $fields[6] ne '*') {
         return (365 * 24 * 3600, 30 * 24 * 3600);
-    }
-    # DOM or DOW with L, LW, nth, or W: monthly window, daily step
-    if ($fields[3] =~ /^(L|LW|\d+W|\d+#\d+)$|^(L|LW|\d+W|\d+#\d+)/ || $fields[5] =~ /^\d+#\d+$/) {
-        return (31 * 24 * 3600, 24 * 3600);
     }
     # Second or minute steps: daily window, second step
     if ($fields[0] =~ /\/\d+/ || $fields[1] =~ /\/\d+/) {

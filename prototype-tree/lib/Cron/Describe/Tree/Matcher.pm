@@ -108,15 +108,17 @@ sub _matches_last {
 sub _matches_lastw {
    my ( $self, $field, $tm ) = @_;
    my $dom = $tm->day_of_month;
-   my $dow = quartz_dow($tm->day_of_week);
    my $days_in_month = $tm->length_of_month;
-  
-   my $last_day = $tm->with_day_of_month($days_in_month);
-   my $last_dow = quartz_dow($last_day->day_of_week);
-   if ($last_dow >= 2 && $last_dow <= 6) {
-      return $dom == $days_in_month;
+   my $candidate = $days_in_month;
+   while ( $candidate >= 1 ) {
+      my $test_tm = $tm->with_day_of_month($candidate);
+      my $test_dow = quartz_dow($test_tm->day_of_week);
+      if ( $test_dow >= 2 && $test_dow <= 6 ) {
+         return $dom == $candidate;
+      }
+      $candidate--;
    }
-   return $dom == $days_in_month - 1 && $dow >= 2 && $dow <= 6;
+   return 0;  # Theoretically impossible (months have weekdays), but safe
 }
 
 sub _matches_nth {
@@ -124,18 +126,15 @@ sub _matches_nth {
    my ( $dow, $nth ) = $field->{value} =~ /(\d+)#(\d+)/;
    my $target_dow = $dow;
    my $actual_nth = 0;
-   my $days_in_month = $tm->length_of_month;
-  
-   for ( my $d = 1; $d <= $days_in_month; $d++ ) {
+   my $current_dom = $tm->day_of_month;
+   for ( my $d = 1; $d <= $current_dom; $d++ ) {
       my $test_tm = $tm->with_day_of_month($d);
       if ( quartz_dow($test_tm->day_of_week) == $target_dow ) {
          $actual_nth++;
-         if ($actual_nth == $nth && ($tm->day_of_month == $d || $tm->day_of_month < $d)) {
-            return 1;
-         }
       }
    }
-   return 0;
+   my $is_target = ( quartz_dow($tm->day_of_week) == $target_dow );
+   return $is_target && $actual_nth == $nth;
 }
 
 sub _matches_nearest_weekday {
