@@ -13,3 +13,4 @@ pod_coverage_ok('Cron::Toolkit', { trustme => [qr/^_/] });
 # (Add minimal =head1 NAME stubs if you want, but not required)
 
 done_testing;
+

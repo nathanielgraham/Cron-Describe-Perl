@@ -1,22 +1,14 @@
-# Ignore build artifacts
 ^Cron-Toolkit-[\d\.\-]*
 ^_build
 ^blib
 ^Build$
 ^MYMETA\.
 ^cover_db
-
-# Ignore dev scripts
+prototype-tree
 code_share\.sh
 grok_prompts
-
-# Ignore bin/ if dev (or add to MANIFEST if CLI)
-^bin/
-
-# Ignore git
+MAKEFILE\.skip
 \.git
 \.gitignore
-
-# Ignore temp/editor
 \.swp$
 ~$

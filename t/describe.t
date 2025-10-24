@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use lib './lib';
 use Test::More;
 use String::Util qw(trim);
 use Cron::Toolkit;
@@ -219,7 +220,7 @@ my @tests = (
       expected_type     => 'single',
       expected_value    => '1',
       expected_children => 0,
-      english           => trim('at midnight on the first of every month in January')
+      english           => trim('at midnight on the first of January')
    },
    {
       expr              => '0 0 0 ? * SUN *',
@@ -413,6 +414,46 @@ my @tests = (
       english           => trim('at midnight every Monday in 2025')
    },
 );
+
+subtest 'unified step collapse' => sub {
+    plan tests => 12;
+
+    # Seconds degenerate: 58/3 → single 58 (in sec field 0)
+    my $cron_sec = Cron::Toolkit->new(expression => '58/3 * * * * ? *');
+    my $sec_node = $cron_sec->{root}{children}[0];
+    is($sec_node->{type}, 'single', '58/3 sec → single');
+    is($sec_node->{value}, 58, 'value=58');
+
+    # Minutes wildcard degenerate: */60 → single 0 (in min field 1)
+    my $cron_min_wc = Cron::Toolkit->new(expression => '0 */60 * * * ? *');
+    my $min_node = $cron_min_wc->{root}{children}[1];
+    is($min_node->{type}, 'single', '*/60 min → single 0');
+    is($min_node->{value}, 0, 'value=0 (every hour at :00)');
+
+    # Hours non-degenerate wildcard: */3 → step (in hour field 2)
+    my $cron_hour = Cron::Toolkit->new(expression => '0 0 */3 * * ? *');
+    my $hour_node = $cron_hour->{root}{children}[2];
+    is($hour_node->{type}, 'step', '*/3 hour → step');
+    is($hour_node->{children}[0]{type}, 'wildcard', 'base=*');
+
+    # DOM wildcard degenerate: */32 → single 1 (in dom field 3; min=1)
+    my $cron_dom = Cron::Toolkit->new(expression => '0 0 * */32 * ? *');
+    my $dom_node = $cron_dom->{root}{children}[3];
+    is($dom_node->{type}, 'single', '*/32 DOM → single 1');
+    is($dom_node->{value}, 1, 'value=1 (min for DOM)');
+
+    # Month degenerate: 11/3 → single 11 (in month field 4)
+    my $cron_month = Cron::Toolkit->new(expression => '0 0 0 * 11/3 ? *');
+    my $month_node = $cron_month->{root}{children}[4];
+    is($month_node->{type}, 'single', '11/3 month → single 11');
+    is($month_node->{value}, 11, 'November only');
+
+    # DOW Unix degenerate (pre-norm collapse)
+    my $cron_dow = Cron::Toolkit->new_from_unix(expression => '* * * * 7/2');
+    my $dow_node = $cron_dow->{root}{children}[5];
+    is($dow_node->{type}, 'single', '7/2 DOW → single 1');
+    is($dow_node->{value}, 1, 'Sunday only');
+};
 
 for my $test (@tests) {
    subtest "Test: $test->{expr} (valid: $test->{valid})" => sub {

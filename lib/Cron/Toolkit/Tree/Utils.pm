@@ -144,6 +144,10 @@ our %templates = (
    dow_range_month_range => 'every {start} through {end} {month_range}',
    dom_single_month_single => 'on the {ordinal} of every month in {month}',
    dow_single_year => 'every {day} in {year}',
+   #dom_single_month_single => 'on the {ordinal} in {month}',
+   month_year_single => 'in {month} of {year}', 
+   dom_single_month_single => 'on the {ordinal} of {month}',  # Restored "of" for natural flow
+   dom_single_year_single  => 'on the {ordinal} of every month in {year}',  # Fallback for no month
 );
 sub plural_unit {
    my ( $unit, $count ) = @_;
@@ -176,7 +180,15 @@ sub generate_list_desc {
      : $list;
 }
 sub fill_template { my ( $id, $data ) = @_; my $tpl = $templates{$id} or return ''; $tpl =~ s/{(\w+)}/$data->{$1}||''/ge; return $tpl; }
-sub num_to_ordinal { my $n = shift // return ''; return $nth_names{$n} // "$n${ordinal_suffix{$n}//''}"; }
+#sub num_to_ordinal { my $n = shift // return ''; return $nth_names{$n} // "$n${ordinal_suffix{$n}//''}"; }
+sub num_to_ordinal {
+    my $n = shift // return '';
+    if ($nth_names{$n}) {
+        return $nth_names{$n};  # Full: 'first', 'second', 'third' (non-numeric, keep prose-y)
+    }
+    return "$n${ordinal_suffix{$n}//''}";  # Always abbr: "1st", "2nd", "21st", etc. (no ucfirst)
+}
+
 sub join_parts {
    my @p = grep { defined && length } @_;
    return @p == 0 ? '' : @p == 1 ? $p[0] : @p == 2 ? "$p[0] $joiners{list} $p[1]" : join( ', ', @p[ 0 .. $#p - 1 ] ) . " $joiners{list} $p[-1]";

@@ -5,15 +5,10 @@ use Cron::Toolkit::Tree::Utils qw(:all);
 
 sub new {
     my ($class, %args) = @_;
-    bless { locale => $args{locale} // 'en' }, $class;
+    bless {}, $class;
 }
 sub describe {
-    my ($self, $root, $locale) = @_;
-    $locale //= $self->{locale};
-    if ($locale ne 'en') {
-        warn "Locale stub: English fallback.";
-        $locale = 'en';
-    }
+    my ($self, $root) = @_;
    my @fields      = @{ $root->{children} };
    my @field_types = qw(second minute hour dom month dow year);
    for my $i ( 0 .. 6 ) {
@@ -45,22 +40,31 @@ sub describe {
 
 sub _fuse_combos {
    my ( $self, $phrases, $fields ) = @_;
-
    # 🔥 ALL ARRAY REF FIXED
+   # Reordered: Year/Month first for chaining
+   # Year + Month (single/single)
+   if ( $phrases->[4] && $phrases->[6] && $fields->[4]{type} eq 'single' && $fields->[6]{type} eq 'single' ) {
+      my $data = { month => $phrases->[4], year => $fields->[6]{value} };
+      $phrases->[4] = fill_template( 'month_year_single', $data );
+      $phrases->[6] = '';
+   }
    # DOM Special + Month
    if ( $phrases->[3] && $phrases->[4] && $fields->[3]{type} =~ /^(last|lastW|nearest_weekday|step)$/ ) {
       my $data = { dom_desc => $phrases->[3], month_range => $phrases->[4] };
       $phrases->[3] = fill_template( 'dom_special_month_range', $data );
       $phrases->[4] = '';
    }
-
-   # 🔥 FIXED: DOM Single + Month Single
+   # 🔥 FIXED: DOM Single + Month Single (chain year if fused)
    if ( $phrases->[3] && $phrases->[4] && $fields->[3]{type} eq 'single' && $fields->[4]{type} eq 'single' ) {
       my $data = { ordinal => num_to_ordinal( $fields->[3]{value} ), month => $month_names{ $fields->[4]{value} } };
       $phrases->[3] = fill_template( 'dom_single_month_single', $data );
+      # Chain year if already in phrases[4] (from prior month_year fuse)
+      if ( $phrases->[4] =~ /\d{4}/ ) {
+         my $year_part = (split /\s+/, $phrases->[4])[-1];  # Grab "2025" from "in January 2025"
+         $phrases->[3] .= " $year_part";
+      }
       $phrases->[4] = '';
    }
-
    # DOW Nth + Month
    if ( $phrases->[5] && $phrases->[4] && $fields->[5]{type} eq 'nth' ) {
       my ( $day, $nth ) = $fields->[5]{value} =~ /(\d+)#(\d+)/;
@@ -68,9 +72,8 @@ sub _fuse_combos {
       $phrases->[5] = fill_template( 'dow_nth_month_range', $data );
       $phrases->[4] = '';
    }
-
    # 🔥 FIXED: DOM Single + Year (Allow DOW=?)
-   if (  $phrases->[3]
+   if ( $phrases->[3]
       && $phrases->[6]
       && $fields->[3]{type} eq 'single'
       && $fields->[6]{type} ne 'wildcard'
@@ -85,28 +88,24 @@ sub _fuse_combos {
       $phrases->[3] = fill_template( 'dom_list_year_range', $data );
       $phrases->[6] = '';
    }
-
    # Step on DOM + Month
    if ( $phrases->[3] && $phrases->[4] && $fields->[3]{type} eq 'step' ) {
       my $data = { step => $fields->[3]{children}[1]{value}, start => num_to_ordinal( $fields->[3]{children}[0]{children}[0]{value} ), month_range => $phrases->[4] };
       $phrases->[3] = fill_template( 'dom_step_month_range', $data );
       $phrases->[4] = '';
    }
-
    # DOW Single + Month
    if ( $phrases->[5] && $phrases->[4] && $fields->[5]{type} eq 'single' ) {
       my $data = { day => $day_names{ $fields->[5]{value} }, month_range => $phrases->[4] };
       $phrases->[5] = fill_template( 'dow_single_month_range', $data );
       $phrases->[4] = '';
    }
-
    # DOW Range + Month
    if ( $phrases->[5] && $phrases->[4] && $fields->[5]{type} eq 'range' ) {
       my $data = { start => $day_names{ $fields->[5]{children}[0]{value} }, end => $day_names{ $fields->[5]{children}[1]{value} }, month_range => $phrases->[4] };
       $phrases->[5] = fill_template( 'dow_range_month_range', $data );
       $phrases->[4] = '';
    }
-
    # DOW Single + Year
    if ( $phrases->[5] && $phrases->[6] && $fields->[5]{type} eq 'single' && $fields->[6]{type} ne 'wildcard' ) {
       my $data = { day => $day_names{ $fields->[5]{value} }, year => $fields->[6]{value} };

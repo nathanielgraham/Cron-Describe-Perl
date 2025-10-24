@@ -5,6 +5,8 @@ blib/
 _build/
 MYMETA.*
 grok_prompt
+Makefile
+pm_to_blib
 
 # Test
 cover_db/

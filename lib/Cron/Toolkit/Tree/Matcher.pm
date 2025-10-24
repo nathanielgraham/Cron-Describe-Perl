@@ -60,6 +60,13 @@ sub _find_next {
    my $iterations     = 0;
    my $max_iterations = 400;
 
+   #my $max_iterations = 10000;  # Bump from 400
+   #my $is_second_step = $step == 1;
+   #if ($is_second_step && $fields[1] =~ /\/(\d+)/) {  # Minute step? Coarsen to minutes
+   #   $step = 60 * (0 + $1);  # e.g., */15 → step=900s
+   #   $is_second_step = 0;  # Fall to day generate
+   #}
+
    print STDERR "Search: Current=" . $current->strftime('%Y-%m-%d %H:%M:%S') . ", Search End=" . ( $search_end ? $search_end->strftime('%Y-%m-%d %H:%M:%S') : 'unbounded' ) . "\n" if $ENV{Cron_DEBUG};
 
    my $is_second_step = $step == 1;
