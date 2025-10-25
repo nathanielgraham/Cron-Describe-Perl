@@ -5,10 +5,102 @@
       "expr" : "* * * * *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761177600,
+         "epoch" : 1761138000,
          "is_match" : 1
       },
       "norm" : "0 * * * * ? *",
+      "schedule" : {
+         "next_epoch" : 1761138060,
+         "next_n" : [
+            1761138000,
+            1761138060,
+            1761138120
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
+   },
+   {
+      "category" : "general",
+      "desc" : "at 12:00:00 AM",
+      "expr" : "* * * * * ? *",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1761138001,
+         "is_match" : 1
+      },
+      "norm" : "* * * * * ? *",
+      "schedule" : {
+         "next_epoch" : 1761138003,
+         "next_n" : [
+            1761138001,
+            1761138003,
+            1761138005
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
+   },
+   {
+      "category" : "general",
+      "desc" : "at 12:00:00 AM every Monday through Wednesday",
+      "expr" : "* * * * MON,TUE,WED",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1761523200,
+         "is_match" : 1
+      },
+      "norm" : "0 * * ? * 2-4 *",
+      "schedule" : {
+         "next_epoch" : 1761523260,
+         "next_n" : [
+            1761523200,
+            1761523260,
+            1761523320
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : null,
+      "utc_offset" : 0
+   },
+   {
+      "category" : "general",
+      "desc" : "at 12:00:00 AM every Sunday",
+      "expr" : "* * * * 7/2",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1761436800,
+         "is_match" : 1
+      },
+      "norm" : "0 * * ? * 1 *",
+      "schedule" : {
+         "next_epoch" : 1761436860,
+         "next_n" : [
+            1761436800,
+            1761436860,
+            1761436920
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : null,
+      "utc_offset" : 0
+   },
+   {
+      "category" : "general",
+      "desc" : "at 12:00:00 AM every Monday through Friday",
+      "expr" : "* * * * MON-FRI",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1761177600,
+         "is_match" : 1
+      },
+      "norm" : "0 * * ? * 2-6 *",
       "schedule" : {
          "next_epoch" : 1761177660,
          "next_n" : [
@@ -21,75 +113,6 @@
       "type" : "quartz",
       "tz" : null,
       "utc_offset" : 0
-   },
-   {
-      "category" : "general",
-      "desc" : "at 12:00:00 AM",
-      "expr" : "* * * * * ? *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761202801,
-         "is_match" : 1
-      },
-      "norm" : "* * * * * ? *",
-      "schedule" : {
-         "next_epoch" : 1761202803,
-         "next_n" : [
-            1761202801,
-            1761202803,
-            1761202805
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "America/Los_Angeles",
-      "utc_offset" : -420
-   },
-   {
-      "category" : "general",
-      "desc" : "at 12:00:00 AM every Sunday",
-      "expr" : "* * * * 7/2",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761465600,
-         "is_match" : 1
-      },
-      "norm" : "0 * * ? * 1 *",
-      "schedule" : {
-         "next_epoch" : 1761465660,
-         "next_n" : [
-            1761465600,
-            1761465660,
-            1761465720
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : -480
-   },
-   {
-      "category" : "general",
-      "desc" : "at 12:00:00 AM every Monday through Friday",
-      "expr" : "* * * * MON-FRI",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761192000,
-         "is_match" : 1
-      },
-      "norm" : "0 * * ? * 2-6 *",
-      "schedule" : {
-         "next_epoch" : 1761192060,
-         "next_n" : [
-            1761192000,
-            1761192060,
-            1761192120
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "America/New_York",
-      "utc_offset" : -240
    },
    {
       "category" : "general",
@@ -111,8 +134,8 @@
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Europe/London",
-      "utc_offset" : 60
+      "tz" : null,
+      "utc_offset" : -480
    },
    {
       "category" : "general",
@@ -120,22 +143,22 @@
       "expr" : "*/15 * * * * ?",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761195615,
+         "epoch" : 1761177615,
          "is_match" : 1
       },
       "norm" : "*/15 * * * * ? *",
       "schedule" : {
-         "next_epoch" : 1761195630,
+         "next_epoch" : 1761177630,
          "next_n" : [
-            1761195615,
-            1761195630,
-            1761195645
+            1761177615,
+            1761177630,
+            1761177645
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : -300
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -143,22 +166,22 @@
       "expr" : "0 */60 * * * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : null,
-         "is_match" : 0
+         "epoch" : 1761145200,
+         "is_match" : 1
       },
-      "norm" : "0 */60 * * * ? *",
+      "norm" : "0 0 * * * ? *",
       "schedule" : {
-         "next_epoch" : null,
+         "next_epoch" : 1761148800,
          "next_n" : [
-            null,
-            null,
-            null
+            1761145200,
+            1761148800,
+            1761152400
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "America/New_York",
-      "utc_offset" : -240
+      "tz" : "Asia/Tokyo",
+      "utc_offset" : 540
    },
    {
       "category" : "general",
@@ -166,22 +189,22 @@
       "expr" : "0 0 * * * ?",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761206400,
+         "epoch" : 1761177600,
          "is_match" : 1
       },
       "norm" : "0 0 * * * ? *",
       "schedule" : {
-         "next_epoch" : 1761210000,
+         "next_epoch" : 1761181200,
          "next_n" : [
-            1761206400,
-            1761210000,
-            1761213600
+            1761177600,
+            1761181200,
+            1761184800
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : -480
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -189,22 +212,22 @@
       "expr" : "0 0 * */32 * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761973200,
+         "epoch" : 1761980400,
          "is_match" : 1
       },
-      "norm" : "0 0 * */32 * ? *",
+      "norm" : "0 0 * 1 * ? *",
       "schedule" : {
-         "next_epoch" : 1761976800,
+         "next_epoch" : 1761984000,
          "next_n" : [
-            1761973200,
-            1761976800,
-            1761980400
+            1761980400,
+            1761984000,
+            1761987600
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : -300
+      "tz" : "America/Los_Angeles",
+      "utc_offset" : -420
    },
    {
       "category" : "general",
@@ -212,22 +235,22 @@
       "expr" : "0 0 */3 * * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761170400,
+         "epoch" : 1761202800,
          "is_match" : 1
       },
       "norm" : "0 0 */3 * * ? *",
       "schedule" : {
-         "next_epoch" : 1761181200,
+         "next_epoch" : 1761213600,
          "next_n" : [
-            1761170400,
-            1761181200,
-            1761192000
+            1761202800,
+            1761213600,
+            1761224400
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Europe/Paris",
-      "utc_offset" : 120
+      "tz" : "America/Los_Angeles",
+      "utc_offset" : -420
    },
    {
       "category" : "general",
@@ -235,22 +258,22 @@
       "expr" : "0 0 0 * * 1#2 ?",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1762642800,
+         "epoch" : 1762606800,
          "is_match" : 1
       },
-      "norm" : "0 0 0 * * 1#2 ?",
+      "norm" : "0 0 0 ? * 1#2 ?",
       "schedule" : {
-         "next_epoch" : 1765666800,
+         "next_epoch" : 1765630800,
          "next_n" : [
-            1762642800,
-            1765666800,
-            1768086000
+            1762606800,
+            1765630800,
+            1768050000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 60
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
    },
    {
       "category" : "general",
@@ -258,16 +281,16 @@
       "expr" : "0 0 0 * * 2 ?",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1766361600,
+         "epoch" : 1761523200,
          "is_match" : 1
       },
-      "norm" : "0 0 0 * * 2 ?",
+      "norm" : "0 0 0 ? * 2 ?",
       "schedule" : {
-         "next_epoch" : 1784505600,
+         "next_epoch" : 1762128000,
          "next_n" : [
-            1766361600,
-            1784505600,
-            1802649600
+            1761523200,
+            1762128000,
+            1762732800
          ],
          "prev_epoch" : null
       },
@@ -281,22 +304,22 @@
       "expr" : "0 0 0 * * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761177600,
+         "epoch" : 1761145200,
          "is_match" : 1
       },
       "norm" : "0 0 0 * * ? *",
       "schedule" : {
-         "next_epoch" : 1761264000,
+         "next_epoch" : 1761231600,
          "next_n" : [
-            1761177600,
-            1761264000,
-            1761350400
+            1761145200,
+            1761231600,
+            1761318000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
+      "tz" : "Asia/Tokyo",
+      "utc_offset" : 540
    },
    {
       "category" : "general",
@@ -327,22 +350,22 @@
       "expr" : "0 0 0 * * ? 2025",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761145200,
+         "epoch" : 1761174000,
          "is_match" : 1
       },
       "norm" : "0 0 0 * * ? 2025",
       "schedule" : {
-         "next_epoch" : 1763737200,
+         "next_epoch" : 1763766000,
          "next_n" : [
-            1761145200,
-            1763737200,
-            1766329200
+            1761174000,
+            1763766000,
+            1766358000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : 540
+      "utc_offset" : 60
    },
    {
       "category" : "general",
@@ -350,22 +373,22 @@
       "expr" : "0 0 0 * 11/3 ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1763798400,
+         "epoch" : 1763769600,
          "is_match" : 1
       },
-      "norm" : "0 0 0 * 11/3 ? *",
+      "norm" : "0 0 0 * 11 ? *",
       "schedule" : {
-         "next_epoch" : 1794902400,
+         "next_epoch" : 1794873600,
          "next_n" : [
-            1763798400,
-            1794902400,
-            1826006400
+            1763769600,
+            1794873600,
+            1825977600
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : -480
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -373,22 +396,22 @@
       "expr" : "0 0 0 1 JAN ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1767243600,
+         "epoch" : 1767225600,
          "is_match" : 1
       },
       "norm" : "0 0 0 1 1 ? *",
       "schedule" : {
-         "next_epoch" : 1798779600,
+         "next_epoch" : 1798761600,
          "next_n" : [
-            1767243600,
-            1798779600,
-            1830315600
+            1767225600,
+            1798761600,
+            1830297600
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : -300
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -399,7 +422,7 @@
          "epoch" : 1761955200,
          "is_match" : 1
       },
-      "norm" : "0 0 0 1,15 * * ?",
+      "norm" : "0 0 0 1,15 * ? ?",
       "schedule" : {
          "next_epoch" : 1763164800,
          "next_n" : [
@@ -419,22 +442,22 @@
       "expr" : "0 0 0 16W * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1763305200,
+         "epoch" : 1763366400,
          "is_match" : 1
       },
       "norm" : "0 0 0 16W * ? *",
       "schedule" : {
-         "next_epoch" : 1765810800,
+         "next_epoch" : 1765872000,
          "next_n" : [
-            1763305200,
-            1765810800,
-            1768489200
+            1763366400,
+            1765872000,
+            1768550400
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Asia/Tokyo",
-      "utc_offset" : 540
+      "tz" : null,
+      "utc_offset" : -480
    },
    {
       "category" : "general",
@@ -457,7 +480,7 @@
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : -300
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -465,16 +488,39 @@
       "expr" : "0 0 0 L * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761894000,
+         "epoch" : 1761865200,
          "is_match" : 1
       },
       "norm" : "0 0 0 L * ? *",
       "schedule" : {
-         "next_epoch" : 1764486000,
+         "next_epoch" : 1764457200,
          "next_n" : [
-            1761894000,
-            1764486000,
-            1767164400
+            1761865200,
+            1764457200,
+            1767135600
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : "Europe/London",
+      "utc_offset" : 60
+   },
+   {
+      "category" : "general",
+      "desc" : "at midnight on the second last day of every month",
+      "expr" : "0 0 0 L-2 * ? *",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1761721200,
+         "is_match" : 1
+      },
+      "norm" : "0 0 0 L-2 * ? *",
+      "schedule" : {
+         "next_epoch" : 1764313200,
+         "next_n" : [
+            1761721200,
+            1764313200,
+            1766991600
          ],
          "prev_epoch" : null
       },
@@ -484,49 +530,26 @@
    },
    {
       "category" : "general",
-      "desc" : "at midnight on the second last day of every month",
-      "expr" : "0 0 0 L-2 * ? *",
+      "desc" : "at midnight on the last weekday of every month",
+      "expr" : "0 0 0 LW * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761656400,
+         "epoch" : 1761829200,
          "is_match" : 1
       },
-      "norm" : "0 0 0 L-2 * ? *",
+      "norm" : "0 0 0 LW * ? *",
       "schedule" : {
          "next_epoch" : 1764248400,
          "next_n" : [
-            1761656400,
+            1761829200,
             1764248400,
-            1766926800
+            1767099600
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : "Australia/Sydney",
       "utc_offset" : 660
-   },
-   {
-      "category" : "general",
-      "desc" : "at midnight on the last weekday of every month",
-      "expr" : "0 0 0 LW * ? *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761861600,
-         "is_match" : 1
-      },
-      "norm" : "0 0 0 LW * ? *",
-      "schedule" : {
-         "next_epoch" : 1764280800,
-         "next_n" : [
-            1761861600,
-            1764280800,
-            1767132000
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "Europe/Paris",
-      "utc_offset" : 120
    },
    {
       "category" : "general",
@@ -534,22 +557,22 @@
       "expr" : "0 0 0 LW 6 ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1782745200,
+         "epoch" : 1782777600,
          "is_match" : 1
       },
       "norm" : "0 0 0 LW 6 ? *",
       "schedule" : {
-         "next_epoch" : 1814281200,
+         "next_epoch" : 1814313600,
          "next_n" : [
-            1782745200,
-            1814281200,
-            1845903600
+            1782777600,
+            1814313600,
+            1845936000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Asia/Tokyo",
-      "utc_offset" : 540
+      "tz" : null,
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -557,22 +580,22 @@
       "expr" : "0 0 10-14 * * ?",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761174000,
+         "epoch" : 1761231600,
          "is_match" : 1
       },
       "norm" : "0 0 10-14 * * ? *",
       "schedule" : {
-         "next_epoch" : 1761177600,
+         "next_epoch" : 1761235200,
          "next_n" : [
-            1761174000,
-            1761177600,
-            1761181200
+            1761231600,
+            1761235200,
+            1761238800
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
+      "tz" : null,
+      "utc_offset" : -300
    },
    {
       "category" : "general",
@@ -580,22 +603,22 @@
       "expr" : "0 30 14 * * ?",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761226200,
+         "epoch" : 1761229800,
          "is_match" : 1
       },
       "norm" : "0 30 14 * * ? *",
       "schedule" : {
-         "next_epoch" : 1761312600,
+         "next_epoch" : 1761316200,
          "next_n" : [
-            1761226200,
-            1761312600,
-            1761399000
+            1761229800,
+            1761316200,
+            1761402600
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Europe/London",
-      "utc_offset" : 60
+      "tz" : null,
+      "utc_offset" : 0
    },
    {
       "category" : "parsing",
@@ -623,7 +646,7 @@
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Europe/Paris",
+      "tz" : null,
       "utc_offset" : 120
    },
    {
@@ -632,22 +655,22 @@
       "expr" : "0 30 14 ? * 6",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761309000,
+         "epoch" : 1761276600,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? * 6 *",
       "schedule" : {
-         "next_epoch" : 1761913800,
+         "next_epoch" : 1761881400,
          "next_n" : [
-            1761309000,
-            1761913800,
-            1762518600
+            1761276600,
+            1761881400,
+            1762486200
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 120
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
    },
    {
       "category" : "general",
@@ -655,22 +678,22 @@
       "expr" : "0 30 14 ? * MON *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761535800,
+         "epoch" : 1761571800,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? * 2 *",
       "schedule" : {
-         "next_epoch" : 1762140600,
+         "next_epoch" : 1762176600,
          "next_n" : [
-            1761535800,
-            1762140600,
-            1762745400
+            1761571800,
+            1762176600,
+            1762781400
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
+      "tz" : null,
+      "utc_offset" : 60
    },
    {
       "category" : "general",
@@ -707,22 +730,22 @@
       "expr" : "30 14 * * *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761229800,
+         "epoch" : 1761244200,
          "is_match" : 1
       },
       "norm" : "0 30 14 * * ? *",
       "schedule" : {
-         "next_epoch" : 1761316200,
+         "next_epoch" : 1761330600,
          "next_n" : [
-            1761229800,
-            1761316200,
-            1761402600
+            1761244200,
+            1761330600,
+            1761417000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
+      "tz" : "America/New_York",
+      "utc_offset" : -240
    },
    {
       "category" : "parsing",
@@ -736,22 +759,22 @@
       "expr" : "30 14 * * 0",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761489000,
+         "epoch" : 1761456600,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? * 1 *",
       "schedule" : {
-         "next_epoch" : 1762093800,
+         "next_epoch" : 1762061400,
          "next_n" : [
-            1761489000,
-            1762093800,
-            1762698600
+            1761456600,
+            1762061400,
+            1762666200
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : 0
+      "utc_offset" : 540
    },
    {
       "category" : "general",
@@ -759,22 +782,22 @@
       "expr" : "30 14 * * 1-5/2",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761334200,
+         "epoch" : 1761316200,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? * 2-6/2 *",
       "schedule" : {
-         "next_epoch" : 1761593400,
+         "next_epoch" : 1761575400,
          "next_n" : [
-            1761334200,
-            1761593400,
-            1761766200
+            1761316200,
+            1761575400,
+            1761748200
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : -300
+      "utc_offset" : 0
    },
    {
       "category" : "parsing",
@@ -788,22 +811,22 @@
       "expr" : "30 14 * * MON",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761600600,
+         "epoch" : 1761575400,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? * 2 *",
       "schedule" : {
-         "next_epoch" : 1762205400,
+         "next_epoch" : 1762180200,
          "next_n" : [
-            1761600600,
-            1762205400,
-            1762810200
+            1761575400,
+            1762180200,
+            1762785000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "America/Los_Angeles",
-      "utc_offset" : -420
+      "tz" : null,
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -811,22 +834,22 @@
       "expr" : "30 14 * * SAT",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761370200,
+         "epoch" : 1761363000,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? * 7 *",
       "schedule" : {
-         "next_epoch" : 1761975000,
+         "next_epoch" : 1761967800,
          "next_n" : [
-            1761370200,
-            1761975000,
-            1762579800
+            1761363000,
+            1761967800,
+            1762572600
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 540
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
    },
    {
       "category" : "general",
@@ -834,22 +857,22 @@
       "expr" : "30 14 * * SUN",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761517800,
+         "epoch" : 1761485400,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? * 1 *",
       "schedule" : {
-         "next_epoch" : 1762122600,
+         "next_epoch" : 1762090200,
          "next_n" : [
-            1761517800,
-            1762122600,
-            1762727400
+            1761485400,
+            1762090200,
+            1762695000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : -480
+      "utc_offset" : 60
    },
    {
       "category" : "general",
@@ -857,22 +880,22 @@
       "expr" : "30 14 * * mOn,WeD,fRi",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761330600,
+         "epoch" : 1761316200,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? * 2,4,6 *",
       "schedule" : {
-         "next_epoch" : 1761589800,
+         "next_epoch" : 1761575400,
          "next_n" : [
-            1761330600,
-            1761589800,
-            1761762600
+            1761316200,
+            1761575400,
+            1761748200
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "America/New_York",
-      "utc_offset" : -240
+      "tz" : null,
+      "utc_offset" : 0
    },
    {
       "category" : "parsing",
@@ -886,22 +909,22 @@
       "expr" : "30 14 * JaN-MaR *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1768973400,
+         "epoch" : 1768998600,
          "is_match" : 1
       },
       "norm" : "0 30 14 * 1-3 ? *",
       "schedule" : {
-         "next_epoch" : 1771565400,
+         "next_epoch" : 1771590600,
          "next_n" : [
-            1768973400,
-            1771565400,
-            1774157400
+            1768998600,
+            1771590600,
+            1774182600
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Asia/Tokyo",
-      "utc_offset" : 540
+      "tz" : null,
+      "utc_offset" : 120
    },
    {
       "category" : "parsing",
@@ -915,39 +938,16 @@
       "expr" : "30 14 * jan Mon",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1767583800,
+         "epoch" : 1767591000,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? 1 2 *",
       "schedule" : {
-         "next_epoch" : 1768188600,
+         "next_epoch" : 1768195800,
          "next_n" : [
-            1767583800,
-            1768188600,
-            1768793400
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every 5 minutes from 1 to 15 past 14",
-      "expr" : "30 14 1-15/5 * *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761975000,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 1-15/5 * ? *",
-      "schedule" : {
-         "next_epoch" : 1762407000,
-         "next_n" : [
-            1761975000,
-            1762407000,
-            1762839000
+            1767591000,
+            1768195800,
+            1768800600
          ],
          "prev_epoch" : null
       },
@@ -956,10 +956,50 @@
       "utc_offset" : 540
    },
    {
-      "category" : "parsing",
-      "expect_error" : "dow and dom cannot both be specified\n",
+      "category" : "general",
+      "desc" : "at 2:30:00 PM every 5 minutes from 1 to 15 past 14",
+      "expr" : "30 14 1-15/5 * *",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1762007400,
+         "is_match" : 1
+      },
+      "norm" : "0 30 14 1-15/5 * ? *",
+      "schedule" : {
+         "next_epoch" : 1762439400,
+         "next_n" : [
+            1762007400,
+            1762439400,
+            1762871400
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : null,
+      "utc_offset" : 0
+   },
+   {
+      "category" : "general",
+      "desc" : "at 2:30:00 PM on the first through fifth of every month every Monday through Friday",
       "expr" : "30 14 1-5 * 1-5",
-      "invalid" : 1
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1762147800,
+         "is_match" : 1
+      },
+      "norm" : "0 30 14 1-5 * 2-6 *",
+      "schedule" : {
+         "next_epoch" : 1762234200,
+         "next_n" : [
+            1762147800,
+            1762234200,
+            1762320600
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : "Asia/Tokyo",
+      "utc_offset" : 540
    },
    {
       "category" : "general",
@@ -967,22 +1007,22 @@
       "expr" : "30 14 15 * ?",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1763213400,
+         "epoch" : 1763217000,
          "is_match" : 1
       },
       "norm" : "0 30 14 15 * ? *",
       "schedule" : {
-         "next_epoch" : 1765805400,
+         "next_epoch" : 1765809000,
          "next_n" : [
-            1763213400,
-            1765805400,
-            1768483800
+            1763217000,
+            1765809000,
+            1768487400
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : 60
+      "utc_offset" : 0
    },
    {
       "category" : "parsing",
@@ -996,22 +1036,22 @@
       "expr" : "30 14 ? * MON",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761600600,
+         "epoch" : 1761575400,
          "is_match" : 1
       },
       "norm" : "0 30 14 ? * 2 *",
       "schedule" : {
-         "next_epoch" : 1762205400,
+         "next_epoch" : 1762180200,
          "next_n" : [
-            1761600600,
-            1762205400,
-            1762810200
+            1761575400,
+            1762180200,
+            1762785000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "America/Los_Angeles",
-      "utc_offset" : -420
+      "tz" : null,
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -1022,7 +1062,7 @@
          "epoch" : 1761177658,
          "is_match" : 1
       },
-      "norm" : "58/3 * * * * ? *",
+      "norm" : "58 * * * * ? *",
       "schedule" : {
          "next_epoch" : 1761177718,
          "next_n" : [
@@ -1048,22 +1088,22 @@
       "expr" : "@daily",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761192000,
+         "epoch" : 1761174000,
          "is_match" : 1
       },
       "norm" : "0 0 0 * * ? *",
       "schedule" : {
-         "next_epoch" : 1761278400,
+         "next_epoch" : 1761260400,
          "next_n" : [
-            1761192000,
-            1761278400,
-            1761364800
+            1761174000,
+            1761260400,
+            1761346800
          ],
          "prev_epoch" : null
       },
       "type" : "alias",
-      "tz" : "America/New_York",
-      "utc_offset" : -240
+      "tz" : "Europe/London",
+      "utc_offset" : 60
    },
    {
       "category" : "general",
@@ -1071,22 +1111,22 @@
       "expr" : "@hourly",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761206400,
+         "epoch" : 1761177600,
          "is_match" : 1
       },
       "norm" : "0 0 * * * ? *",
       "schedule" : {
-         "next_epoch" : 1761210000,
+         "next_epoch" : 1761181200,
          "next_n" : [
-            1761206400,
-            1761210000,
-            1761213600
+            1761177600,
+            1761181200,
+            1761184800
          ],
          "prev_epoch" : null
       },
       "type" : "alias",
       "tz" : null,
-      "utc_offset" : -480
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -1094,22 +1134,22 @@
       "expr" : "@monthly",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761894000,
+         "epoch" : 1761865200,
          "is_match" : 1
       },
-      "norm" : "0 0 0 L ? * *",
+      "norm" : "0 0 0 L ? ? *",
       "schedule" : {
-         "next_epoch" : 1764486000,
+         "next_epoch" : 1764457200,
          "next_n" : [
-            1761894000,
-            1764486000,
-            1767164400
+            1761865200,
+            1764457200,
+            1767135600
          ],
          "prev_epoch" : null
       },
       "type" : "alias",
-      "tz" : "America/Los_Angeles",
-      "utc_offset" : -420
+      "tz" : "Europe/London",
+      "utc_offset" : 60
    },
    {
       "category" : "general",
@@ -1117,22 +1157,22 @@
       "expr" : "@yearly",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1767225600,
+         "epoch" : 1767186000,
          "is_match" : 1
       },
       "norm" : "0 0 0 1 1 ? *",
       "schedule" : {
-         "next_epoch" : 1798761600,
+         "next_epoch" : 1798722000,
          "next_n" : [
-            1767225600,
-            1798761600,
-            1830297600
+            1767186000,
+            1798722000,
+            1830258000
          ],
          "prev_epoch" : null
       },
       "type" : "alias",
-      "tz" : null,
-      "utc_offset" : 0
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
    },
    {
       "category" : "general",
@@ -1154,8 +1194,8 @@
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Europe/London",
-      "utc_offset" : 60
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
    },
    {
       "category" : "general",
@@ -1163,22 +1203,22 @@
       "expr" : "0 0 0 * * ? */2",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1768953600,
+         "epoch" : 1768921200,
          "is_match" : 1
       },
       "norm" : "0 0 0 * * ? */2",
       "schedule" : {
-         "next_epoch" : 1771545600,
+         "next_epoch" : 1771513200,
          "next_n" : [
-            1768953600,
-            1771545600,
-            1774137600
+            1768921200,
+            1771513200,
+            1774105200
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : 0
+      "utc_offset" : 540
    },
    {
       "category" : "general",
@@ -1186,22 +1226,22 @@
       "expr" : "0 0 1 * * 1",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761408000,
+         "epoch" : 1761440400,
          "is_match" : 1
       },
-      "norm" : "0 0 1 * * 1 *",
+      "norm" : "0 0 1 ? * 1 *",
       "schedule" : {
-         "next_epoch" : 1762012800,
+         "next_epoch" : 1762045200,
          "next_n" : [
-            1761408000,
-            1762012800,
-            1762617600
+            1761440400,
+            1762045200,
+            1762650000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Asia/Tokyo",
-      "utc_offset" : 540
+      "tz" : null,
+      "utc_offset" : 0
    }
 ]
 
