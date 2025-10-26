@@ -11,28 +11,30 @@ my @tests = @{ JSON::MaybeXS->new->decode($json) };
 my @valid = grep { $_->{category} eq 'general' && !$_->{invalid} } @tests;
 my @invalids = grep { $_->{invalid} } @tests;
 subtest 'new() Builds & Normalizes' => sub {
+    plan tests => scalar(@valid) * (2 + 2);
     for my $test (@valid) {
         my $cron = Cron::Toolkit->new(expression => $test->{expr});
         ok($cron, "Builds: $test->{expr}");
         is($cron->as_string, $test->{norm}, "Norm: $test->{norm}");
         is($test->{type}, ($test->{expr} =~ /^@/ ? 'alias' : 'quartz'), "Type: $test->{type}");
-       
-        # TZ/offset setup (conditional)
         if ($test->{tz}) {
             $cron->time_zone($test->{tz});
             is($cron->time_zone, $test->{tz}, "TZ: $test->{tz}");
         } elsif ($test->{utc_offset}) {
             $cron->utc_offset($test->{utc_offset});
             is($cron->utc_offset, $test->{utc_offset}, "Offset: $test->{utc_offset}");
+        } else {
+            pass("No TZ/offset for $test->{expr}");
         }
     }
 };
 subtest 'Unix/Quartz Constructors' => sub {
+    plan tests => scalar(@valid);
     for my $test (@valid) {
         my @fields = split /\s+/, $test->{expr};
-        if (scalar(@fields) == 5 && $test->{expr} !~ /^@/) { # 5-field Unix-like
-            my $unix = Cron::Toolkit->new_from_unix(expression => $test->{expr});
-            is($unix->as_string, $test->{norm}, "new_from_unix: $test->{expr}");
+        if (scalar(@fields) == 5 && $test->{expr} !~ /^@/ && $test->{expr} !~ /\?/) {
+            my $unix = Cron::Toolkit->new(expression => $test->{expr});
+            is($unix->as_string, $test->{norm}, "new: $test->{expr}");
         } else {
             my $quartz = Cron::Toolkit->new_from_quartz(expression => $test->{norm});
             is($quartz->as_string, $test->{norm}, "new_from_quartz: $test->{norm}");
@@ -40,12 +42,13 @@ subtest 'Unix/Quartz Constructors' => sub {
     }
 };
 subtest 'Invalid Parsing' => sub {
+    plan tests => scalar(@invalids) || 1;
     if (@invalids) {
         for my $test (@invalids) {
             local $@;
             eval { Cron::Toolkit->new(expression => $test->{expr}); 1 };
             my $err = $@;
-            $err =~ s/ at .*//s if $err;  # Trim stack
+            $err =~ s/ at .*//s if $err;
             like($err, qr/\Q$test->{expect_error}\E/, "Rejects: $test->{expr}");
         }
     } else {
@@ -53,6 +56,7 @@ subtest 'Invalid Parsing' => sub {
     }
 };
 subtest 'new_from_crontab' => sub {
+    plan tests => 4;
     my $crontab = <<'EOF';
 SHELL=/bin/bash
 # Comment

@@ -342,7 +342,7 @@ sub _new {
       die "expected 6-7 fields, got " . scalar(@fields) unless @fields == 6 || @fields == 7;
       push( @fields, '*' ) if @fields == 6;    # year
 
-      # convert dow names to numberical equivalent 
+      # convert dow names to quartz numberical equivalent
       while ( my ( $name, $num ) = each %dow_map_quartz ) {
          $fields[5] =~ s/\b\Q$name\E\b/$num/gi;
       }
@@ -352,103 +352,50 @@ sub _new {
       unshift( @fields, 0 );                   # seconds
       push( @fields, '*' );                    # year
 
-      # convert day names to unix numberical equivalent 
+      # convert dow names to unix numberical equivalent
       while ( my ( $name, $num ) = each %dow_map_unix ) {
          $fields[5] =~ s/\b\Q$name\E\b/$num/gi;
       }
-
-      #$fields[5] = unix_dow_normalize( $fields[5] );
    }
-
-   # collapse degenerate DOW steps (Unix 0-7)
-   #if ( $fields[5] =~ /^(\d*|\*)\/(\d+)$/ ) {
-   #   my ( $base_str, $step ) = ( $1, $2 );
-   #   my $effective_start = ( $base_str eq '*' ) ? 0 : $base_str // 0;
-   #   if ( $effective_start + $step > 7 ) {
-   #      $fields[5] = $effective_start;    # Single (0→1 post-norm)
-   #      print STDERR "DEBUG: Unix DOW degenerate $base_str/$step → single $effective_start\n" if $ENV{Cron_DEBUG};
-   #   }
-   #}
 
    # enforce dom/dow mutual exclusivity
    if ( $fields[3] ne '?' && $fields[5] eq '*' ) {
-      $fields[5] = '?'; 
+      $fields[5] = '?';
    }
    elsif ( $fields[3] eq '*' && $fields[5] ne '?' ) {
-      $fields[3] = '?'; 
+      $fields[3] = '?';
    }
 
-   for my $i ( 0 .. 6 ) {
-      my $field_type = $field_names{$i};
+   die "Invalid characters" unless join( ' ', @fields ) =~ /^[#LW\d\?\*\s\-\/,]+$/;
 
-      # collapse degenerate steps to single value
-      if ( $fields[$i] =~ /^(\d*|\*)\/(\d+)$/ ) {
-         my ( $base_str, $step ) = ( $1, $2 );
-         my ( $min,      $max )  = @{ $limits{$field_type} };
-         my $effective_start = ( $base_str eq '*' ) ? $min : ( $base_str // $min );
-
-         if ( $effective_start + $step > $max ) {
-            $fields[$i] = $effective_start;
-            print STDERR "DEBUG: Degenerate step $fields[$i] → single $effective_start ($field_type)\n" if $ENV{Cron_DEBUG};
-         }
-      }
-
-      # convert arithmetic sequence to range (to create concise description in Composer)
-      elsif ( $fields[$i] =~ /,/ ) {
-         my @list = split /,/, $fields[$i];
-         die "non-integer element in list" if scalar grep { $_ !~ /^\d+$/ } @list;
-         my $is_arithmetic = 1;
-         for ( my $n = 0 ; $n < $#list ; $n++ ) {
-            if ( $list[ $n + 1 ] - $list[$n] != 1 ) {
-               $is_arithmetic = 0;
-               last;
-            }
-         }
-         $fields[$i] = "$list[0]-$list[$#list]" if $is_arithmetic;
-      }
-   }
-
-   # convert unix dow to quartz
-   unless ($args{is_quartz}) {
-      if ( $fields[5] =~ /\// ) { # special handling for steps
-         my ( $base, $step ) = split( '/', $fields[5] );
-         $base =~ s/\b(\d)\b/$1+1/eeg;
-         $base =~ s/\b0\b|8/1/g;
-         $fields[5] = join( '/', ( $base, $step ) );
-      }
-      else {
-         $fields[5] =~ s/\b(\d)\b/$1+1/eeg;
-         $fields[5] =~ s/\b0\b|8/1/g;
-      }
-   }
-
-   # stitch it back together
-   $expr = join( ' ', @fields );
-   die "Invalid characters" unless $expr =~ /^[#LW\d\?\*\s\-\/,]+$/;
-
-   # DEFAULTS: UTC (0 minutes)
-   my $utc_offset = $args{utc_offset} // 0;
-   my $time_zone  = $args{time_zone};
-   my $self       = bless {
-      expression  => $expr,
+   # Initialize object
+   my $self = bless {
+      expression  => join( ' ', @fields ),
       is_quartz   => $args{is_quartz},
-      utc_offset  => $utc_offset,
-      time_zone   => $time_zone // 'UTC',
-      begin_epoch => $args{begin_epoch},         # undef = use method start_epoch
-      end_epoch   => $args{end_epoch},           # undef = unbounded
-      user        => $args{user}    // undef,    # RO from crontab
-      command     => $args{command} // undef,    # RO from crontab
-      env         => $args{env}     // {},       # RO hashref from crontab
+      utc_offset  => $args{utc_offset} // 0,
+      time_zone   => $args{time_zone}  // 'UTC',
+      begin_epoch => $args{begin_epoch},
+      end_epoch   => $args{end_epoch},
+      user        => $args{user}    // undef,
+      command     => $args{command} // undef,
+      env         => $args{env}     // {},
    }, $class;
-   $self->time_zone($time_zone) if defined $time_zone;
-   my @types = qw(second minute hour dom month dow year);
+   $self->time_zone( $args{time_zone} ) if defined $args{time_zone};
+
+   # Parse fields with TreeParser
+   my @types  = qw(second minute hour dom month dow year);
+   my $parser = Cron::Toolkit::Tree::TreeParser->new(
+      is_quartz => $args{is_quartz},
+      fields    => \@fields,
+      types     => \@types
+   );
    $self->{root} = Cron::Toolkit::Tree::CompositePattern->new( type => 'root' );
    for my $i ( 0 .. 6 ) {
-      validate( $fields[$i], $types[$i] );
-      my $node = Cron::Toolkit::Tree::TreeParser->parse_field( $fields[$i], $types[$i] );
+      my $node = $parser->parse_field( $fields[$i], $types[$i] );
       $node->{field_type} = $types[$i];
       $self->{root}->add_child($node);
    }
+   $self->{expression} = $parser->rebuild_from_node( $self->{root} );
    return $self;
 }
 

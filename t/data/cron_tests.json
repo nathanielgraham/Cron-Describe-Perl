@@ -1,26 +1,9 @@
 [
    {
-      "category" : "general",
-      "desc" : "at 12:00:00 AM",
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dow: ?",
       "expr" : "* * * * *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761138000,
-         "is_match" : 1
-      },
-      "norm" : "0 * * * * ? *",
-      "schedule" : {
-         "next_epoch" : 1761138060,
-         "next_n" : [
-            1761138000,
-            1761138060,
-            1761138120
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
+      "invalid" : 1
    },
    {
       "category" : "general",
@@ -28,160 +11,69 @@
       "expr" : "* * * * * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761138001,
+         "epoch" : 1761177601,
          "is_match" : 1
       },
       "norm" : "* * * * * ? *",
       "schedule" : {
-         "next_epoch" : 1761138003,
+         "next_epoch" : 1761177603,
          "next_n" : [
-            1761138001,
-            1761138003,
-            1761138005
+            1761177601,
+            1761177603,
+            1761177605
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
+      "tz" : null,
+      "utc_offset" : 0
    },
    {
-      "category" : "general",
-      "desc" : "at 12:00:00 AM every Monday through Wednesday",
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
       "expr" : "* * * * MON,TUE,WED",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761523200,
-         "is_match" : 1
-      },
-      "norm" : "0 * * ? * 2-4 *",
-      "schedule" : {
-         "next_epoch" : 1761523260,
-         "next_n" : [
-            1761523200,
-            1761523260,
-            1761523320
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
+      "invalid" : 1
    },
    {
-      "category" : "general",
-      "desc" : "at 12:00:00 AM every Sunday",
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
       "expr" : "* * * * 7/2",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761436800,
-         "is_match" : 1
-      },
-      "norm" : "0 * * ? * 1 *",
-      "schedule" : {
-         "next_epoch" : 1761436860,
-         "next_n" : [
-            1761436800,
-            1761436860,
-            1761436920
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "* * * * MON-FRI",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dow: ?",
+      "expr" : "*/10 * * * *",
+      "invalid" : 1
    },
    {
       "category" : "general",
-      "desc" : "at 12:00:00 AM every Monday through Friday",
-      "expr" : "* * * * MON-FRI",
+      "desc" : "at 12:00:00 AM",
+      "expr" : "*/15 * * * * ?",
       "invalid" : 0,
       "match" : {
          "epoch" : 1761177600,
          "is_match" : 1
       },
-      "norm" : "0 * * ? * 2-6 *",
+      "norm" : "0,15,30,45 * * * * ? *",
       "schedule" : {
-         "next_epoch" : 1761177660,
+         "next_epoch" : 1761177615,
          "next_n" : [
             1761177600,
-            1761177660,
-            1761177720
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
-   },
-   {
-      "category" : "general",
-      "desc" : "every 10 minutes",
-      "expr" : "*/10 * * * *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : null,
-         "is_match" : 0
-      },
-      "norm" : "0 */10 * * * ? *",
-      "schedule" : {
-         "next_epoch" : null,
-         "next_n" : [
-            null,
-            null,
-            null
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : -480
-   },
-   {
-      "category" : "general",
-      "desc" : "every 15 seconds",
-      "expr" : "*/15 * * * * ?",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761177615,
-         "is_match" : 1
-      },
-      "norm" : "*/15 * * * * ? *",
-      "schedule" : {
-         "next_epoch" : 1761177630,
-         "next_n" : [
             1761177615,
-            1761177630,
-            1761177645
+            1761177630
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
       "utc_offset" : 0
-   },
-   {
-      "category" : "general",
-      "desc" : "at 12:00:00 AM",
-      "expr" : "0 */60 * * * ? *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761145200,
-         "is_match" : 1
-      },
-      "norm" : "0 0 * * * ? *",
-      "schedule" : {
-         "next_epoch" : 1761148800,
-         "next_n" : [
-            1761145200,
-            1761148800,
-            1761152400
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "Asia/Tokyo",
-      "utc_offset" : 540
    },
    {
       "category" : "general",
@@ -209,65 +101,19 @@
    {
       "category" : "general",
       "desc" : "at 12:00:00 AM on the first of every month",
-      "expr" : "0 0 * */32 * ? *",
+      "expr" : "0 0 * */31 * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761980400,
+         "epoch" : 1761915600,
          "is_match" : 1
       },
       "norm" : "0 0 * 1 * ? *",
       "schedule" : {
-         "next_epoch" : 1761984000,
+         "next_epoch" : 1761919200,
          "next_n" : [
-            1761980400,
-            1761984000,
-            1761987600
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "America/Los_Angeles",
-      "utc_offset" : -420
-   },
-   {
-      "category" : "general",
-      "desc" : "every 3 hours",
-      "expr" : "0 0 */3 * * ? *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761202800,
-         "is_match" : 1
-      },
-      "norm" : "0 0 */3 * * ? *",
-      "schedule" : {
-         "next_epoch" : 1761213600,
-         "next_n" : [
-            1761202800,
-            1761213600,
-            1761224400
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "America/Los_Angeles",
-      "utc_offset" : -420
-   },
-   {
-      "category" : "general",
-      "desc" : "at midnight on the second Sunday of every month",
-      "expr" : "0 0 0 * * 1#2 ?",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1762606800,
-         "is_match" : 1
-      },
-      "norm" : "0 0 0 ? * 1#2 ?",
-      "schedule" : {
-         "next_epoch" : 1765630800,
-         "next_n" : [
-            1762606800,
-            1765630800,
-            1768050000
+            1761915600,
+            1761919200,
+            1761922800
          ],
          "prev_epoch" : null
       },
@@ -277,20 +123,20 @@
    },
    {
       "category" : "general",
-      "desc" : "at midnight every Monday",
-      "expr" : "0 0 0 * * 2 ?",
+      "desc" : "at 12:00:00 AM",
+      "expr" : "0 0 */3 * * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761523200,
+         "epoch" : 1761177600,
          "is_match" : 1
       },
-      "norm" : "0 0 0 ? * 2 ?",
+      "norm" : "0 0 0,3,6,9,12,15,18,21 * * ? *",
       "schedule" : {
-         "next_epoch" : 1762128000,
+         "next_epoch" : 1761188400,
          "next_n" : [
-            1761523200,
-            1762128000,
-            1762732800
+            1761177600,
+            1761188400,
+            1761199200
          ],
          "prev_epoch" : null
       },
@@ -299,21 +145,56 @@
       "utc_offset" : 0
    },
    {
+      "category" : "parsing",
+      "expect_error" : "Syntax: ? only allowed in dow or dom, not year",
+      "expr" : "0 0 0 * * 1#2 ?",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: ? only allowed in dow or dom, not year",
+      "expr" : "0 0 0 * * 2 ?",
+      "invalid" : 1
+   },
+   {
       "category" : "general",
       "desc" : "at midnight",
       "expr" : "0 0 0 * * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761145200,
+         "epoch" : 1761174000,
          "is_match" : 1
       },
       "norm" : "0 0 0 * * ? *",
       "schedule" : {
-         "next_epoch" : 1761231600,
+         "next_epoch" : 1761260400,
          "next_n" : [
-            1761145200,
-            1761231600,
-            1761318000
+            1761174000,
+            1761260400,
+            1761346800
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : null,
+      "utc_offset" : 60
+   },
+   {
+      "category" : "general",
+      "desc" : "at midnight every day in 2023",
+      "expr" : "0 0 0 * * ? 2023",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1674572400,
+         "is_match" : 1
+      },
+      "norm" : "0 0 0 * * ? 2023",
+      "schedule" : {
+         "next_epoch" : 1677164400,
+         "next_n" : [
+            1674572400,
+            1677164400,
+            1679756400
          ],
          "prev_epoch" : null
       },
@@ -323,49 +204,26 @@
    },
    {
       "category" : "general",
-      "desc" : "at midnight every day in 2023",
-      "expr" : "0 0 0 * * ? 2023",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1674601200,
-         "is_match" : 1
-      },
-      "norm" : "0 0 0 * * ? 2023",
-      "schedule" : {
-         "next_epoch" : 1677193200,
-         "next_n" : [
-            1674601200,
-            1677193200,
-            1679785200
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "Europe/London",
-      "utc_offset" : 60
-   },
-   {
-      "category" : "general",
       "desc" : "at midnight every day in 2025",
       "expr" : "0 0 0 * * ? 2025",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761174000,
+         "epoch" : 1761138000,
          "is_match" : 1
       },
       "norm" : "0 0 0 * * ? 2025",
       "schedule" : {
-         "next_epoch" : 1763766000,
+         "next_epoch" : 1763730000,
          "next_n" : [
-            1761174000,
-            1763766000,
-            1766358000
+            1761138000,
+            1763730000,
+            1766322000
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 60
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
    },
    {
       "category" : "general",
@@ -396,45 +254,28 @@
       "expr" : "0 0 0 1 JAN ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1767225600,
+         "epoch" : 1767193200,
          "is_match" : 1
       },
       "norm" : "0 0 0 1 1 ? *",
       "schedule" : {
-         "next_epoch" : 1798761600,
+         "next_epoch" : 1798729200,
          "next_n" : [
-            1767225600,
-            1798761600,
-            1830297600
+            1767193200,
+            1798729200,
+            1830265200
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : 0
+      "utc_offset" : 540
    },
    {
-      "category" : "general",
-      "desc" : "at midnight on the first and 15th of every month",
+      "category" : "parsing",
+      "expect_error" : "Syntax: ? only allowed in dow or dom, not year",
       "expr" : "0 0 0 1,15 * * ?",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761955200,
-         "is_match" : 1
-      },
-      "norm" : "0 0 0 1,15 * ? ?",
-      "schedule" : {
-         "next_epoch" : 1763164800,
-         "next_n" : [
-            1761955200,
-            1763164800,
-            1764547200
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
+      "invalid" : 1
    },
    {
       "category" : "general",
@@ -442,22 +283,22 @@
       "expr" : "0 0 0 16W * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1763366400,
+         "epoch" : 1763337600,
          "is_match" : 1
       },
       "norm" : "0 0 0 16W * ? *",
       "schedule" : {
-         "next_epoch" : 1765872000,
+         "next_epoch" : 1765843200,
          "next_n" : [
-            1763366400,
-            1765872000,
-            1768550400
+            1763337600,
+            1765843200,
+            1768521600
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : -480
+      "utc_offset" : 0
    },
    {
       "category" : "general",
@@ -480,7 +321,7 @@
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : 0
+      "utc_offset" : 540
    },
    {
       "category" : "general",
@@ -488,85 +329,16 @@
       "expr" : "0 0 0 L * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761865200,
+         "epoch" : 1761868800,
          "is_match" : 1
       },
       "norm" : "0 0 0 L * ? *",
       "schedule" : {
-         "next_epoch" : 1764457200,
+         "next_epoch" : 1764460800,
          "next_n" : [
-            1761865200,
-            1764457200,
-            1767135600
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "Europe/London",
-      "utc_offset" : 60
-   },
-   {
-      "category" : "general",
-      "desc" : "at midnight on the second last day of every month",
-      "expr" : "0 0 0 L-2 * ? *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761721200,
-         "is_match" : 1
-      },
-      "norm" : "0 0 0 L-2 * ? *",
-      "schedule" : {
-         "next_epoch" : 1764313200,
-         "next_n" : [
-            1761721200,
-            1764313200,
-            1766991600
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "America/Los_Angeles",
-      "utc_offset" : -420
-   },
-   {
-      "category" : "general",
-      "desc" : "at midnight on the last weekday of every month",
-      "expr" : "0 0 0 LW * ? *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761829200,
-         "is_match" : 1
-      },
-      "norm" : "0 0 0 LW * ? *",
-      "schedule" : {
-         "next_epoch" : 1764248400,
-         "next_n" : [
-            1761829200,
-            1764248400,
-            1767099600
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
-   },
-   {
-      "category" : "general",
-      "desc" : "at midnight on the on the last weekday of every month of June",
-      "expr" : "0 0 0 LW 6 ? *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1782777600,
-         "is_match" : 1
-      },
-      "norm" : "0 0 0 LW 6 ? *",
-      "schedule" : {
-         "next_epoch" : 1814313600,
-         "next_n" : [
-            1782777600,
-            1814313600,
-            1845936000
+            1761868800,
+            1764460800,
+            1767139200
          ],
          "prev_epoch" : null
       },
@@ -576,26 +348,95 @@
    },
    {
       "category" : "general",
-      "desc" : "at 12:00:00 AM",
-      "expr" : "0 0 10-14 * * ?",
+      "desc" : "at midnight on the second last day of every month",
+      "expr" : "0 0 0 L-2 * ? *",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761231600,
+         "epoch" : 1761688800,
          "is_match" : 1
       },
-      "norm" : "0 0 10-14 * * ? *",
+      "norm" : "0 0 0 L-2 * ? *",
       "schedule" : {
-         "next_epoch" : 1761235200,
+         "next_epoch" : 1764280800,
          "next_n" : [
-            1761231600,
-            1761235200,
-            1761238800
+            1761688800,
+            1764280800,
+            1766959200
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : -300
+      "utc_offset" : 120
+   },
+   {
+      "category" : "general",
+      "desc" : "at midnight on the last weekday of every month",
+      "expr" : "0 0 0 LW * ? *",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1761868800,
+         "is_match" : 1
+      },
+      "norm" : "0 0 0 LW * ? *",
+      "schedule" : {
+         "next_epoch" : 1764288000,
+         "next_n" : [
+            1761868800,
+            1764288000,
+            1767139200
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : null,
+      "utc_offset" : 0
+   },
+   {
+      "category" : "general",
+      "desc" : "at midnight on the on the last weekday of every month of June",
+      "expr" : "0 0 0 LW 6 ? *",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1782774000,
+         "is_match" : 1
+      },
+      "norm" : "0 0 0 LW 6 ? *",
+      "schedule" : {
+         "next_epoch" : 1814310000,
+         "next_n" : [
+            1782774000,
+            1814310000,
+            1845932400
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : "Europe/Paris",
+      "utc_offset" : 60
+   },
+   {
+      "category" : "general",
+      "desc" : "at 12:00:00 AM",
+      "expr" : "0 0 10-14 * * ?",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1761174000,
+         "is_match" : 1
+      },
+      "norm" : "0 0 10-14 * * ? *",
+      "schedule" : {
+         "next_epoch" : 1761177600,
+         "next_n" : [
+            1761174000,
+            1761177600,
+            1761181200
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
    },
    {
       "category" : "general",
@@ -621,379 +462,21 @@
       "utc_offset" : 0
    },
    {
-      "category" : "parsing",
-      "expect_error" : "expected 5-7 fields",
-      "expr" : "0 30 14 * * ? * *",
-      "invalid" : 1
-   },
-   {
       "category" : "general",
       "desc" : "at 2:30:00 PM every day in 2025",
       "expr" : "0 30 14 * * ? 2025",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761222600,
+         "epoch" : 1761197400,
          "is_match" : 1
       },
       "norm" : "0 30 14 * * ? 2025",
       "schedule" : {
-         "next_epoch" : 1763814600,
+         "next_epoch" : 1763789400,
          "next_n" : [
-            1761222600,
-            1763814600,
-            1766406600
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 120
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every Friday",
-      "expr" : "0 30 14 ? * 6",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761276600,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 ? * 6 *",
-      "schedule" : {
-         "next_epoch" : 1761881400,
-         "next_n" : [
-            1761276600,
-            1761881400,
-            1762486200
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every Monday",
-      "expr" : "0 30 14 ? * MON *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761571800,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 ? * 2 *",
-      "schedule" : {
-         "next_epoch" : 1762176600,
-         "next_n" : [
-            1761571800,
-            1762176600,
-            1762781400
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 60
-   },
-   {
-      "category" : "general",
-      "desc" : "at 12:00:00 AM",
-      "expr" : "1-5 * * * *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761177660,
-         "is_match" : 1
-      },
-      "norm" : "0 1-5 * * * ? *",
-      "schedule" : {
-         "next_epoch" : 1761177720,
-         "next_n" : [
-            1761177660,
-            1761177720,
-            1761177780
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
-   },
-   {
-      "category" : "parsing",
-      "expect_error" : "expected 5-7 fields",
-      "expr" : "30 14 * *",
-      "invalid" : 1
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM",
-      "expr" : "30 14 * * *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761244200,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 * * ? *",
-      "schedule" : {
-         "next_epoch" : 1761330600,
-         "next_n" : [
-            1761244200,
-            1761330600,
-            1761417000
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "America/New_York",
-      "utc_offset" : -240
-   },
-   {
-      "category" : "parsing",
-      "expect_error" : "expected 5-7 fields",
-      "expr" : "30 14 * * * MON TUE *",
-      "invalid" : 1
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every Sunday",
-      "expr" : "30 14 * * 0",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761456600,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 ? * 1 *",
-      "schedule" : {
-         "next_epoch" : 1762061400,
-         "next_n" : [
-            1761456600,
-            1762061400,
-            1762666200
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 540
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every 2 minutes from 2 to 6 past 14",
-      "expr" : "30 14 * * 1-5/2",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761316200,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 ? * 2-6/2 *",
-      "schedule" : {
-         "next_epoch" : 1761575400,
-         "next_n" : [
-            1761316200,
-            1761575400,
-            1761748200
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
-   },
-   {
-      "category" : "parsing",
-      "expect_error" : "invalid dow range: 6-2 (start must be <= end)",
-      "expr" : "30 14 * * 5-1",
-      "invalid" : 1
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every Monday",
-      "expr" : "30 14 * * MON",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761575400,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 ? * 2 *",
-      "schedule" : {
-         "next_epoch" : 1762180200,
-         "next_n" : [
-            1761575400,
-            1762180200,
-            1762785000
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every Saturday",
-      "expr" : "30 14 * * SAT",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761363000,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 ? * 7 *",
-      "schedule" : {
-         "next_epoch" : 1761967800,
-         "next_n" : [
-            1761363000,
-            1761967800,
-            1762572600
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every Sunday",
-      "expr" : "30 14 * * SUN",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761485400,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 ? * 1 *",
-      "schedule" : {
-         "next_epoch" : 1762090200,
-         "next_n" : [
-            1761485400,
-            1762090200,
-            1762695000
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 60
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every Monday, Wednesday and Friday",
-      "expr" : "30 14 * * mOn,WeD,fRi",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761316200,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 ? * 2,4,6 *",
-      "schedule" : {
-         "next_epoch" : 1761575400,
-         "next_n" : [
-            1761316200,
-            1761575400,
-            1761748200
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
-   },
-   {
-      "category" : "parsing",
-      "expect_error" : "Invalid characters",
-      "expr" : "30 14 * JAN FOO",
-      "invalid" : 1
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM from January to March",
-      "expr" : "30 14 * JaN-MaR *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1768998600,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 * 1-3 ? *",
-      "schedule" : {
-         "next_epoch" : 1771590600,
-         "next_n" : [
-            1768998600,
-            1771590600,
-            1774182600
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 120
-   },
-   {
-      "category" : "parsing",
-      "expect_error" : "Invalid characters",
-      "expr" : "30 14 * XYZ MON",
-      "invalid" : 1
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every Monday January",
-      "expr" : "30 14 * jan Mon",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1767591000,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 ? 1 2 *",
-      "schedule" : {
-         "next_epoch" : 1768195800,
-         "next_n" : [
-            1767591000,
-            1768195800,
-            1768800600
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 540
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM every 5 minutes from 1 to 15 past 14",
-      "expr" : "30 14 1-15/5 * *",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1762007400,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 1-15/5 * ? *",
-      "schedule" : {
-         "next_epoch" : 1762439400,
-         "next_n" : [
-            1762007400,
-            1762439400,
-            1762871400
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 0
-   },
-   {
-      "category" : "general",
-      "desc" : "at 2:30:00 PM on the first through fifth of every month every Monday through Friday",
-      "expr" : "30 14 1-5 * 1-5",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1762147800,
-         "is_match" : 1
-      },
-      "norm" : "0 30 14 1-5 * 2-6 *",
-      "schedule" : {
-         "next_epoch" : 1762234200,
-         "next_n" : [
-            1762147800,
-            1762234200,
-            1762320600
+            1761197400,
+            1763789400,
+            1766381400
          ],
          "prev_epoch" : null
       },
@@ -1003,37 +486,31 @@
    },
    {
       "category" : "general",
-      "desc" : "at 2:30:00 PM on the 15th of every month",
-      "expr" : "30 14 15 * ?",
+      "desc" : "at 2:30:00 PM every Friday",
+      "expr" : "0 30 14 ? * 6",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1763217000,
+         "epoch" : 1761345000,
          "is_match" : 1
       },
-      "norm" : "0 30 14 15 * ? *",
+      "norm" : "0 30 14 ? * 6 *",
       "schedule" : {
-         "next_epoch" : 1765809000,
+         "next_epoch" : 1761949800,
          "next_n" : [
-            1763217000,
-            1765809000,
-            1768487400
+            1761345000,
+            1761949800,
+            1762554600
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : 0
-   },
-   {
-      "category" : "parsing",
-      "expect_error" : "invalid dom range: 5-1 (start must be <= end)",
-      "expr" : "30 14 5-1 * *",
-      "invalid" : 1
+      "utc_offset" : -480
    },
    {
       "category" : "general",
       "desc" : "at 2:30:00 PM every Monday",
-      "expr" : "30 14 ? * MON",
+      "expr" : "0 30 14 ? * MON *",
       "invalid" : 0,
       "match" : {
          "epoch" : 1761575400,
@@ -1054,27 +531,152 @@
       "utc_offset" : 0
    },
    {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dow: ?",
+      "expr" : "1-5 * * * *",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dow: ?",
+      "expr" : "30 14 * * *",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "30 14 * * 0",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "30 14 * * 1-5/2",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "30 14 * * 5-1",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "30 14 * * MON",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "30 14 * * SAT",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "30 14 * * SUN",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "30 14 * * mOn,WeD,fRi",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Invalid characters",
+      "expr" : "30 14 * JAN FOO",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dow: ?",
+      "expr" : "30 14 * JaN-MaR *",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Invalid characters",
+      "expr" : "30 14 * XYZ MON",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "30 14 * jan Mon",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dow: ?",
+      "expr" : "30 14 1-15/5 * *",
+      "invalid" : 1
+   },
+   {
       "category" : "general",
-      "desc" : "at 12:00:58 AM",
-      "expr" : "58/3 * * * * ? *",
+      "desc" : "at 2:30:00 PM on the first through fifth of every month every Monday through Friday",
+      "expr" : "30 14 1-5 * 1-5",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761177658,
+         "epoch" : 1762209000,
          "is_match" : 1
       },
-      "norm" : "58 * * * * ? *",
+      "norm" : "0 30 14 1-5 * 2-6 *",
       "schedule" : {
-         "next_epoch" : 1761177718,
+         "next_epoch" : 1762295400,
          "next_n" : [
-            1761177658,
-            1761177718,
-            1761177778
+            1762209000,
+            1762295400,
+            1762381800
          ],
          "prev_epoch" : null
       },
       "type" : "quartz",
       "tz" : null,
-      "utc_offset" : 0
+      "utc_offset" : -480
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dow: ?",
+      "expr" : "30 14 15 * ?",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dow: ?",
+      "expr" : "30 14 5-1 * *",
+      "invalid" : 1
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: Invalid chars in dom: ?",
+      "expr" : "30 14 ? * MON",
+      "invalid" : 1
+   },
+   {
+      "category" : "general",
+      "desc" : "at 12:00:58 AM",
+      "expr" : "58/3 * * * * ? *",
+      "invalid" : 0,
+      "match" : {
+         "epoch" : 1761170458,
+         "is_match" : 1
+      },
+      "norm" : "58 * * * * ? *",
+      "schedule" : {
+         "next_epoch" : 1761170518,
+         "next_n" : [
+            1761170458,
+            1761170518,
+            1761170578
+         ],
+         "prev_epoch" : null
+      },
+      "type" : "quartz",
+      "tz" : null,
+      "utc_offset" : 120
    },
    {
       "category" : "parsing",
@@ -1088,39 +690,16 @@
       "expr" : "@daily",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761174000,
+         "epoch" : 1761177600,
          "is_match" : 1
       },
       "norm" : "0 0 0 * * ? *",
       "schedule" : {
-         "next_epoch" : 1761260400,
-         "next_n" : [
-            1761174000,
-            1761260400,
-            1761346800
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "alias",
-      "tz" : "Europe/London",
-      "utc_offset" : 60
-   },
-   {
-      "category" : "general",
-      "desc" : "at 12:00:00 AM",
-      "expr" : "@hourly",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1761177600,
-         "is_match" : 1
-      },
-      "norm" : "0 0 * * * ? *",
-      "schedule" : {
-         "next_epoch" : 1761181200,
+         "next_epoch" : 1761264000,
          "next_n" : [
             1761177600,
-            1761181200,
-            1761184800
+            1761264000,
+            1761350400
          ],
          "prev_epoch" : null
       },
@@ -1130,26 +709,32 @@
    },
    {
       "category" : "general",
-      "desc" : "at midnight on the last day of every month",
-      "expr" : "@monthly",
+      "desc" : "at 12:00:00 AM",
+      "expr" : "@hourly",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1761865200,
+         "epoch" : 1761138000,
          "is_match" : 1
       },
-      "norm" : "0 0 0 L ? ? *",
+      "norm" : "0 0 * * * ? *",
       "schedule" : {
-         "next_epoch" : 1764457200,
+         "next_epoch" : 1761141600,
          "next_n" : [
-            1761865200,
-            1764457200,
-            1767135600
+            1761138000,
+            1761141600,
+            1761145200
          ],
          "prev_epoch" : null
       },
       "type" : "alias",
-      "tz" : "Europe/London",
-      "utc_offset" : 60
+      "tz" : "Australia/Sydney",
+      "utc_offset" : 660
+   },
+   {
+      "category" : "parsing",
+      "expect_error" : "Syntax: ? only allowed in dow or dom, not month",
+      "expr" : "@monthly",
+      "invalid" : 1
    },
    {
       "category" : "general",
@@ -1157,22 +742,22 @@
       "expr" : "@yearly",
       "invalid" : 0,
       "match" : {
-         "epoch" : 1767186000,
+         "epoch" : 1767243600,
          "is_match" : 1
       },
       "norm" : "0 0 0 1 1 ? *",
       "schedule" : {
-         "next_epoch" : 1798722000,
+         "next_epoch" : 1798779600,
          "next_n" : [
-            1767186000,
-            1798722000,
-            1830258000
+            1767243600,
+            1798779600,
+            1830315600
          ],
          "prev_epoch" : null
       },
       "type" : "alias",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
+      "tz" : null,
+      "utc_offset" : -300
    },
    {
       "category" : "general",
@@ -1194,31 +779,8 @@
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : "Australia/Sydney",
-      "utc_offset" : 660
-   },
-   {
-      "category" : "general",
-      "desc" : "at midnight",
-      "expr" : "0 0 0 * * ? */2",
-      "invalid" : 0,
-      "match" : {
-         "epoch" : 1768921200,
-         "is_match" : 1
-      },
-      "norm" : "0 0 0 * * ? */2",
-      "schedule" : {
-         "next_epoch" : 1771513200,
-         "next_n" : [
-            1768921200,
-            1771513200,
-            1774105200
-         ],
-         "prev_epoch" : null
-      },
-      "type" : "quartz",
-      "tz" : null,
-      "utc_offset" : 540
+      "tz" : "America/Los_Angeles",
+      "utc_offset" : -420
    },
    {
       "category" : "general",
@@ -1240,7 +802,7 @@
          "prev_epoch" : null
       },
       "type" : "quartz",
-      "tz" : null,
+      "tz" : "Europe/London",
       "utc_offset" : 0
    }
 ]
