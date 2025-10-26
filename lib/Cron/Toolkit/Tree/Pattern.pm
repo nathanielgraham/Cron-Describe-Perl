@@ -4,6 +4,8 @@ use warnings;
 use Carp qw(croak);
 use Cron::Toolkit::Tree::EnglishVisitor;
 use Cron::Toolkit::Tree::MatchVisitor;
+use Data::Dumper;
+
 sub new {
     my ($class, %args) = @_;
     my $self = bless {
@@ -14,6 +16,9 @@ sub new {
 }
 sub add_child {
     my ($self, $child) = @_;
+    print STDERR "SELF $self->{type} : " . Dumper($self)  if  $self->{type} ne 'root';
+    #print STDERR "CHILD: " . Dumper($child);
+    #$child->{field_type} = $self->{field_type} if $self->{field_type};
     push @{$self->{children}}, $child;
 }
 sub get_children {

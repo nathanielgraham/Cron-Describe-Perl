@@ -3,7 +3,8 @@ use strict;
 use warnings;
 use Cron::Toolkit::Tree::CompositePattern;
 use Cron::Toolkit::Tree::LeafPattern;
-use Cron::Toolkit::Tree::Utils qw(:all);
+use Cron::Toolkit::Tree::Utils qw(%limits);
+use Carp qw(croak);
 use List::Util qw(min max);
 
 sub new {
@@ -13,7 +14,7 @@ sub new {
         shifted => {},
     }, $class;
     if (exists $args{fields} && exists $args{types}) {
-        die "fields and types must be arrays of equal length" unless ref($args{fields}) eq 'ARRAY' && ref($args{types}) eq 'ARRAY' && @{$args{fields}} == @{$args{types}};
+        croak "fields and types must be arrays of equal length" unless ref($args{fields}) eq 'ARRAY' && ref($args{types}) eq 'ARRAY' && @{$args{fields}} == @{$args{types}};
         for my $i (0 .. $#{$args{fields}}) {
             $self->validate($args{fields}[$i], $args{types}[$i]);
         }
@@ -30,10 +31,7 @@ sub validate {
         ? qr/^[0-9,\*\/\-?LW#]+$/
         : qr/^[0-9,\*\/\-?L]+$/; # Allow ? for Unix
     print STDERR "DEBUG: Validating $type: '$field' with regex $allowed_chars\n" if $ENV{Cron_DEBUG};
-    die "Syntax: Invalid chars in $type: $field" unless $field =~ $allowed_chars;
-
-
-=pod
+    croak "Syntax: Invalid chars in $type: $field" unless $field =~ $allowed_chars;
     if ( $field =~ /^[A-Za-z]{3}$/i && $field ne 'L' ) {
         my %months = (jan => 1, feb => 2, mar => 3, apr => 4, may => 5, jun => 6,
                       jul => 7, aug => 8, sep => 9, oct => 10, nov => 11, dec => 12);
@@ -41,60 +39,58 @@ sub validate {
             ? (sun => 1, mon => 2, tue => 3, wed => 4, thu => 5, fri => 6, sat => 7)
             : (sun => 0, mon => 1, tue => 2, wed => 3, thu => 4, fri => 5, sat => 6);
         if ( $type eq 'month' ) {
-            die "Syntax: Invalid month name in $field" unless exists $months{lc $field};
+            croak "Syntax: Invalid month name in $field" unless exists $months{lc $field};
         } elsif ( $type eq 'dow' ) {
-            die "Syntax: Invalid dow name in $field" unless exists $dow{lc $field};
+            croak "Syntax: Invalid dow name in $field" unless exists $dow{lc $field};
         } else {
-            die "Syntax: Names not allowed in $type: $field";
+            croak "Syntax: Names not allowed in $type: $field";
         }
     }
-=cut
-
     if ( $field =~ /^\d+$/ ) {
-        die "$type $field out of range [$min-$max]" unless $field >= $min && $field <= $max;
+        croak "$type $field out of range [$min-$max]" unless $field >= $min && $field <= $max;
     } elsif ( $field =~ /^(\d+)-(\d+)$/ ) {
-        die "$type $1 out of range [$min-$max]" unless $1 >= $min && $1 <= $max;
-        die "$type $2 out of range [$min-$max]" unless $2 >= $min && $2 <= $max;
+        croak "$type $1 out of range [$min-$max]" unless $1 >= $min && $1 <= $max;
+        croak "$type $2 out of range [$min-$max]" unless $2 >= $min && $2 <= $max;
     } elsif ( $field =~ /^(\d*|\*)\/(\d+)$/ ) {
-        die "$type step $2 out of range [$min-$max]" unless $2 >= $min && $2 <= $max;
-        die "$type base $1 out of range [$min-$max]" if $1 ne '*' && ($1 < $min || $1 > $max);
+        croak "$type step $2 out of range [$min-$max]" unless $2 >= $min && $2 <= $max;
+        croak "$type base $1 out of range [$min-$max]" if $1 ne '*' && ($1 < $min || $1 > $max);
     } elsif ( $field =~ /^(\*|\d+)-(\d+)\/(\d+)$/ ) {
-        die "$type range start $1 out of range [$min-$max]" if $1 ne '*' && ($1 < $min || $1 > $max);
-        die "$type range end $2 out of range [$min-$max]" unless $2 >= $min && $2 <= $max;
-        die "$type step $3 out of range [$min-$max]" unless $3 >= $min && $3 <= $max;
+        croak "$type range start $1 out of range [$min-$max]" if $1 ne '*' && ($1 < $min || $1 > $max);
+        croak "$type range end $2 out of range [$min-$max]" unless $2 >= $min && $2 <= $max;
+        croak "$type step $3 out of range [$min-$max]" unless $3 >= $min && $3 <= $max;
     } elsif ( $field =~ /,/ ) {
         for my $sub (split /,/, $field) {
             if ( $sub =~ /^\d+$/ ) {
-                die "$type $sub out of range [$min-$max]" unless $sub >= $min && $sub <= $max;
+                croak "$type $sub out of range [$min-$max]" unless $sub >= $min && $sub <= $max;
             } elsif ( $sub =~ /^(\d+)-(\d+)$/ ) {
-                die "$type $1 out of range [$min-$max]" unless $1 >= $min && $1 <= $max;
-                die "$type $2 out of range [$min-$max]" unless $2 >= $min && $2 <= $max;
+                croak "$type $1 out of range [$min-$max]" unless $1 >= $min && $1 <= $max;
+                croak "$type $2 out of range [$min-$max]" unless $2 >= $min && $2 <= $max;
             } else {
-                die "Syntax: Invalid list element in $type: $sub";
+                croak "Syntax: Invalid list element in $type: $sub";
             }
         }
     } elsif ( $is_quartz ) {
         if ( $field eq '?' && $type !~ /^(dow|dom)$/ ) {
-            die "Syntax: ? only allowed in dow or dom, not $type";
+            croak "Syntax: ? only allowed in dow or dom, not $type";
         }
         if ( $field =~ /^L(-\d+)?$/ && $type !~ /^(dow|dom)$/ ) {
-            die "Syntax: L only allowed in dow or dom, not $type";
+            croak "Syntax: L only allowed in dow or dom, not $type";
         }
         if ( $field =~ /^LW$/ && $type ne 'dom' ) {
-            die "Syntax: LW only allowed in dom, not $type";
+            croak "Syntax: LW only allowed in dom, not $type";
         }
         if ( $field =~ /^\d+#\d+$/ && $type ne 'dow' ) {
-            die "Syntax: # only allowed in dow, not $type";
+            croak "Syntax: # only allowed in dow, not $type";
         }
         if ( $field =~ /^\d+W$/ && $type ne 'dom' ) {
-            die "Syntax: W only allowed in dom, not $type";
+            croak "Syntax: W only allowed in dom, not $type";
         }
     } else {
         if ( $field =~ /^L(-\d+)?$/ && $type ne 'dom' ) {
-            die "Syntax: L only allowed in dom, not $type";
+            croak "Syntax: L only allowed in dom, not $type";
         }
         if ( $field eq '?' && $type !~ /^(dow|dom)$/ ) {
-            die "Syntax: ? only allowed in dow or dom, not $type";
+            croak "Syntax: ? only allowed in dow or dom, not $type";
         }
     }
     return 1;
@@ -110,7 +106,7 @@ sub rebuild_from_node {
     return $self->rebuild_from_node($node->{children}[0]) . '/' . $self->rebuild_from_node($node->{children}[1]) if $type eq 'step';
     return join ',', map { $self->rebuild_from_node($_) } @{ $node->{children} } if $type eq 'list';
     return join ' ', map { $self->rebuild_from_node($_) } @{ $node->{children} } if $type eq 'root';
-    die "Unsupported for rebuild: $type";
+    croak "Unsupported for rebuild: $type";
 }
 
 sub _get_limits {
@@ -201,7 +197,7 @@ sub parse_field {
         }
         $node = $list;
     } else {
-        die "Unsupported field: $field ($field_type)";
+        croak "Unsupported field: $field ($field_type)";
     }
     print STDERR "DEBUG: Created node: type=$node->{type}, value=" . (defined $node->{value} ? $node->{value} : 'undef') . "\n" if $ENV{Cron_DEBUG};
     if ( $field_type eq 'dow' && !$self->{is_quartz} && !$self->{shifted}{$field_type} ) {
@@ -226,7 +222,7 @@ sub _shift_dow_node {
     }
     if ( $type eq 'single' ) {
         my $val = $node->{value};
-        die "Invalid DOW value: undef" unless defined $val;
+        croak "Invalid DOW value: undef" unless defined $val;
         my $orig_val = $val;
         if ( $val == 0 || $val == 7 ) {
             $val = 1;
@@ -237,7 +233,7 @@ sub _shift_dow_node {
         print STDERR "DEBUG: Shifted single $orig_val → $val\n" if $ENV{Cron_DEBUG};
     } elsif ( $type eq 'nth' ) {
         my ($day, $nth) = $node->{value} =~ /(\d+)#(\d+)/;
-        die "Invalid nth DOW value: $node->{value}" unless defined $day && defined $nth;
+        croak "Invalid nth DOW value: $node->{value}" unless defined $day && defined $nth;
         my $orig_day = $day;
         if ( $day == 0 || $day == 7 ) {
             $day = 1;
@@ -264,7 +260,7 @@ sub _optimize_node {
     if ( $type eq 'step' ) {
         my $base_node = $node->{children}[0];
         my $step = $node->{children}[1]{value};
-        die "Invalid step value in $field_type: undef" unless defined $step;
+        croak "Invalid step value in $field_type: undef" unless defined $step;
         my $values = $self->_expand_node($base_node, $field_type);
         my @stepped;
         if ( @$values ) {
@@ -272,7 +268,7 @@ sub _optimize_node {
             my $max_val = max(@$values);
             my $start = ($field_type eq 'dow' && $base_node->{type} eq 'range')
                 ? $base_node->{children}[0]{value} : $min_val;
-            die "Invalid step start in $field_type: undef" unless defined $start;
+            croak "Invalid step start in $field_type: undef" unless defined $start;
             print STDERR "DEBUG: Step expand base=[" . join(',', @$values) . "], step=$step, start=$start, max=$max_val ($field_type)\n" if $ENV{Cron_DEBUG};
             for ( my $v = $start ; $v <= $max_val ; $v += $step ) {
                 push @stepped, $v if grep { defined $_ && $_ == $v } @$values;
@@ -294,7 +290,7 @@ sub _optimize_node {
     } elsif ( $type eq 'range' && $field_type eq 'dow' ) {
         my $start = $node->{children}[0]{value};
         my $end = $node->{children}[1]{value};
-        die "Invalid range values in $field_type: start=" . (defined $start ? $start : 'undef') . ", end=" . (defined $end ? $end : 'undef') unless defined $start && defined $end;
+        croak "Invalid range values in $field_type: start=" . (defined $start ? $start : 'undef') . ", end=" . (defined $end ? $end : 'undef') unless defined $start && defined $end;
         print STDERR "DEBUG: Range check start=$start, end=$end ($field_type)\n" if $ENV{Cron_DEBUG};
         if ( $start > $end ) {
             print STDERR "DEBUG: Wrapped dow range $start-$end → 1,$start-7 ($field_type)\n" if $ENV{Cron_DEBUG};
@@ -313,7 +309,7 @@ sub _optimize_node {
     } elsif ( $type eq 'list' ) {
         my @values = sort { $a <=> $b } grep { defined $_ } map { @{ $self->_expand_node( $_, $field_type ) } } grep { $_->{type} eq 'single' || $_->{type} eq 'range' } @{ $node->{children} };
         print STDERR "DEBUG: List expand=[" . join(',', @values) . "] ($field_type)\n" if $ENV{Cron_DEBUG};
-        die "Invalid list expansion in $field_type: empty values" unless @values;
+        croak "Invalid list expansion in $field_type: empty values" unless @values;
         my @merged;
         my $start;
         my $prev;
@@ -359,7 +355,7 @@ sub _expand_node {
     if ( $type eq 'range' ) {
         my $start = $node->{children}[0]{value};
         my $end = $node->{children}[1]{value};
-        die "Invalid range values in $field_type: start=" . (defined $start ? $start : 'undef') . ", end=" . (defined $end ? $end : 'undef') unless defined $start && defined $end;
+        croak "Invalid range values in $field_type: start=" . (defined $start ? $start : 'undef') . ", end=" . (defined $end ? $end : 'undef') unless defined $start && defined $end;
         if ( $field_type eq 'dow' && $start > $end ) {
             my @values = ($start .. 7);
             push @values, (1 .. $end) if $end >= 1;
@@ -377,7 +373,7 @@ sub _expand_node {
     } elsif ( $type eq 'step' ) {
         my $base_vals = $self->_expand_node( $node->{children}[0], $field_type );
         my $step = $node->{children}[1]{value};
-        die "Invalid step value in $field_type: undef" unless defined $step;
+        croak "Invalid step value in $field_type: undef" unless defined $step;
         my @stepped;
         if ( @$base_vals ) {
             my $start = min(@$base_vals);
