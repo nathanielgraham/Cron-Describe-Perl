@@ -1,7 +1,7 @@
-package Cron::Toolkit::Tree::Composer;
+package Cron::Toolkit::Composer;
 use strict;
 use warnings;
-use Cron::Toolkit::Tree::Utils qw(:all);
+use Cron::Toolkit::Utils qw(:all);
 
 sub new {
     my ($class, %args) = @_;

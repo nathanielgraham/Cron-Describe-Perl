@@ -1,9 +1,9 @@
-package Cron::Toolkit::Tree::RangePattern;
+package Cron::Toolkit::Pattern::RangePattern;
 use strict;
 use warnings;
-use parent 'Cron::Toolkit::Tree::CompositePattern';
+use parent 'Cron::Toolkit::Pattern::CompositePattern';
 use Carp qw(croak);
-use Cron::Toolkit::Tree::Utils qw(num_to_ordinal);
+use Cron::Toolkit::Utils qw(num_to_ordinal);
 
 sub to_english {
     my ($self, $field_type) = @_;

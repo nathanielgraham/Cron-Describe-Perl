@@ -1,10 +1,9 @@
-package Cron::Toolkit::Tree::Matcher;
+package Cron::Toolkit::Matcher;
 use strict;
 use warnings;
 use Time::Moment;
-use List::Util                  qw(any);
-use Cron::Toolkit::Tree::Utils qw(quartz_dow);
-use List::Util                  qw(max min);
+use Cron::Toolkit::Utils qw(:all);
+use List::Util                  qw(any max min);
 
 sub new {
    my ( $class, %args ) = @_;
@@ -32,7 +31,7 @@ sub match {
       my $value = $self->_field_value( $tm_local, $field_types[$i] );
 
       # Visitor-wired: Traverse for match
-      my $visitor = Cron::Toolkit::Tree::MatchVisitor->new( value => $value, tm => $tm_local );
+      my $visitor = Cron::Toolkit::Visitor::MatchVisitor->new( value => $value, tm => $tm_local );
       return 0 unless $field->traverse($visitor);
    }
    return 1;

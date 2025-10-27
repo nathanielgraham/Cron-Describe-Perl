@@ -1,9 +1,9 @@
-package Cron::Toolkit::Tree::DayOfMonthPattern;
+package Cron::Toolkit::Pattern::DayOfMonthPattern;
 use strict;
 use warnings;
-use parent 'Cron::Toolkit::Tree::LeafPattern';
+use parent 'Cron::Toolkit::Pattern::LeafPattern';
 use Carp qw(croak);
-use Cron::Toolkit::Tree::Utils qw(num_to_ordinal);
+use Cron::Toolkit::Utils qw(:all);
 
 sub to_english {
     my ($self, $is_midnight) = @_;

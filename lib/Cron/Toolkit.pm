@@ -2,290 +2,22 @@ package Cron::Toolkit;
 
 # ABSTRACT: Cron parser, describer, and scheduler with full Quartz support
 # VERSION
-$VERSION = 0.06;
+$VERSION = 0.08;
 use strict;
 use warnings;
 use Time::Moment;
-use Cron::Toolkit::Tree::Utils qw(:all);
-use Cron::Toolkit::Tree::CompositePattern;
-use Cron::Toolkit::Tree::TreeParser;
-use Cron::Toolkit::Tree::Composer;
+use Cron::Toolkit::Utils qw(:all);
+use Cron::Toolkit::CompositePattern;
+use Cron::Toolkit::TreeParser;
+use Cron::Toolkit::Composer;
 use List::Util qw(max min);
 use Exporter   qw(import);
 use feature 'say';
-our @EXPORT_OK   = qw(new new_from_unix new_from_quartz new_from_crontab);
-our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
+#our @EXPORT_OK   = qw(new new_from_unix new_from_quartz new_from_crontab);
+#our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
 
 =head1 NAME
 Cron::Toolkit - Cron parser, describer, and scheduler with full Quartz support
-=encoding utf8
-=head1 SYNOPSIS
-  use Cron::Toolkit;
-  use Time::Moment; # For epoch examples
-  # Standard constructor (auto-detects Unix/Quartz)
-  my $cron = Cron::Toolkit->new(
-      expression => "0 30 14 * * 1#3 ?",
-      time_zone => "America/New_York" # Or utc_offset => -300
-  );
-  # Unix-specific constructor
-  my $unix_cron = Cron::Toolkit->new_from_unix(
-      expression => "30 14 * * MON" # Unix 5-field
-  );
-  # Quartz-specific constructor
-  my $quartz_cron = Cron::Toolkit->new_from_quartz(
-      expression => "0 30 14 * * MON 2025" # Quartz 6/7-field
-  );
-  # Crontab string (supports @aliases and env vars)
-  my @crons = Cron::Toolkit->new_from_crontab($crontab_string);
-  say $crons[0]->env->{SHELL} // '/bin/sh'; # Env from crontab
-  $cron->begin_epoch(Time::Moment->new(year => 2025, month => 1, day => 1)->epoch); # Bound to 2025-01-01
-  $cron->end_epoch(Time::Moment->new(year => 2025, month => 12, day => 31)->epoch); # Bound to 2025-12-31
-  say $cron->describe; # "at 2:30 PM on the third Sunday of every month"
-  say $cron->is_match(time) ? "RUN NOW!" : "WAIT";
-  say $cron->next; # Next matching epoch after begin_epoch or now (within end)
-  say $cron->previous; # Previous matching epoch before now
-  my $nexts = $cron->next_n(3); # Or $cron->next_occurrences(3)
-  say join ", ", map { Time::Moment->from_epoch($_)->strftime('%Y-%m-%d %H:%M:%S') } @$nexts;
-  my $prevs = $cron->previous_n(3); # Previous 3 matches
-  say $cron->user // 'no user'; # From crontab (undef if none)
-  say $cron->command // 'no command';
-  # Utils
-  say $cron->as_string; # "0 30 14 * * ? *"
-  use JSON::MaybeXS; say decode_json($cron->to_json); # Hash of attrs
-  $cron->dump_tree; # Pretty-print AST
-=head1 DESCRIPTION
-Cron::Toolkit is a comprehensive Perl module for parsing, describing, and scheduling cron expressions. It evolved from a descriptive focus into a versatile toolkit for cron manipulation, featuring timezone-aware matching, bounded searches, and complete Quartz enterprise syntax support (seconds field, L/W/#, steps, ranges, lists).
-Key features:
-=over 4
-=item *
-Natural Language Descriptions: Generates readable English like "at 2:30 PM on the third Monday of every month in 2025".
-=item *
-Timezone Awareness: Supports time_zone (e.g., "America/New_York") or utc_offset (-300 minutes) for local-time matching and next/previous calculations. Uses DateTime::TimeZone for DST handling.
-=item *
-Bounded Searches: Optional begin_epoch/end_epoch limits next/previous to a time window, preventing infinite loops or off-by-one errors.
-=item *
-AST Architecture: Tree-based parsing with Pattern nodes (Single, Range, Step, List, Last, Nth, NearestWeekday). Dual visitors for description (Composer + EnglishVisitor) and matching (Matcher + MatchVisitor)—easy to extend for custom patterns.
-=item *
-Quartz Compatibility: Full support for seconds field, L (last day), W (nearest weekday), # (nth DOW), steps/ranges/lists. Unix 5-field auto-converts to Quartz (adds seconds=0, year=*, DOW normalize: MON=1→2, SUN=0→1).
-=item *
-Production-Ready: 50+ tests covering edges like leap years, month lengths, DOW normalization, DST flips, and bounded clamps. Handles @aliases (@hourly, etc.) in expressions and crontabs.
-=back
-=head1 TREE ARCHITECTURE
-Cron::Toolkit employs an Abstract Syntax Tree (AST) for robust expression handling:
-=over 4
-=item *
-Parse: TreeParser constructs Pattern nodes from fields (Single for 15, Range for 1-5, Step for */15, List for 1,15, Last for L, Nth for 1#3, NearestWeekday for 15W).
-=item *
-Describe: Composer fuses node outputs via templates, using EnglishVisitor for human-readable text.
-=item *
-Match: Matcher evaluates recursively against timestamps, using MatchVisitor for field-by-field checks (context-aware for L/nth/W).
-=back
-This separation enables extensibility: Subclass Visitor for new patterns (add parse clause + visit method).
-=head1 METHODS
-=head2 new
-  my $cron = Cron::Toolkit->new(
-      expression => "0 30 14 * * ?",
-      time_zone => "America/New_York", # Auto-calculates offset (DST-aware)
-      utc_offset => -300, # Minutes from UTC (overrides time_zone if both set)
-      begin_epoch => 1640995200, # Optional: Start bound (default: time)
-      end_epoch => 1672531200, # Optional: End bound (default: undef/unbounded)
-  );
-Primary constructor. Auto-detects Unix (5 fields) or Quartz (6/7 fields). Supports @aliases (@hourly → "0 0 * * * ? *"). Normalizes to 7-field Quartz internally.
-Parameters:
-=over 4
-=item *
-expression: Required cron string or @alias.
-=item *
-time_zone: Optional TZ string (e.g., "America/New_York"); auto-calculates utc_offset if not set.
-=item *
-utc_offset: Optional minutes from UTC (-1080 to +1080); overrides time_zone calc.
-=item *
-begin_epoch: Optional non-negative epoch; floors searches (default: time if undef).
-=item *
-end_epoch: Optional non-negative epoch; caps searches (default: unbounded if undef).
-=back
-Returns: Blessed Cron::Toolkit object.
-=head2 new_from_unix
-  my $unix_cron = Cron::Toolkit->new_from_unix(
-      expression => "30 14 * * MON"
-  );
-Unix-specific constructor for 5-field expressions. Auto-converts to Quartz (adds seconds=0, year=*, normalizes DOW: MON=1→2, SUN=0→1).
-Parameters: Same as L</new>, but expression must be 5 fields.
-=head2 new_from_quartz
-  my $quartz_cron = Cron::Toolkit->new_from_quartz(
-      expression => "0 30 14 * * MON 2025"
-  );
-Quartz-specific constructor for 6/7-field expressions. Validates and normalizes (adds year=* if 6 fields, DOW names to numbers).
-Parameters: Same as L</new>, but expression must be 6/7 fields.
-=head2 new_from_crontab
-  my @crons = Cron::Toolkit->new_from_crontab($crontab_string); # Multi-line string
-Parses a crontab string into array of Cron::Toolkit objects. Skips comments (#), empty lines, invalid exprs (warns). Extracts user/command if present (system crontabs). Supports @aliases and environment variables (cumulative KEY=VALUE lines applied to subsequent crons).
-Parameters:
-=over 4
-=item *
-input: Multi-line crontab content as string.
-=back
-Returns: Array of valid objects (empty if none). Objects include C<user>, C<command>, and C<env> (hashref) if extracted.
-=head2 describe
-  my $english = $cron->describe;
-Returns human-readable description with fused combos (e.g., "at 2:30 PM on the third Monday of every month"). Defaults to English.
-=head2 is_match
-  my $match = $cron->is_match($epoch_seconds); # True/false
-Returns true if the timestamp matches the cron in the object's timezone (local time, DST-aware).
-Parameters:
-=over 4
-=item *
-epoch_seconds: Non-negative Unix timestamp (UTC).
-=back
-=head2 next
-  my $next_epoch = $cron->next($epoch_seconds);
-  my $next_epoch = $cron->next; # Defaults to begin_epoch or time
-Returns the next matching epoch after the given/current time, clamped >= begin_epoch and <= end_epoch (undef if none).
-Parameters:
-=over 4
-=item *
-epoch_seconds: Optional non-negative timestamp (defaults: begin_epoch // time, clamped to bounds).
-=back
-=head2 previous
-  my $prev_epoch = $cron->previous($epoch_seconds);
-  my $prev_epoch = $cron->previous; # Defaults to time
-Returns the previous matching epoch before the given/current time, clamped <= end_epoch and >= begin_epoch (undef if none).
-Parameters:
-=over 4
-=item *
-epoch_seconds: Optional non-negative timestamp (defaults: time, clamped to bounds).
-=back
-=head2 next_n
-  my $next_epochs = $cron->next_n($epoch_seconds, $n, $max_iter);
-  my $next_epochs = $cron->next_n(undef, $n); # Defaults: time, n=1, max_iter=10000
-Returns arrayref of the next $n matching epochs after the given/current time, clamped to bounds. Guards against loops with max_iter (dies on exceed).
-Parameters:
-=over 4
-=item *
-epoch_seconds: Optional start timestamp (defaults: time).
-=item *
-n: Number of occurrences (defaults: 1).
-=item *
-max_iter: Max iterations (defaults: 10000; dies if exceeded).
-=back
-Returns: Arrayref of epochs (empty if none).
-=head2 previous_n
-  my $prev_epochs = $cron->previous_n($epoch_seconds, $n, $max_iter);
-  my $prev_epochs = $cron->previous_n(undef, $n); # Defaults: time, n=1, max_iter=10000
-Returns arrayref of the previous $n matching epochs before the given/current time, clamped to bounds. Ascending order (oldest first). Guards against loops with max_iter (dies on exceed).
-Parameters:
-=over 4
-=item *
-epoch_seconds: Optional start timestamp (defaults: time).
-=item *
-n: Number of occurrences (defaults: 1).
-=item *
-max_iter: Max iterations (defaults: 10000; dies if exceeded).
-=back
-Returns: Arrayref of epochs (empty if none).
-=head2 next_occurrences
-Alias for L</next_n>. Same parameters and return.
-=head2 begin_epoch (GETTER/SETTER)
-  say $cron->begin_epoch; # Current value
-  $cron->begin_epoch(1640995200); # Set to 2022-01-01 UTC
-Gets/sets the start epoch for bounded searches (non-negative integer or undef). Clamps next/previous from this time onward (defaults: time if undef).
-=head2 end_epoch (GETTER/SETTER)
-  say $cron->end_epoch; # undef or current value
-  $cron->end_epoch(1672531200); # Set to 2023-01-01 UTC
-  $cron->end_epoch(undef); # Unbounded
-Gets/sets the end epoch for bounded searches (non-negative integer or undef). Caps next/previous at this time (defaults: unbounded if undef).
-=head2 utc_offset (GETTER/SETTER)
-  say $cron->utc_offset; # -300
-  $cron->utc_offset(-480); # Switch to PST
-Gets/sets UTC offset in minutes (-1080 to +1080). Validates input; overrides time_zone calc.
-=head2 time_zone (GETTER/SETTER)
-  say $cron->time_zone; # "America/New_York"
-  $cron->time_zone("Europe/London"); # Recalcs utc_offset (DST-aware)
-Gets/sets time zone string (e.g., "America/New_York"). Validates via DateTime::TimeZone; recalculates utc_offset on set (current DST).
-=head2 user (READER)
-  say $cron->user; # 'root' or undef
-Returns the user from crontab line (system crontabs only; undef otherwise).
-=head2 command (READER)
-  say $cron->command; # '/bin/echo "hi"' or undef
-Returns the command from crontab line (undef if none).
-=head2 env (READER)
-  say $cron->env->{SHELL}; # '/bin/bash' or undef
-Returns hashref of environment variables from crontab (cumulative from preceding KEY=VALUE lines; empty if none).
-=head2 as_string
-  say $cron->as_string; # "0 30 14 * * ? *"
-Returns the normalized Quartz expression as a string.
-=head2 to_json
-  say $cron->to_json; # '{"expression":"0 30 14 * * ? *", ...}'
-Returns JSON-encoded hash of core attributes (expression, description, utc_offset, time_zone, begin_epoch, end_epoch). Requires JSON::MaybeXS.
-=head2 dump_tree
-  $cron->dump_tree; # Prints indented AST to STDOUT
-Pretty-prints the AST root (or pass a node). Recursive indent for types/values/children.
-=head1 QUARTZ SYNTAX SUPPORTED
-=over 4
-=item *
-Basic: "0 30 14 * * ?"
-=item *
-Steps: "*/15", "5/3", "10-20/5"
-=item *
-Ranges: "1-5", "10-14"
-=item *
-Lists: "1,15", "MON,WED,FRI"
-=item *
-Last Day: "L", "L-2", "LW"
-=item *
-Nth DOW: "1#3" = "3rd Sunday"
-=item *
-Weekday: "15W" = "nearest weekday to 15th"
-=item *
-Seconds Field: "0 0 30 14 * * ? *" (7-field)
-=item *
-Names: JAN-MAR, MON-FRI (normalized; mixed-case OK)
-=item *
-Aliases: @hourly, @daily, @monthly, etc. (Vixie-style, mapped to Quartz)
-=back
-Unix 5-field auto-converted to Quartz (adds seconds=0, year=*, DOW normalize: MON=1→2, SUN=0→1).
-=head1 EXAMPLES
-=head3 New York Stock Market Open
-  my $ny_open = Cron::Toolkit->new(
-      expression => "0 30 9 * * 2-6 ?",
-      time_zone => "America/New_York"
-  );
-  say $ny_open->describe; # "at 9:30 AM every Monday through Friday"
-=head3 Bounded Monthly Backup
-  my $backup = Cron::Toolkit->new(
-      expression => "0 0 2 LW * ? *",
-      time_zone => "Europe/London"
-  );
-  $backup->begin_epoch(Time::Moment->new(year => 2025, month => 1, day => 1)->epoch);
-  $backup->end_epoch(Time::Moment->new(year => 2025, month => 4, day => 1)->epoch);
-  if ($backup->is_match(time)) {
-      system("backup.sh");
-  }
-=head3 Third Monday in 2025
-  my $third_mon = Cron::Toolkit->new(expression => "0 0 0 * * 2#3 ? 2025");
-  say $third_mon->describe; # "at midnight on the third Monday in 2025"
-=head3 Seconds Field (Quartz ATS)
-  my $sec_cron = Cron::Toolkit->new_from_quartz(
-      expression => "0 0 30 14 * * ? *"
-  );
-  say $sec_cron->describe; # "at 2:30:00 PM every month"
-=head3 Crontab Parse + Utils
-  my @crons = Cron::Toolkit->new_from_crontab('my_tab');
-  my $cron = $crons[0];
-  say $cron->next_occurrences(3); # Next 3 epochs
-  say decode_json($cron->to_json)->{description}; # JSON attrs
-  say $cron->user // 'no user'; # Metadata
-  say $cron->env->{SHELL} // '/bin/sh'; # Env
-=head1 DEBUGGING
-  $ENV{Cron_DEBUG} = 1;
-  $cron->utc_offset(-300); # "DEBUG: utc_offset: set to -300"
-  $cron->dump_tree; # AST structure
-=head1 AUTHOR
-Nathaniel J Graham <ngraham@cpan.org>
-=head1 COPYRIGHT & LICENSE
-Copyright 2025 Nathaniel J Graham.
-This program is free software; you can redistribute it and/or modify it
-under the terms of the Artistic License (2.0).
 =cut
 
 sub new_from_unix {
@@ -384,12 +116,12 @@ sub _new {
 
    # Parse fields with TreeParser
    my @types  = qw(second minute hour dom month dow year);
-   my $parser = Cron::Toolkit::Tree::TreeParser->new(
+   my $parser = Cron::Toolkit::TreeParser->new(
       is_quartz => $args{is_quartz},
       fields    => \@fields,
       types     => \@types
    );
-   $self->{root} = Cron::Toolkit::Tree::CompositePattern->new( type => 'root' );
+   $self->{root} = Cron::Toolkit::CompositePattern->new( type => 'root' );
    for my $i ( 0 .. 6 ) {
       my $node = $parser->parse_field( $fields[$i], $types[$i] );
       $node->{field_type} = $types[$i];
@@ -464,15 +196,15 @@ sub env {
 
 sub describe {
    my ($self) = @_;
-   my $composer = Cron::Toolkit::Tree::Composer->new;
+   my $composer = Cron::Toolkit::Composer->new;
    return $composer->describe( $self->{root} );
 }
 
 sub is_match {
    my ( $self, $epoch_seconds ) = @_;
    return unless $self->{root};
-   require Cron::Toolkit::Tree::Matcher;
-   my $matcher = Cron::Toolkit::Tree::Matcher->new(
+   require Cron::Toolkit::Matcher;
+   my $matcher = Cron::Toolkit::Matcher->new(
       tree       => $self->{root},
       utc_offset => $self->utc_offset,
       owner      => $self
@@ -488,8 +220,8 @@ sub next {
 
    # Clamp to begin_epoch floor if set
    $epoch_seconds = max( $epoch_seconds, $self->begin_epoch // 0 ) if defined $self->begin_epoch;
-   require Cron::Toolkit::Tree::Matcher;
-   my $matcher = Cron::Toolkit::Tree::Matcher->new(
+   require Cron::Toolkit::Matcher;
+   my $matcher = Cron::Toolkit::Matcher->new(
       tree       => $self->{root},
       utc_offset => $self->utc_offset,
       owner      => $self
@@ -510,8 +242,8 @@ sub previous {
 
    # Clamp to end_epoch cap if set
    $epoch_seconds = min( $epoch_seconds, $self->end_epoch // $epoch_seconds ) if defined $self->end_epoch;
-   require Cron::Toolkit::Tree::Matcher;
-   my $matcher = Cron::Toolkit::Tree::Matcher->new(
+   require Cron::Toolkit::Matcher;
+   my $matcher = Cron::Toolkit::Matcher->new(
       tree       => $self->{root},
       utc_offset => $self->utc_offset,
       owner      => $self

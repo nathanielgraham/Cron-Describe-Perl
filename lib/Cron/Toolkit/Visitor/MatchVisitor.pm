@@ -1,9 +1,9 @@
-package Cron::Toolkit::Tree::MatchVisitor;
+package Cron::Toolkit::Visitor::MatchVisitor;
 use strict;
 use warnings;
-use parent 'Cron::Toolkit::Tree::Visitor';
-use List::Util                  qw(any);
-use Cron::Toolkit::Tree::Utils qw(quartz_dow);
+use parent 'Cron::Toolkit::Visitor';
+use List::Util qw(any);
+use Cron::Toolkit::Utils qw(quartz_dow);
 
 sub new {
    my ( $class, %args ) = @_;

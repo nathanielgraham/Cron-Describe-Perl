@@ -1,9 +1,9 @@
-package Cron::Toolkit::Tree::ListPattern;
+package Cron::Toolkit::Pattern::ListPattern;
 use strict;
 use warnings;
-use parent 'Cron::Toolkit::Tree::CompositePattern';
+use parent 'Cron::Toolkit::Pattern::CompositePattern';
 use Carp qw(croak);
-use Cron::Toolkit::Tree::Utils qw(join_parts num_to_ordinal);
+use Cron::Toolkit::Utils qw(:all);
 
 sub to_english {
     my ($self, $field_type) = @_;

@@ -1,7 +1,7 @@
-package Cron::Toolkit::Tree::StepPattern;
+package Cron::Toolkit::Pattern::StepPattern;
 use strict;
 use warnings;
-use parent 'Cron::Toolkit::Tree::CompositePattern';
+use parent 'Cron::Toolkit::Pattern::CompositePattern';
 use Carp qw(croak);
 
 sub to_english {

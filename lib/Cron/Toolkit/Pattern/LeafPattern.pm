@@ -1,7 +1,7 @@
-package Cron::Toolkit::Tree::LeafPattern;
+package Cron::Toolkit::Pattern::LeafPattern;
 use strict;
 use warnings;
-use parent 'Cron::Toolkit::Tree::Pattern';
+use parent 'Cron::Toolkit::Pattern';
 use Carp qw(croak);
 
 sub new {

@@ -1,6 +1,7 @@
-package Cron::Toolkit::Tree::EnglishVisitor;
-use parent 'Cron::Toolkit::Tree::Visitor';
-use Cron::Toolkit::Tree::Utils qw(:all);
+package Cron::Toolkit::Visitor::EnglishVisitor;
+use parent 'Cron::Toolkit::Visitor';
+use Cron::Toolkit::Utils qw(:all);
+
 sub new {
     my ($class, %args) = @_;
     $args{hour} //= 0;

@@ -1,24 +1,19 @@
-package Cron::Toolkit::Tree::Pattern;
+package Cron::Toolkit::Pattern;
 use strict;
 use warnings;
-use Carp qw(croak);
-use Cron::Toolkit::Tree::EnglishVisitor;
-use Cron::Toolkit::Tree::MatchVisitor;
-use Data::Dumper;
+use Cron::Toolkit::EnglishVisitor;
+use Cron::Toolkit::MatchVisitor;
 
 sub new {
     my ($class, %args) = @_;
     my $self = bless {
-        type => $args{type} // croak "type required",
+        type => $args{type} // die "type required",
         children => [],
     }, $class;
     return $self;
 }
 sub add_child {
     my ($self, $child) = @_;
-    print STDERR "SELF $self->{type} : " . Dumper($self)  if  $self->{type} ne 'root';
-    #print STDERR "CHILD: " . Dumper($child);
-    #$child->{field_type} = $self->{field_type} if $self->{field_type};
     push @{$self->{children}}, $child;
 }
 sub get_children {
@@ -38,12 +33,12 @@ sub traverse {
 }
 sub is_match {
     my ($self, $value, $tm) = @_;
-    my $visitor = Cron::Toolkit::Tree::MatchVisitor->new(value => $value, tm => $tm);
+    my $visitor = Cron::Toolkit::Visitor::MatchVisitor->new(value => $value, tm => $tm);
     return $self->traverse($visitor);
 }
 sub to_english {
     my ($self, $field_type) = @_;
-    my $visitor = Cron::Toolkit::Tree::EnglishVisitor->new(field_type => $field_type);
+    my $visitor = Cron::Toolkit::Visitor::EnglishVisitor->new(field_type => $field_type);
     return $self->traverse($visitor);
 }
 sub dump_tree {

@@ -1,11 +1,11 @@
-package Cron::Toolkit::Tree::Utils;
+package Cron::Toolkit::Utils;
 use strict;
 use warnings;
 use Exporter qw(import);
 our @EXPORT_OK = qw(
   format_time num_to_ordinal field_unit join_parts fill_template is_midnight time_suffix quartz_dow
   quartz_dow_normalize unix_dow_normalize %aliases %field_names
-  ordinal_list step_ordinal complex_join normalize validate generate_list_desc %limits %dow_map_unix
+  ordinal_list step_ordinal complex_join normalize generate_list_desc %limits %dow_map_unix
   %month_map %dow_map_quartz %month_names %day_names %nth_names %unit_labels %ordinal_suffix %joiners %templates
 );
 our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
@@ -223,40 +223,4 @@ sub ordinal_list {
 sub step_ordinal { my $n = shift; return $n . ( $n == 1 ? 'st' : $n == 2 ? 'nd' : $n == 3 ? 'rd' : 'th' ); }
 sub complex_join { join( ', ', @_ ) . ' at {time}'; }
 
-sub normalize {
-   my ($expr) = @_;
-   $expr = uc $expr;
-   $expr =~ s/\s+/ /g;
-   $expr =~ s/^\s+|\s+$//g;
-   while ( my ( $name, $num ) = each %month_map )      { $expr =~ s/\b\Q$name\E\b/$num/gi; }
-   while ( my ( $name, $num ) = each %dow_map_quartz ) { $expr =~ s/\b\Q$name\E\b/$num/gi; }
-   my @fields = split / /, $expr;
-   die "QUARTZ: Expected 6-7 fields, got " . scalar(@fields) unless @fields == 6 || @fields == 7;
-   push @fields, '*' if @fields == 6;
-   return join( ' ', @fields );
-}
-
-sub validate {
-   my ( $expr, $field_type ) = @_;
-   $field_type ||= 'all';
-   die "Syntax: Invalid chars in $field_type: $expr" if $expr =~ /[^0-9*,\/\-L#W?]/i;
-   return 1                                          if $expr eq '*' || $expr eq '?';
-   die "Syntax: Malformed $field_type: $expr"        if $expr =~ /^L(W?)-[^0-9]/;
-   if ( $expr =~ /^(\d+)(?:[\/\-#W])?(\d*)$/ ) {
-      my ( $val1, $val2 ) = ( $1, $2 || 0 );
-      my ( $min,  $max )  = @{ $limits{$field_type} };
-      die "$field_type $val1 out of range [$min-$max]" if $val1 < $min || $val1 > $max;
-      die "$field_type nth $val2 invalid (max 5)"      if $field_type eq 'dow' && $expr =~ /#\d+/ && $val2 > 5;
-   }
-
-   # Check for invalid ranges (e.g., 5-1 where start > end)
-   if ( $expr =~ /^(\d+)-(\d+)$/ ) {
-      my ( $start, $end ) = ( $1, $2 );
-      my ( $min,   $max ) = @{ $limits{$field_type} };
-      die "invalid $field_type range: $start-$end (start must be <= end)" if $start > $end;
-      die "$field_type $start out of range [$min-$max]"                   if $start < $min || $start > $max;
-      die "$field_type $end out of range [$min-$max]"                     if $end < $min   || $end > $max;
-   }
-   return 1;
-}
 1;

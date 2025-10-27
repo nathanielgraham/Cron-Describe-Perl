@@ -1,4 +1,4 @@
-package Cron::Toolkit::Tree::Visitor;
+package Cron::Toolkit::Visitor;
 use strict;
 use warnings;
 

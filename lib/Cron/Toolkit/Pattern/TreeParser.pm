@@ -1,9 +1,9 @@
-package Cron::Toolkit::Tree::TreeParser;
+package Cron::Toolkit::TreeParser;
 use strict;
 use warnings;
-use Cron::Toolkit::Tree::CompositePattern;
-use Cron::Toolkit::Tree::LeafPattern;
-use Cron::Toolkit::Tree::Utils qw(:all);
+use Cron::Toolkit::Pattern::CompositePattern;
+use Cron::Toolkit::Pattern::LeafPattern;
+use Cron::Toolkit::Utils qw(:all);
 use List::Util qw(min max);
 
 sub new {
@@ -31,24 +31,6 @@ sub validate {
         : qr/^[0-9,\*\/\-?L]+$/; # Allow ? for Unix
     print STDERR "DEBUG: Validating $type: '$field' with regex $allowed_chars\n" if $ENV{Cron_DEBUG};
     die "Syntax: Invalid chars in $type: $field" unless $field =~ $allowed_chars;
-
-
-=pod
-    if ( $field =~ /^[A-Za-z]{3}$/i && $field ne 'L' ) {
-        my %months = (jan => 1, feb => 2, mar => 3, apr => 4, may => 5, jun => 6,
-                      jul => 7, aug => 8, sep => 9, oct => 10, nov => 11, dec => 12);
-        my %dow = $is_quartz
-            ? (sun => 1, mon => 2, tue => 3, wed => 4, thu => 5, fri => 6, sat => 7)
-            : (sun => 0, mon => 1, tue => 2, wed => 3, thu => 4, fri => 5, sat => 6);
-        if ( $type eq 'month' ) {
-            die "Syntax: Invalid month name in $field" unless exists $months{lc $field};
-        } elsif ( $type eq 'dow' ) {
-            die "Syntax: Invalid dow name in $field" unless exists $dow{lc $field};
-        } else {
-            die "Syntax: Names not allowed in $type: $field";
-        }
-    }
-=cut
 
     if ( $field =~ /^\d+$/ ) {
         die "$type $field out of range [$min-$max]" unless $field >= $min && $field <= $max;
@@ -149,52 +131,52 @@ sub parse_field {
     $self->{shifted}{$field_type} = 0; # Reset shift state per field
     my $node;
     if ( $field eq '*' ) {
-        $node = Cron::Toolkit::Tree::LeafPattern->new( type => 'wildcard', value => '*' );
+        $node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'wildcard', value => '*' );
     } elsif ( $field eq '?' ) {
-        $node = Cron::Toolkit::Tree::LeafPattern->new( type => 'unspecified', value => '?' );
+        $node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'unspecified', value => '?' );
     } elsif ( $field =~ /^L$/ ) {
-        $node = Cron::Toolkit::Tree::LeafPattern->new( type => 'last', value => 'L' );
+        $node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'last', value => 'L' );
     } elsif ( $field =~ /^L-(\d+)$/ ) {
-        $node = Cron::Toolkit::Tree::LeafPattern->new( type => 'last', value => "L-$1" );
+        $node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'last', value => "L-$1" );
     } elsif ( $field =~ /^LW$/ ) {
-        $node = Cron::Toolkit::Tree::LeafPattern->new( type => 'lastW', value => 'LW' );
+        $node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'lastW', value => 'LW' );
     } elsif ( $field =~ /^\d+$/ ) {
-        $node = Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $field );
+        $node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $field );
     } elsif ( $field =~ /^(\d+)#(\d+)$/ ) {
-        $node = Cron::Toolkit::Tree::LeafPattern->new( type => 'nth', value => $field );
+        $node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'nth', value => $field );
     } elsif ( $field =~ /^(\d+)W$/ ) {
-        $node = Cron::Toolkit::Tree::LeafPattern->new( type => 'nearest_weekday', value => $field );
+        $node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'nearest_weekday', value => $field );
     } elsif ( $field =~ /^(\d*|\*)\/(\d+)$/ ) {
         my ( $base_str, $step ) = ( $1, $2 );
         print STDERR "DEBUG: Parsing step: base=$base_str, step=$step\n" if $ENV{Cron_DEBUG};
-        my $step_node = Cron::Toolkit::Tree::CompositePattern->new( type => 'step' );
+        my $step_node = Cron::Toolkit::Pattern::CompositePattern->new( type => 'step' );
         my $base_node =
             $base_str eq '*'
-            ? Cron::Toolkit::Tree::LeafPattern->new( type => 'wildcard', value => '*' )
-            : Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $base_str );
+            ? Cron::Toolkit::Pattern::LeafPattern->new( type => 'wildcard', value => '*' )
+            : Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $base_str );
         $step_node->add_child($base_node);
-        my $step_val_node = Cron::Toolkit::Tree::LeafPattern->new( type => 'step_value', value => $step );
+        my $step_val_node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'step_value', value => $step );
         $step_node->add_child($step_val_node);
         $node = $step_node;
     } elsif ( $field =~ /^(\*|\d+)-(\d+)\/(\d+)$/ ) {
         my ( $start, $end, $step ) = ( $1, $2, $3 );
         print STDERR "DEBUG: Parsing step range: start=$start, end=$end, step=$step\n" if $ENV{Cron_DEBUG};
-        my $range = Cron::Toolkit::Tree::CompositePattern->new( type => 'range' );
-        $range->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $start ) );
-        $range->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $end ) );
-        my $step_node = Cron::Toolkit::Tree::CompositePattern->new( type => 'step' );
+        my $range = Cron::Toolkit::Pattern::CompositePattern->new( type => 'range' );
+        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $start ) );
+        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $end ) );
+        my $step_node = Cron::Toolkit::Pattern::CompositePattern->new( type => 'step' );
         $step_node->add_child($range);
-        $step_node->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'step_value', value => $step ) );
+        $step_node->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'step_value', value => $step ) );
         $node = $step_node;
     } elsif ( $field =~ /^(\d+)-(\d+)$/ ) {
         my ( $start, $end ) = ( $1, $2 );
         print STDERR "DEBUG: Parsing range: start=$start, end=$end\n" if $ENV{Cron_DEBUG};
-        my $range = Cron::Toolkit::Tree::CompositePattern->new( type => 'range' );
-        $range->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $start ) );
-        $range->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $end ) );
+        my $range = Cron::Toolkit::Pattern::CompositePattern->new( type => 'range' );
+        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $start ) );
+        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $end ) );
         $node = $range;
     } elsif ( $field =~ /,/ ) {
-        my $list = Cron::Toolkit::Tree::CompositePattern->new( type => 'list' );
+        my $list = Cron::Toolkit::Pattern::CompositePattern->new( type => 'list' );
         print STDERR "DEBUG: Parsing list: elements=[" . join(',', split /,/, $field) . "]\n" if $ENV{Cron_DEBUG};
         for my $sub ( split /,/, $field ) {
             $list->add_child( $self->parse_field( $sub, $field_type ) );
@@ -210,9 +192,12 @@ sub parse_field {
         $self->{shifted}{$field_type} = 1;
         print STDERR "DEBUG: After shift: " . $self->dump_tree($node) . "\n" if $ENV{Cron_DEBUG};
     }
-    my $optimized_node = $self->_optimize_node($node, $field_type);
-    print STDERR "DEBUG: After optimization: " . $self->dump_tree($optimized_node) . "\n" if $ENV{Cron_DEBUG};
-    return $optimized_node;
+    #my $optimized_node = $self->_optimize_node($node, $field_type);
+    #print STDERR "DEBUG: After optimization: " . $self->dump_tree($optimized_node) . "\n" if $ENV{Cron_DEBUG};
+    #return $optimized_node;
+    use Data::Dumper;
+    print Dumper($node);
+    return $node;
 }
 
 sub _shift_dow_node {
@@ -281,14 +266,14 @@ sub _optimize_node {
         print STDERR "DEBUG: Step result=[" . join(',', @stepped) . "] ($field_type)\n" if $ENV{Cron_DEBUG};
         if ( @stepped == 0 ) {
             print STDERR "DEBUG: Degenerate step → wildcard ($field_type)\n" if $ENV{Cron_DEBUG};
-            return Cron::Toolkit::Tree::LeafPattern->new( type => 'wildcard', value => '*' );
+            return Cron::Toolkit::Pattern::LeafPattern->new( type => 'wildcard', value => '*' );
         } elsif ( @stepped == 1 ) {
             print STDERR "DEBUG: Degenerate step → single $stepped[0] ($field_type)\n" if $ENV{Cron_DEBUG};
-            return Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $stepped[0] );
+            return Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $stepped[0] );
         } else {
             print STDERR "DEBUG: Step morphed to list (" . join(',', @stepped) . ") ($field_type)\n" if $ENV{Cron_DEBUG};
-            my $list = Cron::Toolkit::Tree::CompositePattern->new( type => 'list' );
-            $list->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $_ ) ) for sort { $a <=> $b } @stepped;
+            my $list = Cron::Toolkit::Pattern::CompositePattern->new( type => 'list' );
+            $list->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $_ ) ) for sort { $a <=> $b } @stepped;
             return $self->_optimize_node($list, $field_type);
         }
     } elsif ( $type eq 'range' && $field_type eq 'dow' ) {
@@ -298,12 +283,12 @@ sub _optimize_node {
         print STDERR "DEBUG: Range check start=$start, end=$end ($field_type)\n" if $ENV{Cron_DEBUG};
         if ( $start > $end ) {
             print STDERR "DEBUG: Wrapped dow range $start-$end → 1,$start-7 ($field_type)\n" if $ENV{Cron_DEBUG};
-            my $list = Cron::Toolkit::Tree::CompositePattern->new( type => 'list' );
-            $list->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => 1 ) );
+            my $list = Cron::Toolkit::Pattern::CompositePattern->new( type => 'list' );
+            $list->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => 1 ) );
             if ( $start <= 7 ) {
-                my $high_range = Cron::Toolkit::Tree::CompositePattern->new( type => 'range' );
-                $high_range->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $start ) );
-                $high_range->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => 7 ) );
+                my $high_range = Cron::Toolkit::Pattern::CompositePattern->new( type => 'range' );
+                $high_range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $start ) );
+                $high_range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => 7 ) );
                 $list->add_child($high_range);
             }
             print STDERR "DEBUG: Post-wrap list children=[" . join(',', map { $_->{type} . ($_->{type} eq 'single' ? ":$_->{value}" : '') } @{$list->{children}}) . "] ($field_type)\n" if $ENV{Cron_DEBUG};
@@ -320,11 +305,11 @@ sub _optimize_node {
         for my $v (@values, undef) {
             if ( defined $start && ( !defined $v || $v != $prev + 1 ) ) {
                 if ( $prev == $start ) {
-                    push @merged, Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $start );
+                    push @merged, Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $start );
                 } else {
-                    my $range = Cron::Toolkit::Tree::CompositePattern->new( type => 'range' );
-                    $range->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $start ) );
-                    $range->add_child( Cron::Toolkit::Tree::LeafPattern->new( type => 'single', value => $prev ) );
+                    my $range = Cron::Toolkit::Pattern::CompositePattern->new( type => 'range' );
+                    $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $start ) );
+                    $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $prev ) );
                     push @merged, $range;
                 }
                 $start = undef;
@@ -339,12 +324,12 @@ sub _optimize_node {
             return $merged[0];
         } elsif ( @merged ) {
             print STDERR "DEBUG: List optimized with merges=[" . join(',', map { $_->{type} . ($_->{type} eq 'single' ? ":$_->{value}" : '') } @merged) . "] ($field_type)\n" if $ENV{Cron_DEBUG};
-            my $opt_list = Cron::Toolkit::Tree::CompositePattern->new( type => 'list' );
+            my $opt_list = Cron::Toolkit::Pattern::CompositePattern->new( type => 'list' );
             $opt_list->add_child($_) for @merged;
             return $opt_list;
         }
         print STDERR "DEBUG: Empty list optimization, returning wildcard ($field_type)\n" if $ENV{Cron_DEBUG};
-        return Cron::Toolkit::Tree::LeafPattern->new( type => 'wildcard', value => '*' );
+        return Cron::Toolkit::Pattern::LeafPattern->new( type => 'wildcard', value => '*' );
     }
     return $node;
 }
