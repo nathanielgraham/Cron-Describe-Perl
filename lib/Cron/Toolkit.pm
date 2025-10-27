@@ -7,14 +7,14 @@ use strict;
 use warnings;
 use Time::Moment;
 use Cron::Toolkit::Utils qw(:all);
-use Cron::Toolkit::CompositePattern;
-use Cron::Toolkit::TreeParser;
+use Cron::Toolkit::Pattern::CompositePattern;
+use Cron::Toolkit::Pattern::LeafPattern;
 use Cron::Toolkit::Composer;
+use Cron::Toolkit::Matcher;
 use List::Util qw(max min);
 use Exporter   qw(import);
 use feature 'say';
-#our @EXPORT_OK   = qw(new new_from_unix new_from_quartz new_from_crontab);
-#our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
+use Data::Dumper;
 
 =head1 NAME
 Cron::Toolkit - Cron parser, describer, and scheduler with full Quartz support
@@ -38,12 +38,6 @@ sub new {
    my ( $class, %args ) = @_;
    die "expression required" unless defined $args{expression};
 
-   # alias support
-   if ( $args{expression} =~ /^(@.*)/ ) {
-      my $alias = $1;
-      $args{expression} = $aliases{$alias} // $args{expression};
-      print STDERR "DEBUG: Alias '$alias' mapped to '$args{expression}'\n" if $ENV{Cron_DEBUG};
-   }
    my @fields = split /\s+/, $args{expression};
    if ( @fields == 5 ) {
       $args{is_quartz} = 0;
@@ -65,8 +59,13 @@ sub _new {
    $expr =~ s/\s+/ /g;
    $expr =~ s/^\s+|\s+$//g;
 
-   # Convert month names to numerical equivalent
-   while ( my ( $name, $num ) = each %month_map ) { $expr =~ s/\b\Q$name\E\b/$num/gi; }
+   # alias support
+   if ( $expr =~ /^(@.*)/ ) {
+      my $alias = $1;
+      $expr = $aliases{$alias} // $expr;
+      print STDERR "DEBUG: Alias '$alias' mapped to '$expr'\n" if $ENV{Cron_DEBUG};
+   }
+
    my @fields = split /\s+/, $expr;
 
    # normalize to 7-field quartz expression
@@ -78,17 +77,23 @@ sub _new {
       while ( my ( $name, $num ) = each %dow_map_quartz ) {
          $fields[5] =~ s/\b\Q$name\E\b/$num/gi;
       }
+
+      #normalize to unix by subtracting one from dow
+      $fields[5] =~ s/(?<!\/)(\b[1-7]\b)/$1-1/ge;
    }
    else {
       die "expected 5 fields, got " . scalar(@fields) unless @fields == 5;
       unshift( @fields, 0 );                   # seconds
       push( @fields, '*' );                    # year
 
-      # convert dow names to unix numberical equivalent
+      # convert dow names to unix numerical equivalent
       while ( my ( $name, $num ) = each %dow_map_unix ) {
          $fields[5] =~ s/\b\Q$name\E\b/$num/gi;
       }
    }
+
+   # Convert month names to numerical equivalent
+   while ( my ( $name, $num ) = each %month_map ) { $fields[4] =~ s/\b\Q$name\E\b/$num/gi; }
 
    # enforce dom/dow mutual exclusivity
    if ( $fields[3] ne '?' && $fields[5] eq '*' ) {
@@ -97,39 +102,154 @@ sub _new {
    elsif ( $fields[3] eq '*' && $fields[5] ne '?' ) {
       $fields[3] = '?';
    }
+   elsif ( $fields[3] ne '?' && $fields[5] ne '?' ) {
+      die "dow and dom cannot both be specified\n";
+   }
+   elsif ( $fields[3] eq '?' && $fields[5] eq '?' ) {
+      die "dow and dom cannot both be unspecified\n";
+   }
 
    die "Invalid characters" unless join( ' ', @fields ) =~ /^[#LW\d\?\*\s\-\/,]+$/;
 
-   # Initialize object
    my $self = bless {
-      expression  => join( ' ', @fields ),
-      is_quartz   => $args{is_quartz},
-      utc_offset  => $args{utc_offset} // 0,
-      time_zone   => $args{time_zone}  // 'UTC',
-      begin_epoch => $args{begin_epoch},
-      end_epoch   => $args{end_epoch},
-      user        => $args{user}    // undef,
-      command     => $args{command} // undef,
-      env         => $args{env}     // {},
+      fields => \@fields,
    }, $class;
-   $self->time_zone( $args{time_zone} ) if defined $args{time_zone};
 
-   # Parse fields with TreeParser
-   my @types  = qw(second minute hour dom month dow year);
-   my $parser = Cron::Toolkit::TreeParser->new(
-      is_quartz => $args{is_quartz},
-      fields    => \@fields,
-      types     => \@types
+   $self->utc_offset( $args{utc_offset} ) if defined $args{utc_offset};
+   $self->time_zone( $args{time_zone} ) if defined $args{time_zone};
+   $self->begin( $args{begin} ) if defined $args{begin};
+   $self->end( $args{end} ) if defined $args{end};
+   $self->user( $args{user} ) if defined $args{user};
+   $self->command( $args{command} ) if defined $args{command};
+   $self->env( $args{env} ) if defined $args{env};
+
+   $self->{root} = Cron::Toolkit::Pattern::CompositePattern->new(
+      type => 'root'
    );
-   $self->{root} = Cron::Toolkit::CompositePattern->new( type => 'root' );
-   for my $i ( 0 .. 6 ) {
-      my $node = $parser->parse_field( $fields[$i], $types[$i] );
-      $node->{field_type} = $types[$i];
-      $self->{root}->add_child($node);
-   }
-   $self->{expression} = $parser->rebuild_from_node( $self->{root} );
+
+   $self->{matcher} = Cron::Toolkit::Matcher->new(
+      tree       => $self->{root},
+      utc_offset => $self->utc_offset,
+      owner      => $self,
+   );
+
+   $self->{composer} = Cron::Toolkit::Composer->new;
+
+   $self->_build_tree;
    return $self;
 }
+
+sub _build_tree {
+   my $self = shift;
+   my @types  = qw(second minute hour dom month dow year);
+   for my $i (0 .. $#types) {
+      my $node = $self->_build_node($types[$i], $self->{fields}[$i]);
+
+      # TODO: node validation goes here, e.g. check for invalid characters, invalid ranges, and min, max thresholds
+      my ($min, $max) = @{ $limits{ $types[$i] } };
+
+      # TODO: optimization goes here, e.g. step collapse and list to range
+      # NOTE: only convert a list to a range if all elements are  consecutive 
+
+      $self->{root}->add_child($node);
+   }
+}
+
+sub _build_node {
+   my ($self, $field, $value) = @_;
+    
+    my $node;
+
+    # leaf patterns
+    my $type = $value eq '*' ? 'wildcard' 
+             : $value eq '?' ? 'unspecified'
+             : $value eq 'L' ? 'last'
+             : $value eq 'LW' ? 'lastW'
+             : $value =~ /^L-(\d+)$/ ? 'last'
+             : $value =~ /^\d+$/ ? 'single'
+             : $value =~ /^(\d+)#(\d+)$/ ? 'nth'
+             : $value =~ /^(\d+)W$/ ? 'nearest_weekday'
+             : $value =~ /^(\d+)#(\d+)$/ ? 'nth'
+             : undef;
+
+    if ($type) {
+       $node = Cron::Toolkit::Pattern::LeafPattern->new( 
+          type => $type, 
+          value => $value, 
+          field_type => $field
+      );
+    } 
+
+    # composite patterns
+    elsif ( $value =~ /^(\d*|\*)\/(\d+)$/ ) {
+        my ( $base_str, $step ) = ( $1, $2 );
+        print STDERR "DEBUG: Parsing step: base=$base_str, step=$step\n" if $ENV{Cron_DEBUG};
+        my $step_node = Cron::Toolkit::Pattern::CompositePattern->new(
+           type => 'step',
+           value => $value, 
+           field_type => $field,
+        );
+        my $base_node =
+            $base_str eq '*'
+            ? Cron::Toolkit::Pattern::LeafPattern->new( type => 'wildcard', value => '*', field_type => $field )
+            : Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $base_str, field_type => $field );
+        $step_node->add_child($base_node);
+        my $step_val_node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'step_value', value => $step, field_type => $field );
+        $step_node->add_child($step_val_node);
+        $node = $step_node;
+    } elsif ( $value =~ /^(\*|\d+)-(\d+)\/(\d+)$/ ) {
+        my ( $start, $end, $step ) = ( $1, $2, $3 );
+        print STDERR "DEBUG: Parsing step range: start=$start, end=$end, step=$step\n" if $ENV{Cron_DEBUG};
+        my $range = Cron::Toolkit::Pattern::CompositePattern->new(
+           type => 'range',
+           field_type => $field,
+        );
+
+        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new(
+           type => 'single',
+           value => $start,
+           field_type => $field,
+        ));
+
+        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new(
+           type => 'single', 
+           value => $end,
+           field_type => $field,
+        ));
+
+        my $step_node = Cron::Toolkit::Pattern::CompositePattern->new( 
+           type => 'step',
+           field_type => $field,
+        );
+
+        $step_node->add_child($range);
+        $step_node->add_child( Cron::Toolkit::Pattern::LeafPattern->new( 
+           type => 'step_value', 
+           value => $step ,
+           field_type => $field,
+        ));
+        $node = $step_node;
+    } elsif ( $value =~ /^(\d+)-(\d+)$/ ) {
+        my ( $start, $end ) = ( $1, $2 );
+        print STDERR "DEBUG: Parsing range: start=$start, end=$end\n" if $ENV{Cron_DEBUG};
+        my $range = Cron::Toolkit::Pattern::CompositePattern->new( type => 'range', field_type => $field, );
+        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $start, field_type => $field, ) );
+        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $end, field_type => $field, ) );
+        $node = $range;
+    } elsif ( $value =~ /,/ ) {
+        my $list = Cron::Toolkit::Pattern::CompositePattern->new( type => 'list', field_type => $field, );
+        print STDERR "DEBUG: Parsing list: elements=[" . join(',', split /,/, $field) . "]\n" if $ENV{Cron_DEBUG};
+        for my $sub ( split /,/, $value ) {
+            $list->add_child( $self->_build_node( $field, $sub ));
+        }
+        $node = $list;
+    } else {
+        die "Unsupported field: $value";
+    }
+    $node->{field_type} = $field;
+    return $node;
+}
+
 
 sub utc_offset {
    my ( $self, $new_offset ) = @_;
@@ -196,20 +316,12 @@ sub env {
 
 sub describe {
    my ($self) = @_;
-   my $composer = Cron::Toolkit::Composer->new;
-   return $composer->describe( $self->{root} );
+   return $self->{composer}->describe( $self->{root} );
 }
 
 sub is_match {
    my ( $self, $epoch_seconds ) = @_;
-   return unless $self->{root};
-   require Cron::Toolkit::Matcher;
-   my $matcher = Cron::Toolkit::Matcher->new(
-      tree       => $self->{root},
-      utc_offset => $self->utc_offset,
-      owner      => $self
-   );
-   return $matcher->match($epoch_seconds);
+   return $self->{matcher}->match($epoch_seconds);
 }
 
 # Symmetric next() with auto-clamp defaults
@@ -220,14 +332,9 @@ sub next {
 
    # Clamp to begin_epoch floor if set
    $epoch_seconds = max( $epoch_seconds, $self->begin_epoch // 0 ) if defined $self->begin_epoch;
-   require Cron::Toolkit::Matcher;
-   my $matcher = Cron::Toolkit::Matcher->new(
-      tree       => $self->{root},
-      utc_offset => $self->utc_offset,
-      owner      => $self
-   );
+
    my ( $window, $step ) = $self->_estimate_window;
-   my $result = $matcher->_find_next( $epoch_seconds, $epoch_seconds + $window, $step, 1 );
+   my $result = $self->{matcher}->_find_next( $epoch_seconds, $epoch_seconds + $window, $step, 1 );
 
    # Cap to end_epoch if set
    return undef if defined $self->end_epoch && $result && $result > $self->end_epoch;
@@ -242,14 +349,8 @@ sub previous {
 
    # Clamp to end_epoch cap if set
    $epoch_seconds = min( $epoch_seconds, $self->end_epoch // $epoch_seconds ) if defined $self->end_epoch;
-   require Cron::Toolkit::Matcher;
-   my $matcher = Cron::Toolkit::Matcher->new(
-      tree       => $self->{root},
-      utc_offset => $self->utc_offset,
-      owner      => $self
-   );
    my ( $window, $step ) = $self->_estimate_window;
-   my $result = $matcher->_find_next( $epoch_seconds, $epoch_seconds - $window, $step, -1 );
+   my $result = $self->{matcher}->_find_next( $epoch_seconds, $epoch_seconds - $window, $step, -1 );
 
    # Floor to begin_epoch if set
    return undef if defined $self->begin_epoch && $result && $result < $self->begin_epoch;
@@ -306,25 +407,45 @@ sub previous_n {
    return \@results;
 }
 
-# PHASE2: next_occurrences alias
 sub next_occurrences {
    my $self = shift;
    return $self->next_n(@_);
 }
 
-# PHASE2: as_string
-sub as_string {
-   my ($self) = @_;
-   return $self->{expression};
+sub as_unix_string {
+   my $self = shift;
+   my $expr = $self->_as_string;
+   my @fields = split(/\s+/, $expr);
+   shift @fields; # remove seconds
+   pop @fields; # remove year
+   return join(' ', @fields);
 }
 
-# PHASE2: to_json
+sub as_quartz_string {
+   my $self = shift;
+   my $expr = $self->_as_string;
+   my @fields = split(/\s+/, $expr);
+
+   # add one to dow
+   $fields[5] =~ s/(?<!\/)(\b[0-6]\b)/$1+1/ge;
+   return join(' ', @fields);
+}
+
+sub as_string {
+   my $self = shift;
+   return $self->_as_string;
+}
+
+sub _as_string {
+   my $self = shift;
+   return $self->_rebuild_from_node($self->{root});
+}
+
 sub to_json {
-   my ($self) = @_;
-   require JSON::MaybeXS;
-   return JSON::MaybeXS::encode_json(
+   my $self = shift;
+   return JSON::PP::encode_json(
       {
-         expression  => $self->as_string,
+         expression  => $self->_as_string,
          description => $self->describe,
          utc_offset  => $self->utc_offset,
          time_zone   => $self->time_zone,
@@ -410,8 +531,8 @@ sub new_from_crontab {
 }
 
 sub _estimate_window {
-   my ($self) = @_;
-   my @fields = split /\s+/, $self->{expression};
+   my $self = shift;
+   my @fields = @{ $self->{fields} };
 
    # Dom constrained or DOW special: 2-month window, daily step (covers cross-month, intra-month)
    if ( $fields[3] ne '*' || $fields[5] =~ /^(L|LW|\d+W|\d+#\d+)$/ ) {
@@ -442,13 +563,12 @@ sub _estimate_window {
    return ( 31 * 24 * 3600, 24 * 3600 );
 }
 
-# PHASE2: dump_tree (self or node; recursive pretty-print)
 sub dump_tree {
    my ( $self_or_node, $indent ) = @_;
    $indent //= 0;
    if ( ref($self_or_node) eq 'Cron::Toolkit' ) {
       my $self = $self_or_node;
-      say "Cron::Toolkit (user: " . ( $self->user // 'undef' ) . ", command: " . ( $self->command // 'undef' ) . ")";
+      #say "Cron::Toolkit (user: " . ( $self->user // 'undef' ) . ", command: " . ( $self->command // 'undef' ) . ")";
       $self_or_node = $self->{root};
    }
    return unless $self_or_node;
@@ -463,5 +583,19 @@ sub dump_tree {
       $child->dump_tree( $indent + 2 );
    }
 }
+
+sub _rebuild_from_node {
+    my ($self, $node) = @_;
+    my $type = $node->{type};
+    return '*' if $type eq 'wildcard';
+    return '?' if $type eq 'unspecified';
+    return $node->{value} if $type eq 'single' || $type eq 'last' || $type eq 'lastW' || $type eq 'nth' || $type eq 'nearest_weekday' || $type eq 'step_value';
+    return $self->_rebuild_from_node($node->{children}[0]) . '-' . $self->_rebuild_from_node($node->{children}[1]) if $type eq 'range';
+    return $self->_rebuild_from_node($node->{children}[0]) . '/' . $self->_rebuild_from_node($node->{children}[1]) if $type eq 'step';
+    return join ',', map { $self->_rebuild_from_node($_) } @{ $node->{children} } if $type eq 'list';
+    return join ' ', map { $self->_rebuild_from_node($_) } @{ $node->{children} } if $type eq 'root';
+    die "Unsupported for rebuild: $type";
+}
+
 1;
 __END__

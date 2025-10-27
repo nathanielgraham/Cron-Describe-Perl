@@ -4,7 +4,7 @@ use warnings;
 use lib './lib';
 use Cron::Toolkit;
 use Time::Moment;
-use JSON::MaybeXS;
+use JSON;
 use feature 'say';
 
 srand(time ^ $$);
@@ -86,20 +86,10 @@ for my $expr (@raw_exprs) {
         print STDERR "DEBUG: Processing expression: '$expr'\n" if $ENV{DEBUG};
         my $cron = Cron::Toolkit->new(expression => $expr);
         my @fields = split /\s+/, $cron->as_string;
-        my @types = qw(second minute hour dom month dow year);
-        my $parser = Cron::Toolkit::Tree::TreeParser->new(
-            is_quartz => scalar(@fields) >= 6,
-            fields => \@fields,
-            types => \@types
-        );
-        my $tree = Cron::Toolkit::Tree::CompositePattern->new( type => 'root', field_type => 'root' );
-        for my $i ( 0 .. $#fields ) {
-            my $node = $parser->parse_field( $fields[$i], $types[$i] );
-            $node->{field_type} = $types[$i];
-            $tree->add_child($node);
-        }
-        print STDERR "DEBUG: AST for '$expr':\n" . $parser->dump_tree($tree) . "\n" if $ENV{DEBUG};
-        my $norm = $cron->as_string;
+
+        my $as_string = $cron->as_string;
+        my $as_unix_string = $cron->as_unix_string;
+        my $as_quartz_string = $cron->as_quartz_string;
         print STDERR "DEBUG: Generating description for '$expr'\n" if $ENV{DEBUG};
         my $desc = $cron->describe;
         $cron->time_zone($tz) if $tz;
@@ -131,7 +121,9 @@ for my $expr (@raw_exprs) {
         push @data, {
             category => "general",
             expr => $expr,
-            norm => $norm,
+            as_string => $as_string,
+            as_unix_string => $as_unix_string,
+            as_quartz_string => $as_quartz_string,
             type => $expr =~ /^@/ ? "alias" : (scalar(split /\s+/, $expr) == 5 && $expr !~ /\?/ ? "unix" : "quartz"),
             tz => $tz,
             utc_offset => $actual_offset,
@@ -168,5 +160,5 @@ for my $expr (@raw_exprs) {
     };
 }
 
-my $json = JSON::MaybeXS->new(utf8 => 1, pretty => 1, canonical => 1);
-say $json->encode(\@data);
+#my $json = JSON->new(utf8 => 1, pretty => 1, canonical => 1);
+say JSON->new->pretty->encode( \@data );

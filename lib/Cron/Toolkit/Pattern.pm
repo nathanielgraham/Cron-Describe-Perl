@@ -1,8 +1,8 @@
 package Cron::Toolkit::Pattern;
 use strict;
 use warnings;
-use Cron::Toolkit::EnglishVisitor;
-use Cron::Toolkit::MatchVisitor;
+use Cron::Toolkit::Visitor::EnglishVisitor;
+use Cron::Toolkit::Visitor::MatchVisitor;
 
 sub new {
     my ($class, %args) = @_;
