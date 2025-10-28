@@ -4,7 +4,7 @@ use warnings;
 use Exporter qw(import);
 our @EXPORT_OK = qw(
   format_time num_to_ordinal field_unit join_parts fill_template is_midnight time_suffix quartz_dow
-  quartz_dow_normalize unix_dow_normalize %aliases %field_names
+  quartz_dow_normalize unix_dow_normalize %aliases %field_names %allowed_chars %allowed_types
   ordinal_list step_ordinal complex_join normalize generate_list_desc %limits %dow_map_unix
   %month_map %dow_map_quartz %month_names %day_names %nth_names %unit_labels %ordinal_suffix %joiners %templates
 );
@@ -100,8 +100,27 @@ our %limits = (
    hour   => [ 0,    23 ],
    dom    => [ 1,    31 ],
    month  => [ 1,    12 ],
-   dow    => [ 1,    7 ],
+   dow    => [ 0,    7 ],
    year   => [ 1970, 2099 ]
+);
+
+our %allowed_chars = (
+   second => qr/^[0-9,\*\/\-]+$/,
+   minute => qr/^[0-9,\*\/\-]+$/,
+   hour   => qr/^[0-9,\*\/\-]+$/,
+   dom    => qr/^[0-9,\*\/\-?LW#]+$/,
+   dow    => qr/^[0-9,\*\/\-?L#]+$/,
+   month  => qr/^[0-9,\*\/\-]+$/,
+   year   => qr/^[0-9,\*\/\-]+$/
+);
+our %allowed_types = (
+   second => [qw(single range step list wildcard)],
+   minute => [qw(single range step list wildcard)],
+   hour   => [qw(single range step list wildcard)],
+   dom    => [qw(single range step list wildcard unspecified last lastW nearest_weekday)],
+   month  => [qw(single range step list wildcard)],
+   dow    => [qw(single range step list wildcard unspecified nth last)],
+   year   => [qw(single range step list wildcard)]
 );
 
 our %aliases = (

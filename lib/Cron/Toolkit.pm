@@ -67,22 +67,27 @@ sub _new {
    }
 
    my @fields = split /\s+/, $expr;
+   my @raw_fields = @fields;
 
    # normalize to 7-field quartz expression
    if ( $args{is_quartz} ) {
-      die "expected 6-7 fields, got " . scalar(@fields) unless @fields == 6 || @fields == 7;
+      die "Expected 6-7 fields, got " . scalar(@fields) unless @fields == 6 || @fields == 7;
       push( @fields, '*' ) if @fields == 6;    # year
 
-      # convert dow names to quartz numberical equivalent
-      while ( my ( $name, $num ) = each %dow_map_quartz ) {
+      # Reject Quartz DOW 0
+      if ($fields[5] =~ /\b0\b/ && $fields[5] !~ /#\d+/) {
+         die "Invalid dow value: 0, must be [1-7] in Quartz";
+      }
+      # Map Quartz DOW names
+      while (my ($name, $num) = each %dow_map_quartz) {
          $fields[5] =~ s/\b\Q$name\E\b/$num/gi;
       }
 
-      #normalize to unix by subtracting one from dow
-      $fields[5] =~ s/(?<!\/)(\b[1-7]\b)/$1-1/ge;
+      # Normalize Quartz DOW 1-7 to 0-6, skip nth and step
+      $fields[5] =~ s/(?<![#\/])(\b[1-7]\b)(?![#\/])/$1-1/ge;
    }
    else {
-      die "expected 5 fields, got " . scalar(@fields) unless @fields == 5;
+      die "Expected 5 fields, got " . scalar(@fields) unless @fields == 5;
       unshift( @fields, 0 );                   # seconds
       push( @fields, '*' );                    # year
 
@@ -113,12 +118,17 @@ sub _new {
 
    my $self = bless {
       fields => \@fields,
+      raw_fields => \@raw_fields,
+      utc_offset => 0,
+      time_zone => 'UTC',
+      begin_epoch => time - (10 * 365 * 86400),  # ~10 years ago
+      end_epoch => time + (10 * 365 * 86400),  # ~10 years ahead
    }, $class;
 
    $self->utc_offset( $args{utc_offset} ) if defined $args{utc_offset};
    $self->time_zone( $args{time_zone} ) if defined $args{time_zone};
-   $self->begin( $args{begin} ) if defined $args{begin};
-   $self->end( $args{end} ) if defined $args{end};
+   $self->begin_epoch( $args{begin} ) if defined $args{begin_epoch};
+   $self->end_epoch( $args{end} ) if defined $args{end_epoch};
    $self->user( $args{user} ) if defined $args{user};
    $self->command( $args{command} ) if defined $args{command};
    $self->env( $args{env} ) if defined $args{env};
@@ -141,115 +151,351 @@ sub _new {
 
 sub _build_tree {
    my $self = shift;
-   my @types  = qw(second minute hour dom month dow year);
+   my @types = qw(second minute hour dom month dow year);
    for my $i (0 .. $#types) {
       my $node = $self->_build_node($types[$i], $self->{fields}[$i]);
-
-      # TODO: node validation goes here, e.g. check for invalid characters, invalid ranges, and min, max thresholds
-      my ($min, $max) = @{ $limits{ $types[$i] } };
-
-      # TODO: optimization goes here, e.g. step collapse and list to range
-      # NOTE: only convert a list to a range if all elements are  consecutive 
-
+      $node = $self->_optimize_node($node, $types[$i]);
       $self->{root}->add_child($node);
+   }
+   $self->_finalize_dow_root();
+}
+
+sub _optimize_node {
+   my ($self, $node, $field) = @_;
+
+   print STDERR "DEBUG: Optimizing $field node: type=$node->{type}\n" if $ENV{Cron_DEBUG};
+
+   # Get field limits
+   my ($min, $max) = @{ $limits{$field} };
+   $min = 0 if $field eq 'dow';
+
+   # Step collapse
+   if ($node->{type} eq 'step') {
+      my $base_node = $node->{children}[0];
+      my $step = $node->{children}[1]{value};
+      my @values;
+      if ($base_node->{type} eq 'wildcard') {
+         @values = ($min .. $max);
+      } elsif ($base_node->{type} eq 'single') {
+         @values = ($base_node->{value});
+      } elsif ($base_node->{type} eq 'range') {
+         my ($start, $end) = map { $_->{value} } @{ $base_node->{children} };
+         @values = ($start .. $end);
+      }
+      my @stepped;
+      for (my $v = $values[0]; $v <= $values[-1]; $v += $step) {
+         push @stepped, $v if grep { $_ == $v } @values;
+      }
+      if (@stepped == 0) {
+         print STDERR "DEBUG: Step collapse to wildcard: $field\n" if $ENV{Cron_DEBUG};
+         return Cron::Toolkit::Pattern::LeafPattern->new(
+            type => 'wildcard',
+            value => '*',
+            field_type => $field
+         );
+      } elsif (@stepped == 1) {
+         print STDERR "DEBUG: Step collapse to single: $stepped[0] in $field\n" if $ENV{Cron_DEBUG};
+         return Cron::Toolkit::Pattern::LeafPattern->new(
+            type => 'single',
+            value => $stepped[0],
+            field_type => $field
+         );
+      } else {
+         print STDERR "DEBUG: Step collapse to list: [" . join(',', @stepped) . "] in $field\n" if $ENV{Cron_DEBUG};
+         my $list = Cron::Toolkit::Pattern::CompositePattern->new(
+            type => 'list',
+            field_type => $field
+         );
+         for my $v (@stepped) {
+            $list->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+               type => 'single',
+               value => $v,
+               field_type => $field
+            ));
+         }
+         return $self->_optimize_node($list, $field); # Recurse for list-to-range
+      }
+   }
+
+   # List-to-range
+   if ($node->{type} eq 'list') {
+      my @values = sort { $a <=> $b } map { $_->{value} }
+                   grep { $_->{type} eq 'single' } @{ $node->{children} };
+      if (@values >= 2 && $values[-1] - $values[0] == $#values) {
+         print STDERR "DEBUG: List collapse to range: $values[0]-$values[-1] in $field\n" if $ENV{Cron_DEBUG};
+         my $range = Cron::Toolkit::Pattern::CompositePattern->new(
+            type => 'range',
+            field_type => $field
+         );
+         $range->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+            type => 'single',
+            value => $values[0],
+            field_type => $field
+         ));
+         $range->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+            type => 'single',
+            value => $values[-1],
+            field_type => $field
+         ));
+         return $range;
+      }
+   }
+
+   return $node;
+}
+
+sub _finalize_dow_root {
+   my $self = shift;
+   my $dow_node = $self->{root}{children}[5];
+
+   print STDERR "DEBUG: Finalizing DOW node: type=$dow_node->{type}\n" if $ENV{Cron_DEBUG};
+
+   if ($dow_node->{type} eq 'single' && $dow_node->{value} == 7) {
+      print STDERR "DEBUG: Mapping DOW 7 to 0\n" if $ENV{Cron_DEBUG};
+      $dow_node = Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'single',
+         value => 0,
+         field_type => 'dow'
+      );
+      $self->{root}{children}[5] = $dow_node;
+   } elsif ($dow_node->{type} eq 'range') {
+      my ($start_node, $end_node) = @{ $dow_node->{children} };
+      if ($start_node->{value} == 7 || $end_node->{value} == 7) {
+         print STDERR "DEBUG: Mapping DOW range with 7 to 0\n" if $ENV{Cron_DEBUG};
+         my $new_start = $start_node->{value} == 7 ? 0 : $start_node->{value};
+         my $new_end = $end_node->{value} == 7 ? 0 : $end_node->{value};
+         my $range = Cron::Toolkit::Pattern::CompositePattern->new(
+            type => 'range',
+            field_type => 'dow'
+         );
+         $range->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+            type => 'single',
+            value => $new_start,
+            field_type => 'dow'
+         ));
+         $range->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+            type => 'single',
+            value => $new_end,
+            field_type => 'dow'
+         ));
+         $self->{root}{children}[5] = $range;
+      }
+   } elsif ($dow_node->{type} eq 'list') {
+      my @new_children;
+      for my $child (@{ $dow_node->{children} }) {
+         if ($child->{type} eq 'single' && $child->{value} == 7) {
+            print STDERR "DEBUG: Mapping DOW list element 7 to 0\n" if $ENV{Cron_DEBUG};
+            push @new_children, Cron::Toolkit::Pattern::LeafPattern->new(
+               type => 'single',
+               value => 0,
+               field_type => 'dow'
+            );
+         } else {
+            push @new_children, $child;
+         }
+      }
+      if (@new_children != @{ $dow_node->{children} }) {
+         my $list = Cron::Toolkit::Pattern::CompositePattern->new(
+            type => 'list',
+            field_type => 'dow'
+         );
+         $list->add_child($_) for @new_children;
+         $self->{root}{children}[5] = $list;
+      }
    }
 }
 
 sub _build_node {
    my ($self, $field, $value) = @_;
-    
-    my $node;
 
-    # leaf patterns
-    my $type = $value eq '*' ? 'wildcard' 
-             : $value eq '?' ? 'unspecified'
-             : $value eq 'L' ? 'last'
-             : $value eq 'LW' ? 'lastW'
-             : $value =~ /^L-(\d+)$/ ? 'last'
-             : $value =~ /^\d+$/ ? 'single'
-             : $value =~ /^(\d+)#(\d+)$/ ? 'nth'
-             : $value =~ /^(\d+)W$/ ? 'nearest_weekday'
-             : $value =~ /^(\d+)#(\d+)$/ ? 'nth'
-             : undef;
+   print STDERR "DEBUG: Parsing $field: '$value'\n" if $ENV{Cron_DEBUG};
 
-    if ($type) {
-       $node = Cron::Toolkit::Pattern::LeafPattern->new( 
-          type => $type, 
-          value => $value, 
-          field_type => $field
+   # Validate characters using Utils.pm
+   die "Invalid characters in $field: $value" unless $value =~ $allowed_chars{$field};
+
+   # Get field limits, adjust DOW to [0-7]
+   my ($min, $max) = @{ $limits{$field} };
+   $min = 0 if $field eq 'dow';
+
+   my $node;
+
+   # Combined validation and node creation
+   if ($value eq '*') {
+      die "Invalid type wildcard for $field: not in allowed types"
+         unless grep { $_ eq 'wildcard' } @{ $allowed_types{$field} };
+      $node = Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'wildcard',
+         value => '*',
+         field_type => $field
       );
-    } 
+   } elsif ($value eq '?') {
+      die "Syntax: ? only allowed in dom or dow, not $field"
+         unless $field =~ /^(dom|dow)$/;
+      die "Invalid type unspecified for $field: not in allowed types"
+         unless grep { $_ eq 'unspecified' } @{ $allowed_types{$field} };
+      $node = Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'unspecified',
+         value => '?',
+         field_type => $field
+      );
+   } elsif ($value =~ /^L(-\d+)?$/) {
+      die "Syntax: L only allowed in dom or dow, not $field"
+         unless $field =~ /^(dom|dow)$/;
+      die "Invalid type last for $field: not in allowed types"
+         unless grep { $_ eq 'last' } @{ $allowed_types{$field} };
+      if ($1) {
+         my $offset = $1 =~ /-(\d+)/ ? $1 : 0;
+         die "$field offset $offset too large" if ($field eq 'dom' && $offset > 30) || ($field eq 'dow' && $offset > 6);
+      }
+      $node = Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'last',
+         value => $value,
+         field_type => $field
+      );
+   } elsif ($value =~ /^LW$/) {
+      die "Syntax: LW only allowed in dom, not $field" unless $field eq 'dom';
+      die "Invalid type lastW for $field: not in allowed types"
+         unless grep { $_ eq 'lastW' } @{ $allowed_types{$field} };
+      $node = Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'lastW',
+         value => 'LW',
+         field_type => $field
+      );
+   } elsif ($value =~ /^(\d+)W$/) {
+      die "Syntax: W only allowed in dom, not $field" unless $field eq 'dom';
+      die "Invalid type nearest_weekday for $field: not in allowed types"
+         unless grep { $_ eq 'nearest_weekday' } @{ $allowed_types{$field} };
+      my $day = $1;
+      die "dom $day out of range [1-31]" unless $day >= 1 && $day <= 31;
+      $node = Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'nearest_weekday',
+         value => $value,
+         field_type => $field
+      );
+   } elsif ($value =~ /^(\d+)#(\d+)$/) {
+      die "Syntax: # only allowed in dow, not $field" unless $field eq 'dow';
+      die "Invalid type nth for $field: not in allowed types"
+         unless grep { $_ eq 'nth' } @{ $allowed_types{$field} };
+      my ($day, $nth) = ($1, $2);
+      die "dow $day out of range [1-7]" unless $day >= 1 && $day <= 7; # Pre-normalization for nth
+      die "nth $nth out of range [1-5]" unless $nth >= 1 && $nth <= 5;
+      $node = Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'nth',
+         value => $value,
+         field_type => $field
+      );
+   } elsif ($value =~ /^\d+$/) {
+      die "Invalid type single for $field: not in allowed types"
+         unless grep { $_ eq 'single' } @{ $allowed_types{$field} };
+      die "$field $value out of range [$min-$max]" unless $value >= $min && $value <= $max;
+      $node = Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'single',
+         value => $value,
+         field_type => $field
+      );
+   } elsif ($value =~ /^(\d+)-(\d+)$/) {
+      die "Invalid type range for $field: not in allowed types"
+         unless grep { $_ eq 'range' } @{ $allowed_types{$field} };
+      my ($start, $end) = ($1, $2);
+      die "$field start $start out of range [$min-$max]" unless $start >= $min && $start <= $max;
+      die "$field end $end out of range [$min-$max]" unless $end >= $min && $end <= $max;
+      die "$field range start $start must be <= end $end" if $start > $end;
+      $node = Cron::Toolkit::Pattern::CompositePattern->new(
+         type => 'range',
+         field_type => $field
+      );
+      $node->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'single',
+         value => $start,
+         field_type => $field
+      ));
+      $node->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'single',
+         value => $end,
+         field_type => $field
+      ));
+   } elsif ($value =~ /^(\d*|\*)\/(\d+)$/) {
+      die "Invalid type step for $field: not in allowed types"
+         unless grep { $_ eq 'step' } @{ $allowed_types{$field} };
+      my ($base_str, $step) = ($1, $2);
+      die "$field step $step out of range [$min-$max]" unless $step >= $min && $step <= $max;
+      die "$field base $base_str out of range [$min-$max]" if $base_str ne '*' && ($base_str < $min || $base_str > $max);
+      print STDERR "DEBUG: Parsing step: base=$base_str, step=$step\n" if $ENV{Cron_DEBUG};
+      $node = Cron::Toolkit::Pattern::CompositePattern->new(
+         type => 'step',
+         field_type => $field
+      );
+      my $base_node =
+         $base_str eq '*' ?
+         Cron::Toolkit::Pattern::LeafPattern->new(type => 'wildcard', value => '*', field_type => $field) :
+         Cron::Toolkit::Pattern::LeafPattern->new(type => 'single', value => $base_str, field_type => $field);
+      $node->add_child($base_node);
+      $node->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'step_value',
+         value => $step,
+         field_type => $field
+      ));
+   } elsif ($value =~ /^(\*|\d+)-(\d+)\/(\d+)$/) {
+      die "Invalid type step for $field: not in allowed types"
+         unless grep { $_ eq 'step' } @{ $allowed_types{$field} };
+      my ($start, $end, $step) = ($1, $2, $3);
+      die "$field range start $start out of range [$min-$max]" if $start ne '*' && ($start < $min || $start > $max);
+      die "$field range end $end out of range [$min-$max]" unless $end >= $min && $end <= $max;
+      die "$field step $step out of range [$min-$max]" unless $step >= $min && $step <= $max;
+      die "$field range start $start must be <= end $end" if $start ne '*' && $start > $end;
+      print STDERR "DEBUG: Parsing step range: start=$start, end=$end, step=$step\n" if $ENV{Cron_DEBUG};
+      my $range = Cron::Toolkit::Pattern::CompositePattern->new(
+         type => 'range',
+         field_type => $field
+      );
+      $range->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'single',
+         value => $start,
+         field_type => $field
+      ));
+      $range->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'single',
+         value => $end,
+         field_type => $field
+      ));
+      $node = Cron::Toolkit::Pattern::CompositePattern->new(
+         type => 'step',
+         field_type => $field
+      );
+      $node->add_child($range);
+      $node->add_child(Cron::Toolkit::Pattern::LeafPattern->new(
+         type => 'step_value',
+         value => $step,
+         field_type => $field
+      ));
+   } elsif ($value =~ /,/) {
+      die "Invalid type list for $field: not in allowed types"
+         unless grep { $_ eq 'list' } @{ $allowed_types{$field} };
+      $node = Cron::Toolkit::Pattern::CompositePattern->new(
+         type => 'list',
+         field_type => $field
+      );
+      print STDERR "DEBUG: Parsing list: elements=[" . join(',', split /,/, $value) . "]\n" if $ENV{Cron_DEBUG};
+      for my $sub (split /,/, $value) {
+         print STDERR "DEBUG: Parsing list element: $sub in $field\n" if $ENV{Cron_DEBUG};
+         eval {
+            my $sub_node = $self->_build_node($field, $sub);
+            die "Invalid list element in $field: list not allowed" if $sub_node->{type} eq 'list';
+            $node->add_child($sub_node);
+         };
+         if ($@) {
+            my $error = $@;
+            $error =~ s/^Invalid $field:/Invalid $field list element:/;
+            $error =~ s/^$field ([^:]+):/Invalid $field list element $1:/;
+            die $error;
+         }
+      }
+   } else {
+      die "Unsupported field: $value ($field)";
+   }
 
-    # composite patterns
-    elsif ( $value =~ /^(\d*|\*)\/(\d+)$/ ) {
-        my ( $base_str, $step ) = ( $1, $2 );
-        print STDERR "DEBUG: Parsing step: base=$base_str, step=$step\n" if $ENV{Cron_DEBUG};
-        my $step_node = Cron::Toolkit::Pattern::CompositePattern->new(
-           type => 'step',
-           value => $value, 
-           field_type => $field,
-        );
-        my $base_node =
-            $base_str eq '*'
-            ? Cron::Toolkit::Pattern::LeafPattern->new( type => 'wildcard', value => '*', field_type => $field )
-            : Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $base_str, field_type => $field );
-        $step_node->add_child($base_node);
-        my $step_val_node = Cron::Toolkit::Pattern::LeafPattern->new( type => 'step_value', value => $step, field_type => $field );
-        $step_node->add_child($step_val_node);
-        $node = $step_node;
-    } elsif ( $value =~ /^(\*|\d+)-(\d+)\/(\d+)$/ ) {
-        my ( $start, $end, $step ) = ( $1, $2, $3 );
-        print STDERR "DEBUG: Parsing step range: start=$start, end=$end, step=$step\n" if $ENV{Cron_DEBUG};
-        my $range = Cron::Toolkit::Pattern::CompositePattern->new(
-           type => 'range',
-           field_type => $field,
-        );
-
-        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new(
-           type => 'single',
-           value => $start,
-           field_type => $field,
-        ));
-
-        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new(
-           type => 'single', 
-           value => $end,
-           field_type => $field,
-        ));
-
-        my $step_node = Cron::Toolkit::Pattern::CompositePattern->new( 
-           type => 'step',
-           field_type => $field,
-        );
-
-        $step_node->add_child($range);
-        $step_node->add_child( Cron::Toolkit::Pattern::LeafPattern->new( 
-           type => 'step_value', 
-           value => $step ,
-           field_type => $field,
-        ));
-        $node = $step_node;
-    } elsif ( $value =~ /^(\d+)-(\d+)$/ ) {
-        my ( $start, $end ) = ( $1, $2 );
-        print STDERR "DEBUG: Parsing range: start=$start, end=$end\n" if $ENV{Cron_DEBUG};
-        my $range = Cron::Toolkit::Pattern::CompositePattern->new( type => 'range', field_type => $field, );
-        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $start, field_type => $field, ) );
-        $range->add_child( Cron::Toolkit::Pattern::LeafPattern->new( type => 'single', value => $end, field_type => $field, ) );
-        $node = $range;
-    } elsif ( $value =~ /,/ ) {
-        my $list = Cron::Toolkit::Pattern::CompositePattern->new( type => 'list', field_type => $field, );
-        print STDERR "DEBUG: Parsing list: elements=[" . join(',', split /,/, $field) . "]\n" if $ENV{Cron_DEBUG};
-        for my $sub ( split /,/, $value ) {
-            $list->add_child( $self->_build_node( $field, $sub ));
-        }
-        $node = $list;
-    } else {
-        die "Unsupported field: $value";
-    }
-    $node->{field_type} = $field;
-    return $node;
+   return $node;
 }
-
 
 sub utc_offset {
    my ( $self, $new_offset ) = @_;
@@ -424,11 +670,18 @@ sub as_unix_string {
 sub as_quartz_string {
    my $self = shift;
    my $expr = $self->_as_string;
-   my @fields = split(/\s+/, $expr);
+   my @fields = split /\s+/, $expr;
 
-   # add one to dow
-   $fields[5] =~ s/(?<!\/)(\b[0-6]\b)/$1+1/ge;
-   return join(' ', @fields);
+   my $dow = $fields[5];
+
+   # Preserve special values
+   return $expr if $dow eq '?' || $dow =~ /[L#\/W]/;
+
+   # Only modify standalone numeric tokens in 0-6
+   $dow =~ s/(?<![#\d])(\b[0-6]\b)(?![#\/\d])/$1 + 1/ge;
+
+   $fields[5] = $dow;
+   return join ' ', @fields;
 }
 
 sub as_string {
@@ -531,6 +784,39 @@ sub new_from_crontab {
 }
 
 sub _estimate_window {
+    my ($self) = @_;
+    my $root = $self->{root};
+
+    my $min_step = 60;  # default: 1 minute
+    my $max_window = 86400 * 7;  # 1 week max
+
+    for my $child (@{ $root->{children} }) {
+        next unless $child;
+
+        if ($child->{type} eq 'step') {
+            my $step = $child->{children}[1]{value} || 1;
+            $min_step = min($min_step, $step);
+        }
+        elsif ($child->{type} eq 'single') {
+            $min_step = 1;
+        }
+        elsif ($child->{type} eq 'range') {
+            $min_step = 1;
+        }
+        elsif ($child->{type} eq 'wildcard') {
+            $min_step = 1;
+        }
+    }
+
+    my $window = $max_window;
+    if ($min_step > 1) {
+        $window = int($max_window / $min_step) * $min_step;
+    }
+
+    return ( $window, max(1, $min_step) );
+}
+
+sub _estimate_window2 {
    my $self = shift;
    my @fields = @{ $self->{fields} };
 

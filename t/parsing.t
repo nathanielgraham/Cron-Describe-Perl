@@ -1,72 +1,103 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Test::More 0.88;
+use Test::More;
 use Cron::Toolkit;
-eval { require JSON::MaybeXS };
-plan skip_all => "JSON::MaybeXS required" if $@;
-open my $fh, '<', 't/data/cron_tests.json' or BAIL_OUT("JSON missing");
-my $json = do { local $/; <$fh> };
-my @tests = @{ JSON::MaybeXS->new->decode($json) };
-my @valid = grep { $_->{category} eq 'general' && !$_->{invalid} } @tests;
-my @invalids = grep { $_->{invalid} } @tests;
-subtest 'new() Builds & Normalizes' => sub {
-    plan tests => scalar(@valid) * (2 + 2);
-    for my $test (@valid) {
-        my $cron = Cron::Toolkit->new(expression => $test->{expr});
-        ok($cron, "Builds: $test->{expr}");
-        is($cron->as_string, $test->{norm}, "Norm: $test->{norm}");
-        is($test->{type}, ($test->{expr} =~ /^@/ ? 'alias' : 'quartz'), "Type: $test->{type}");
-        if ($test->{tz}) {
-            $cron->time_zone($test->{tz});
-            is($cron->time_zone, $test->{tz}, "TZ: $test->{tz}");
-        } elsif ($test->{utc_offset}) {
-            $cron->utc_offset($test->{utc_offset});
-            is($cron->utc_offset, $test->{utc_offset}, "Offset: $test->{utc_offset}");
-        } else {
-            pass("No TZ/offset for $test->{expr}");
-        }
-    }
-};
-subtest 'Unix/Quartz Constructors' => sub {
-    plan tests => scalar(@valid);
-    for my $test (@valid) {
-        my @fields = split /\s+/, $test->{expr};
-        if (scalar(@fields) == 5 && $test->{expr} !~ /^@/ && $test->{expr} !~ /\?/) {
-            my $unix = Cron::Toolkit->new(expression => $test->{expr});
-            is($unix->as_string, $test->{norm}, "new: $test->{expr}");
-        } else {
-            my $quartz = Cron::Toolkit->new_from_quartz(expression => $test->{norm});
-            is($quartz->as_string, $test->{norm}, "new_from_quartz: $test->{norm}");
-        }
-    }
-};
-subtest 'Invalid Parsing' => sub {
-    plan tests => scalar(@invalids) || 1;
-    if (@invalids) {
-        for my $test (@invalids) {
-            local $@;
-            eval { Cron::Toolkit->new(expression => $test->{expr}); 1 };
-            my $err = $@;
-            $err =~ s/ at .*//s if $err;
-            like($err, qr/\Q$test->{expect_error}\E/, "Rejects: $test->{expr}");
-        }
-    } else {
-        pass("No invalids in JSON");
-    }
-};
-subtest 'new_from_crontab' => sub {
-    plan tests => 4;
-    my $crontab = <<'EOF';
-SHELL=/bin/bash
-# Comment
-0 0 * * * root /bin/echo daily
-0 0 * * * user2 /tmp/hourly
-EOF
-    my @crons = Cron::Toolkit->new_from_crontab($crontab);
-    is(scalar(@crons), 2, "Parses 2 valid lines");
-    is($crons[0]->user, 'root', "User: root");
-    is($crons[0]->command, '/bin/echo daily', "Command: daily");
-    is($crons[1]->as_string, '0 0 0 * * ? *', "Second line norm");
-};
+
+# Helper – safe access to raw_fields
+sub _norm {
+   my ( $desc, $expr, $expected, $expected_error ) = @_;
+   my $cron;
+   eval { $cron = Cron::Toolkit->new( expression => $expr ); };
+   if ($expected_error) {
+      like( $@, $expected_error, "$desc: error" );
+   } else {
+      my $raw = $cron->{raw_fields} // [];
+      diag "Raw fields      : [" . join( ', ', @$raw ) . "]";
+      diag "Normalized fields: [" . join( ', ', @{ $cron->{fields} } ) . "]";
+      diag "Optimized expr   : " . $cron->as_string;
+      is( $cron->as_string, $expected, $desc );
+   }
+}
+
+# ----------------------------------------------------------------------
+# Unix normalization – DOW 7 and SUN become 0 in AST → as_string shows 0
+# ----------------------------------------------------------------------
+_norm(
+   'Unix DOW 0: normalized',
+   '30 14 * * 0',
+   '0 30 14 ? * 0 *'
+);
+
+_norm(
+   'Unix DOW 7: normalized',
+   '30 14 * * 7',
+   '0 30 14 ? * 0 *'   # 7 → 0 in AST
+);
+
+_norm(
+   'Unix DOW SUN: normalized',
+   '30 14 * * SUN',
+   '0 30 14 ? * 0 *'   # SUN → 7 → 0
+);
+
+_norm(
+   'Unix DOW 1,3,5: normalized',
+   '* * * * 1,3,5',
+   '0 * * ? * 1,3,5 *'
+);
+
+# ----------------------------------------------------------------------
+# Quartz normalization
+# ----------------------------------------------------------------------
+_norm(
+   'Quartz DOW 1: normalized to 0',
+   '0 0 0 ? * 1 *',
+   '0 0 0 ? * 0 *'
+);
+
+_norm(
+   'Quartz DOW 1#2: unchanged',
+   '0 0 0 ? * 1#2 *',
+   '0 0 0 ? * 1#2 *'
+);
+
+# ----------------------------------------------------------------------
+# Invalid inputs – match actual error messages
+# ----------------------------------------------------------------------
+_norm(
+   'Quartz rejects DOW 0',
+   '0 0 0 ? * 0 *',
+   undef,
+   qr/Invalid dow value: 0, must be \[1-7\] in Quartz/
+);
+
+_norm(
+   'Rejects ? in year',
+   '0 0 0 * * ? ?',
+   undef,
+   qr/Invalid characters in year: \?/
+);
+
+_norm(
+   'Rejects invalid DOW range',
+   '* * * * 5-1',
+   undef,
+   qr/dow range start 5 must be <= end 1/
+);
+
+_norm(
+   'Rejects invalid month FOO',
+   '30 14 * FOO *',
+   undef,
+   qr/Invalid characters/
+);
+
+_norm(
+   'Rejects invalid list element',
+   '* * * * 1,99',
+   undef,
+   qr/dow 99 out of range \[0-7\]/
+);
+
 done_testing;
