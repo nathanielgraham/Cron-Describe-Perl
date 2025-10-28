@@ -5,7 +5,7 @@ use Exporter qw(import);
 our @EXPORT_OK = qw(
   format_time num_to_ordinal field_unit join_parts fill_template is_midnight time_suffix quartz_dow
   quartz_dow_normalize unix_dow_normalize %aliases %field_names %allowed_chars %allowed_types
-  ordinal_list step_ordinal complex_join normalize generate_list_desc %limits %dow_map_unix
+  ordinal_list step_ordinal complex_join normalize generate_list_desc %limits %dow_map_unix @FIELDS %LIMITS
   %month_map %dow_map_quartz %month_names %day_names %nth_names %unit_labels %ordinal_suffix %joiners %templates
 );
 our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
@@ -80,6 +80,7 @@ our %month_names = (
    11 => 'November',
    12 => 'December'
 );
+our @fields = qw(second minute hour dom month dow year);
 our %day_names   = ( 0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday' );
 our %nth_names   = ( 1 => 'first',  2 => 'second', 3 => 'third',   4 => 'fourth',    5 => 'fifth' );
 our %field_names = ( 0 => 'second', 1 => 'minute', 2 => 'hour',    3 => 'dom',       4 => 'month', 5 => 'dow', 6 => 'year' );
@@ -93,6 +94,19 @@ our %unit_labels = (
    dow    => [ 'day of the week', 'days of the week' ],
    year   => [ 'year',            'years' ]
 );
+
+# Exported constants — UPPERCASE
+our %LIMITS = (
+    second => [0, 59],
+    minute => [0, 59],
+    hour   => [0, 23],
+    dom    => [1, 31],
+    month  => [1, 12],
+    dow    => [0, 6],
+    year   => [1970, 2099],
+);
+
+our @FIELDS = qw(second minute hour dom month dow year);
 
 our %limits = (
    second => [ 0,    59 ],

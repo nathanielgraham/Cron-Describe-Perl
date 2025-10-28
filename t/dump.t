@@ -12,11 +12,10 @@ for my $test (@tests) {
    eval {
       my $cron = Cron::Toolkit->new(expression => $test->{expr});
       print Dumper($cron->{fields});
-      print Dumper($cron->{root});
+      #print Dumper($cron->{root});
       print $cron->as_string . "\n";
+      print $cron->as_quartz_string . "\n";
       print $cron->dump_tree . "\n";
    };
    print "$@\n" if $@; 
 }
-
-#done_testing;

@@ -119,10 +119,10 @@ sub _new {
    my $self = bless {
       fields => \@fields,
       raw_fields => \@raw_fields,
-      #utc_offset => 0,
-      #time_zone => 'UTC',
-      #begin_epoch => time - (10 * 365 * 86400),  # ~10 years ago
-      #end_epoch => time + (10 * 365 * 86400),  # ~10 years ahead
+      utc_offset => 0,
+      time_zone => 'UTC',
+      begin_epoch => time - (10 * 365 * 86400),  # ~10 years ago
+      end_epoch => time + (10 * 365 * 86400),  # ~10 years ahead
    }, $class;
 
    #$self->utc_offset( $args{utc_offset} ) if defined $args{utc_offset};
@@ -576,7 +576,8 @@ sub next {
    $epoch_seconds //= time;
    die "Invalid epoch_seconds: must be a non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
    # Delegate to matcher (handles clamping, search, bounds)
-   return $self->{matcher}->find_next_or_previous($epoch_seconds, 1);
+   #return $self->{matcher}->find_next_or_previous($epoch_seconds, 1);
+   return $self->{matcher}->next($epoch_seconds);
 }
 
 # Symmetric previous() with auto-clamp defaults
@@ -585,7 +586,8 @@ sub previous {
    $epoch_seconds //= time;
    die "Invalid epoch_seconds: must be a non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
    # Delegate to matcher (handles clamping, search, bounds)
-   return $self->{matcher}->find_next_or_previous($epoch_seconds, -1);
+   #return $self->{matcher}->find_next_or_previous($epoch_seconds, -1);
+   return $self->{matcher}->previous($epoch_seconds);
 }
 
 # next_n with max_iter guard
@@ -654,20 +656,21 @@ sub as_unix_string {
 }
 
 sub as_quartz_string {
-   my $self = shift;
-   my $expr = $self->_as_string;
-   my @fields = split /\s+/, $expr;
+    my $self = shift;
+    my $expr = $self->_as_string;
+    my @fields = split /\s+/, $expr;
 
-   my $dow = $fields[5];
+    # Increment standalone DOW numbers: 0-6 → 1-7
+    # But NOT if preceded by /, #, - or followed by W
+    $fields[5] =~ s{
+        (?<![\\/#\-])   # not after /, #, -
+        \b([0-6])\b     # standalone 0–6
+        (?![W])         # not before W
+    }{
+        $1 + 1
+    }gex;
 
-   # Preserve special values
-   #return $expr if $dow eq '?' || $dow =~ /[L#\/W]/;
-
-   # Only modify standalone numeric tokens in 0-6
-   $fields[5] =~ s/(?<![#\d])(\b[0-6]\b)(?![#\/\d])/$1 + 1/ge;
-
-   #$fields[5] = $dow;
-   return join ' ', @fields;
+    return join ' ', @fields;
 }
 
 sub as_string {
@@ -769,91 +772,67 @@ sub new_from_crontab {
    return @crons;
 }
 
-sub _estimate_window {
-    my ($self) = @_;
-    my $root = $self->{root};
-
-    my $min_step = 60;  # default: 1 minute
-    my $max_window = 86400 * 7;  # 1 week max
-
-    for my $child (@{ $root->{children} }) {
-        next unless $child;
-
-        if ($child->{type} eq 'step') {
-            my $step = $child->{children}[1]{value} || 1;
-            $min_step = min($min_step, $step);
-        }
-        elsif ($child->{type} eq 'single') {
-            $min_step = 1;
-        }
-        elsif ($child->{type} eq 'range') {
-            $min_step = 1;
-        }
-        elsif ($child->{type} eq 'wildcard') {
-            $min_step = 1;
-        }
-    }
-
-    my $window = $max_window;
-    if ($min_step > 1) {
-        $window = int($max_window / $min_step) * $min_step;
-    }
-
-    return ( $window, max(1, $min_step) );
-}
-
-sub _estimate_window2 {
-   my $self = shift;
-   my @fields = @{ $self->{fields} };
-
-   # Dom constrained or DOW special: 2-month window, daily step (covers cross-month, intra-month)
-   if ( $fields[3] ne '*' || $fields[5] =~ /^(L|LW|\d+W|\d+#\d+)$/ ) {
-      return ( 62 * 24 * 3600, 24 * 3600 );
-   }
-
-   # Year or month constrained (no dom/DOW special): yearly window, monthly step
-   if ( $fields[4] ne '*' || $fields[6] ne '*' ) {
-      return ( 365 * 24 * 3600, 30 * 24 * 3600 );
-   }
-
-   # Second or minute steps: daily window, second step
-   if ( $fields[0] =~ /\/\d+/ || $fields[1] =~ /\/\d+/ ) {
-      return ( 24 * 3600, 1 );
-   }
-
-   # Every-second schedules: immediate window, second step
-   if ( $fields[0] eq '*' && $fields[1] eq '*' && $fields[2] eq '*' && $fields[3] eq '*' && $fields[4] eq '*' && $fields[5] eq '?' && $fields[6] eq '*' ) {
-      return ( 1, 1 );
-   }
-
-   # New: Year step (e.g., */4 for leaps)
-   if ( $fields[6] =~ /\/\d+/ ) {
-      return ( 4 * 365 * 24 * 3600, 365 * 24 * 3600 );
-   }
-
-   # Default: monthly window, daily step
-   return ( 31 * 24 * 3600, 24 * 3600 );
-}
-
+# --------------------------------------------------------------
+#  NEW dump_tree – pretty, field-labelled, correct tree graphics
+# --------------------------------------------------------------
 sub dump_tree {
-   my ( $self_or_node, $indent ) = @_;
-   $indent //= 0;
-   if ( ref($self_or_node) eq 'Cron::Toolkit' ) {
-      my $self = $self_or_node;
-      #say "Cron::Toolkit (user: " . ( $self->user // 'undef' ) . ", command: " . ( $self->command // 'undef' ) . ")";
-      $self_or_node = $self->{root};
-   }
-   return unless $self_or_node;
-   my $prefix = ' ' x $indent;
-   my $type   = $self_or_node->{type} // 'root';
-   my $val    = $self_or_node->{value}      ? " ($self_or_node->{value})"      : '';
-   my $field  = $self_or_node->{field_type} ? " [$self_or_node->{field_type}]" : '';
-   say $prefix . ucfirst($type) . $val . $field;
+    my ( $self, $node, $prefix, $is_last, $field_idx ) = @_;
+    $node      //= $self->{root};
+    $prefix    //= '';
+    $is_last   //= 1;               # root is the only top-level node
+    $field_idx //= -1;              # -1 = root
 
-   # Recurse children
-   for my $child ( @{ $self_or_node->{children} || [] } ) {
-      $child->dump_tree( $indent + 2 );
-   }
+    # ----- print the current node --------------------------------
+    my $type   = $node->{type} // 'root';
+    my $value  = $node->{value} // '';
+    my $label  = '';
+
+    # field name for the 7 cron fields
+    my @field_names = qw(second minute hour dom month dow year);
+    if ( $field_idx >= 0 && $field_idx < @field_names ) {
+        $label = $field_names[$field_idx] . ' ';
+    }
+
+    # human-readable node description
+    my $desc;
+    if ( $type eq 'wildcard' ) {
+        $desc = 'Wildcard';
+    }
+    elsif ( $type eq 'unspecified' ) {
+        $desc = 'Unspecified';
+    }
+    elsif ( $type eq 'single' ) {
+        $desc = "Single ($value)";
+    }
+    elsif ( $type eq 'range' ) {
+        $desc = 'Range';
+    }
+    elsif ( $type eq 'list' ) {
+        $desc = 'List';
+    }
+    elsif ( $type eq 'step' ) {
+        $desc = 'Step';
+    }
+    else {
+        $desc = ucfirst($type);
+        $desc .= " ($value)" if $value ne '';
+    }
+
+    # build the line (root has no connector)
+    my $connector = $field_idx < 0 ? '' : ( $is_last ? '└─ ' : '├─ ' );
+    say $prefix . $connector . $label . $desc;
+
+    # ----- recurse into children ---------------------------------
+    my $children = $node->{children} // [];
+    return unless @$children;
+
+    my $new_prefix = $prefix . ( $is_last ? '   ' : '│  ' );
+    for my $i ( 0 .. $#$children ) {
+        my $child     = $children->[$i];
+        my $child_last = ( $i == $#$children );
+        my $child_idx  = $field_idx < 0 ? $i : -1;   # only root children get field index
+        $self->dump_tree( $child, $new_prefix, $child_last, $child_idx );
+    }
 }
 
 sub _rebuild_from_node {
