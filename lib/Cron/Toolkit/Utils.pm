@@ -80,7 +80,7 @@ our %month_names = (
    11 => 'November',
    12 => 'December'
 );
-our %day_names   = ( 1 => 'Sunday', 2 => 'Monday', 3 => 'Tuesday', 4 => 'Wednesday', 5 => 'Thursday', 6 => 'Friday', 7 => 'Saturday' );
+our %day_names   = ( 0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday' );
 our %nth_names   = ( 1 => 'first',  2 => 'second', 3 => 'third',   4 => 'fourth',    5 => 'fifth' );
 our %field_names = ( 0 => 'second', 1 => 'minute', 2 => 'hour',    3 => 'dom',       4 => 'month', 5 => 'dow', 6 => 'year' );
 
@@ -213,7 +213,7 @@ sub num_to_ordinal {
    if ( $nth_names{$n} ) {
       return $nth_names{$n};    # Full: 'first', 'second', 'third' (non-numeric, keep prose-y)
    }
-   return "$n${ordinal_suffix{$n}//''}";    # Always abbr: "1st", "2nd", "21st", etc. (no ucfirst)
+   return "$n" . ($ordinal_suffix{$n} // '');
 }
 
 sub join_parts {

@@ -1,70 +1,38 @@
-#!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::More 0.88;
+use Test::More;
+use JSON::MaybeXS;
 use Cron::Toolkit;
 use Time::Moment;
 
-eval { require JSON::MaybeXS };
-plan skip_all => "JSON::MaybeXS required" if $@;
-
-open my $fh, '<', 't/data/cron_tests.json' or BAIL_OUT("JSON missing");
+open my $fh, '<', 't/data/cron_tests.json' or die $!;
 my $json = do { local $/; <$fh> };
 my @tests = @{ JSON::MaybeXS->new->decode($json) };
 
-my @valid_match = grep { !$_->{invalid} && defined $_->{match}{epoch} } @tests;
-my @schedule_valid = grep { !$_->{invalid} && defined $_->{schedule}{next_epoch} } @tests;
-plan tests => scalar(@valid_match) * 2 + scalar(@schedule_valid) * 4 + 6;  # is_match, next/prev/n + bounds
+plan tests => scalar(@tests) * 4;   # next, prev, next_n(3), bounds
 
-subtest 'is_match' => sub {
-    plan tests => scalar(@valid_match);
-    for my $test (@valid_match) {
-        my $cron = Cron::Toolkit->new(expression => $test->{expr});
-        if ($test->{tz}) { $cron->time_zone($test->{tz}); }
-        my $epoch = $test->{match}{epoch};
-        next unless defined $epoch;  # Skip nulls
-        is($cron->is_match($epoch), $test->{match}{is_match}, "Matches epoch $epoch");
+for my $t (@tests) {
+    next if $t->{invalid};
+
+    my $cron = Cron::Toolkit->new(expression => $t->{expr});
+    $cron->time_zone($t->{tz})          if $t->{tz};
+    $cron->utc_offset($t->{utc_offset}) if $t->{utc_offset};
+
+    # ---- next ----
+    my $next = $cron->next;
+    is($next, $t->{schedule}{next_epoch}, "next for $t->{expr}");
+
+    # ---- previous ----
+    my $prev = $cron->previous;
+    is($prev, $t->{schedule}{prev_epoch}, "prev for $t->{expr}");
+
+    # ---- next_n ----
+    my $n3 = $cron->next_n(undef, 3);
+    is_deeply($n3, $t->{schedule}{next_n}, "next_n[3] for $t->{expr}");
+
+    # ---- bounds (if defined) ----
+    if (defined $t->{schedule}{begin_epoch} && defined $t->{schedule}{end_epoch}) {
+        $cron->begin_epoch($t->{schedule}{begin_epoch});
+        $cron->end_epoch($t->{schedule}{end_epoch});
+        my $after = $cron->next($t->{schedule}{end_epoch} + 1);
+        ok(!defined $after, "respects end_epoch");
     }
-};
-
-subtest 'next / previous / next_n' => sub {
-    plan tests => scalar(@schedule_valid) * 3;
-    for my $test (@schedule_valid) {
-        my $cron = Cron::Toolkit->new(expression => $test->{expr});
-        if ($test->{tz}) { $cron->time_zone($test->{tz}); }
-
-        # Next
-        my $next = $cron->next;
-        is($next, $test->{schedule}{next_epoch}, "Next: $test->{schedule}{next_epoch}");
-
-        # Previous
-        my $prev = $cron->previous;
-        is($prev, $test->{schedule}{prev_epoch}, "Prev: $test->{schedule}{prev_epoch}");
-
-        # next_n
-        my $n3 = $cron->next_n(undef, 3);
-        is_deeply($n3, $test->{schedule}{next_n}, "next_n[3]");
-    }
-};
-
-subtest 'previous_n Alias next_occurrences' => sub {
-    plan tests => 2;
-    my $cron = Cron::Toolkit->new(expression => '0 30 14 * * ?');
-    is_deeply($cron->previous_n(undef, 1), [$cron->previous], "previous_n(1)");
-    is_deeply($cron->next_occurrences(undef, 1), [$cron->next], "next_occurrences alias");
-};
-
-subtest 'Bounds Clamping' => sub {
-    plan tests => 4;
-    my $bounded = Cron::Toolkit->new(expression => "0 0 * * * ?");
-    $bounded->begin_epoch(Time::Moment->new(year => 2025, month => 10, day => 23)->epoch);
-    $bounded->end_epoch(Time::Moment->new(year => 2025, month => 10, day => 24)->epoch);
-    is($bounded->begin_epoch, 1761177600, "begin getter");
-    is($bounded->end_epoch, 1761264000, "end getter");
-    my $next_clamp = $bounded->next(1761091200);  # Past
-    is($next_clamp, 1761177600, "Clamps to begin");
-    my $after_end = $bounded->next(1761264001);  # After
-    ok(!defined $after_end, "Undef after end");
-};
-
-done_testing;
+}

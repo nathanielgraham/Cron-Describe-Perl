@@ -119,16 +119,16 @@ sub _new {
    my $self = bless {
       fields => \@fields,
       raw_fields => \@raw_fields,
-      utc_offset => 0,
-      time_zone => 'UTC',
-      begin_epoch => time - (10 * 365 * 86400),  # ~10 years ago
-      end_epoch => time + (10 * 365 * 86400),  # ~10 years ahead
+      #utc_offset => 0,
+      #time_zone => 'UTC',
+      #begin_epoch => time - (10 * 365 * 86400),  # ~10 years ago
+      #end_epoch => time + (10 * 365 * 86400),  # ~10 years ahead
    }, $class;
 
-   $self->utc_offset( $args{utc_offset} ) if defined $args{utc_offset};
-   $self->time_zone( $args{time_zone} ) if defined $args{time_zone};
-   $self->begin_epoch( $args{begin} ) if defined $args{begin_epoch};
-   $self->end_epoch( $args{end} ) if defined $args{end_epoch};
+   #$self->utc_offset( $args{utc_offset} ) if defined $args{utc_offset};
+   #$self->time_zone( $args{time_zone} ) if defined $args{time_zone};
+   #$self->begin_epoch( $args{begin} ) if defined $args{begin_epoch};
+   #$self->end_epoch( $args{end} ) if defined $args{end_epoch};
    $self->user( $args{user} ) if defined $args{user};
    $self->command( $args{command} ) if defined $args{command};
    $self->env( $args{env} ) if defined $args{env};
@@ -573,18 +573,10 @@ sub is_match {
 # Symmetric next() with auto-clamp defaults
 sub next {
    my ( $self, $epoch_seconds ) = @_;
-   $epoch_seconds //= $self->begin_epoch // time;
+   $epoch_seconds //= time;
    die "Invalid epoch_seconds: must be a non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
-
-   # Clamp to begin_epoch floor if set
-   $epoch_seconds = max( $epoch_seconds, $self->begin_epoch // 0 ) if defined $self->begin_epoch;
-
-   my ( $window, $step ) = $self->_estimate_window;
-   my $result = $self->{matcher}->_find_next( $epoch_seconds, $epoch_seconds + $window, $step, 1 );
-
-   # Cap to end_epoch if set
-   return undef if defined $self->end_epoch && $result && $result > $self->end_epoch;
-   return $result;
+   # Delegate to matcher (handles clamping, search, bounds)
+   return $self->{matcher}->find_next_or_previous($epoch_seconds, 1);
 }
 
 # Symmetric previous() with auto-clamp defaults
@@ -592,15 +584,8 @@ sub previous {
    my ( $self, $epoch_seconds ) = @_;
    $epoch_seconds //= time;
    die "Invalid epoch_seconds: must be a non-negative integer" unless defined $epoch_seconds && $epoch_seconds =~ /^\d+$/ && $epoch_seconds >= 0;
-
-   # Clamp to end_epoch cap if set
-   $epoch_seconds = min( $epoch_seconds, $self->end_epoch // $epoch_seconds ) if defined $self->end_epoch;
-   my ( $window, $step ) = $self->_estimate_window;
-   my $result = $self->{matcher}->_find_next( $epoch_seconds, $epoch_seconds - $window, $step, -1 );
-
-   # Floor to begin_epoch if set
-   return undef if defined $self->begin_epoch && $result && $result < $self->begin_epoch;
-   return $result;
+   # Delegate to matcher (handles clamping, search, bounds)
+   return $self->{matcher}->find_next_or_previous($epoch_seconds, -1);
 }
 
 # next_n with max_iter guard
@@ -661,6 +646,7 @@ sub next_occurrences {
 sub as_unix_string {
    my $self = shift;
    my $expr = $self->_as_string;
+   $expr =~ s/\?/*/;
    my @fields = split(/\s+/, $expr);
    shift @fields; # remove seconds
    pop @fields; # remove year
@@ -675,12 +661,12 @@ sub as_quartz_string {
    my $dow = $fields[5];
 
    # Preserve special values
-   return $expr if $dow eq '?' || $dow =~ /[L#\/W]/;
+   #return $expr if $dow eq '?' || $dow =~ /[L#\/W]/;
 
    # Only modify standalone numeric tokens in 0-6
-   $dow =~ s/(?<![#\d])(\b[0-6]\b)(?![#\/\d])/$1 + 1/ge;
+   $fields[5] =~ s/(?<![#\d])(\b[0-6]\b)(?![#\/\d])/$1 + 1/ge;
 
-   $fields[5] = $dow;
+   #$fields[5] = $dow;
    return join ' ', @fields;
 }
 

@@ -3,128 +3,209 @@ use strict;
 use warnings;
 use Cron::Toolkit::Utils qw(:all);
 
-sub new { bless {}, shift }
-
+sub new {
+    my ($class, %args) = @_;
+    bless {}, $class;
+}
 sub describe {
     my ($self, $root) = @_;
-    my @f = @{ $root->{children} };
-    my @type = qw(second minute hour dom month dow year);
+   my @fields      = @{ $root->{children} };
+   my @field_types = qw(second minute hour dom month dow year);
+   for my $i ( 0 .. 6 ) {
+      $fields[$i]{field_type} = $field_types[$i] if $fields[$i];
+   }
+   my $sec         = ( $fields[0]{type} eq 'single' ) ? $fields[0]{value} : undef;
+   my $min         = ( $fields[1]{type} eq 'single' ) ? $fields[1]{value} : undef;
+   my $hour        = ( $fields[2]{type} eq 'single' ) ? $fields[2]{value} : undef;
+   my $time_prefix = format_time( $sec // 0, $min // 0, $hour // 0 );
+   $time_prefix = "at $time_prefix" if $time_prefix;
+   my @phrases;
+   for my $field (@fields) {
+      push @phrases, $self->template_for_field( $field, \@fields );
+   }
+   push @phrases, $time_prefix if $time_prefix;
+   $self->_fuse_combos( \@phrases, \@fields );
+   my @time_phrases = grep { $_ } @phrases[ 0 .. 2 ];
+   my $time_str     = join( ' ', @time_phrases );
+   return $time_str if $time_str =~ /^every \d+ (seconds?|minutes?|hours?)/;
+   my @date_phrases = grep { $_ } @phrases[ 3 .. 6 ];
+   my $date_str     = join( ' ', @date_phrases );
+   $date_str = "on $date_str" if $date_str && $date_phrases[0] =~ /^(the|last)/;
 
-    # ------------------------------------------------------------------
-    # 1. Build raw phrase list
-    # ------------------------------------------------------------------
-    my @phrases;
-    for my $i (0 .. 6) {
-        my $node = $f[$i] or next;
-        push @phrases, $self->_phrase_for($node, $type[$i], \@f);
-    }
-
-    # ------------------------------------------------------------------
-    # 2. Fuse & order
-    # ------------------------------------------------------------------
-    $self->_fuse_year_month(\@phrases, \@f);
-    $self->_fuse_dom_month(\@phrases, \@f);
-    $self->_fuse_dow_month(\@phrases, \@f);
-    $self->_fuse_time(\@phrases, \@f);
-
-    my $desc = join ' ', grep {$_} @phrases;
-    $desc =~ s/\s+/ /g;
-    $desc =~ s/^at midnight$/at midnight every day/;
-    return $desc || 'every second';
+   if ( defined $sec && defined $min && defined $hour && $sec == 0 && $min == 0 && $hour == 0 ) {
+      $time_prefix = 'at midnight' . ( $date_str ? ' ' : '' );
+   }
+   return ( join( ' ', grep { $_ } ( $time_prefix, $date_str ) ) || 'every second' ) =~ s/\s+/ /gr;
 }
 
-# ----------------------------------------------------------------------
-# Phrase generators
-# ----------------------------------------------------------------------
-sub _phrase_for {
-    my ($self, $node, $ft, $all) = @_;
-    my $t = $node->{type};
-
-    return '' if $t eq 'wildcard' || $t eq 'unspecified';
-
-    # ----- single -----
-    if ($t eq 'single') {
-        return $self->_single($node->{value}, $ft);
-    }
-
-    # ----- range -----
-    if ($t eq 'range') {
-        my ($s,$e) = map { $_->{value} } @{ $node->{children} };
-        return $self->_range($s,$e,$ft);
-    }
-
-    # ----- list -----
-    if ($t eq 'list') {
-        my @parts = map { $self->_phrase_for($_, $ft, $all) } @{ $node->{children} };
-        return join_parts(@parts);
-    }
-
-    # ----- step -----
-    if ($t eq 'step') {
-        my $base = $node->{children}[0];
-        my $step = $node->{children}[1]{value};
-        my $base_str = $base->{type} eq 'wildcard'
-            ? '*'
-            : $self->_phrase_for($base, $ft, $all);
-        return "every $step ".field_unit($ft,$step)." $base_str";
-    }
-
-    # ----- special Quartz -----
-    if ($t eq 'last')      { return $node->{value} eq 'L' ? 'last day of the month' : "the ".num_to_ordinal($1)." to last day of the month" if $node->{value}=~ /L-(\d+)/; }
-    if ($t eq 'lastW')    { return 'last weekday of the month'; }
-    if ($t eq 'nth')      { my ($d,$n)=$node->{value}=~ /(\d+)#(\d+)/; return "the ".num_to_ordinal($n)." ".$day_names{$d}." of the month"; }
-    if ($t eq 'nearest_weekday') { my ($d)=$node->{value}=~ /(\d+)W/; return "nearest weekday to the ".num_to_ordinal($d); }
-
-    return '';
+sub _fuse_combos {
+   my ( $self, $phrases, $fields ) = @_;
+   # 🔥 ALL ARRAY REF FIXED
+   # Reordered: Year/Month first for chaining
+   # Year + Month (single/single)
+   if ( $phrases->[4] && $phrases->[6] && $fields->[4]{type} eq 'single' && $fields->[6]{type} eq 'single' ) {
+      my $data = { month => $phrases->[4], year => $fields->[6]{value} };
+      $phrases->[4] = fill_template( 'month_year_single', $data );
+      $phrases->[6] = '';
+   }
+   # DOM Special + Month
+   if ( $phrases->[3] && $phrases->[4] && $fields->[3]{type} =~ /^(last|lastW|nearest_weekday|step)$/ ) {
+      my $data = { dom_desc => $phrases->[3], month_range => $phrases->[4] };
+      $phrases->[3] = fill_template( 'dom_special_month_range', $data );
+      $phrases->[4] = '';
+   }
+   # 🔥 FIXED: DOM Single + Month Single (chain year if fused)
+   if ( $phrases->[3] && $phrases->[4] && $fields->[3]{type} eq 'single' && $fields->[4]{type} eq 'single' ) {
+      my $data = { ordinal => num_to_ordinal( $fields->[3]{value} ), month => $month_names{ $fields->[4]{value} } };
+      $phrases->[3] = fill_template( 'dom_single_month_single', $data );
+      # Chain year if already in phrases[4] (from prior month_year fuse)
+      if ( $phrases->[4] =~ /\d{4}/ ) {
+         my $year_part = (split /\s+/, $phrases->[4])[-1];  # Grab "2025" from "in January 2025"
+         $phrases->[3] .= " $year_part";
+      }
+      $phrases->[4] = '';
+   }
+   # DOW Nth + Month
+   if ( $phrases->[5] && $phrases->[4] && $fields->[5]{type} eq 'nth' ) {
+      my ( $day, $nth ) = $fields->[5]{value} =~ /(\d+)#(\d+)/;
+      my $data = { nth => num_to_ordinal($nth), day => $day_names{$day}, month_range => $phrases->[4] };
+      $phrases->[5] = fill_template( 'dow_nth_month_range', $data );
+      $phrases->[4] = '';
+   }
+   # 🔥 FIXED: DOM Single + Year (Allow DOW=?)
+   if ( $phrases->[3]
+      && $phrases->[6]
+      && $fields->[3]{type} eq 'single'
+      && $fields->[6]{type} ne 'wildcard'
+      && ( $fields->[5]{type} eq 'wildcard' || $fields->[5]{type} eq 'unspecified' ) )
+   {
+      my $data = { ordinal => num_to_ordinal( $fields->[3]{value} ), year => $fields->[6]{value} };
+      $phrases->[3] = fill_template( 'dom_single_year_single', $data );
+      $phrases->[6] = '';
+   }
+   elsif ( $phrases->[3] && $phrases->[6] && $fields->[3]{type} eq 'list' && $fields->[6]{type} ne 'wildcard' ) {
+      my $data = { list => $phrases->[3], year_range => $phrases->[6] };
+      $phrases->[3] = fill_template( 'dom_list_year_range', $data );
+      $phrases->[6] = '';
+   }
+   # Step on DOM + Month
+   if ( $phrases->[3] && $phrases->[4] && $fields->[3]{type} eq 'step' ) {
+      my $data = { step => $fields->[3]{children}[1]{value}, start => num_to_ordinal( $fields->[3]{children}[0]{children}[0]{value} ), month_range => $phrases->[4] };
+      $phrases->[3] = fill_template( 'dom_step_month_range', $data );
+      $phrases->[4] = '';
+   }
+   # DOW Single + Month
+   if ( $phrases->[5] && $phrases->[4] && $fields->[5]{type} eq 'single' ) {
+      my $data = { day => $day_names{ $fields->[5]{value} }, month_range => $phrases->[4] };
+      $phrases->[5] = fill_template( 'dow_single_month_range', $data );
+      $phrases->[4] = '';
+   }
+   # DOW Range + Month
+   if ( $phrases->[5] && $phrases->[4] && $fields->[5]{type} eq 'range' ) {
+      my $data = { start => $day_names{ $fields->[5]{children}[0]{value} }, end => $day_names{ $fields->[5]{children}[1]{value} }, month_range => $phrases->[4] };
+      $phrases->[5] = fill_template( 'dow_range_month_range', $data );
+      $phrases->[4] = '';
+   }
+   # DOW Single + Year
+   if ( $phrases->[5] && $phrases->[6] && $fields->[5]{type} eq 'single' && $fields->[6]{type} ne 'wildcard' ) {
+      my $data = { day => $day_names{ $fields->[5]{value} }, year => $fields->[6]{value} };
+      $phrases->[5] = fill_template( 'dow_single_year', $data );
+      $phrases->[6] = '';
+   }
 }
 
-sub _single {
-    my ($self,$v,$ft)=@_;
-    return $v                     if $ft eq 'second' || $ft eq 'minute' || $ft eq 'hour';
-    return num_to_ordinal($v)     if $ft eq 'dom';
-    return $month_names{$v}       if $ft eq 'month';
-    return $day_names{$v}         if $ft eq 'dow';
-    return $v                     if $ft eq 'year';
-    return $v;
-}
-sub _range {
-    my ($self,$s,$e,$ft)=@_;
-    my $start = $self->_single($s,$ft);
-    my $end   = $self->_single($e,$ft);
-    return "$start through $end";
-}
-
-# ----------------------------------------------------------------------
-# Fusion helpers (order matters!)
-# ----------------------------------------------------------------------
-sub _fuse_year_month {
-    my ($self,$p,$f)=@_;
-    return unless $p->[6] && $p->[4];
-    my $y = $f->[6]{type} eq 'single' ? $f->[6]{value} : $p->[6];
-    $p->[4] = fill_template('month_year_single', { month=>$p->[4], year=>$y });
-    $p->[6] = '';
-}
-sub _fuse_dom_month {
-    my ($self,$p,$f)=@_;
-    return unless $p->[3] && $p->[4];
-    $p->[3] = fill_template('dom_special_month_range',
-        { dom_desc=>$p->[3], month_range=>$p->[4] });
-    $p->[4] = '';
-}
-sub _fuse_dow_month {
-    my ($self,$p,$f)=@_;
-    return unless $p->[5] && $p->[4];
-    my $dow = $p->[5];
-    $dow =~ s/ of the month//;
-    $p->[5] = fill_template('dow_nth_month_range',
-        { nth_dow=>$dow, month_range=>$p->[4] });
-    $p->[4] = '';
-}
-sub _fuse_time {
-    my ($self,$p,$f)=@_;
-    my ($s,$m,$h) = map { $f->[$_]{type} eq 'single' ? $f->[$_]{value} : undef } (0,1,2);
-    my $time = format_time($s//0,$m//0,$h//0);
-    unshift @$p, "at $time" if $time && $time ne '12:00:00 AM';
-    unshift @$p, "at midnight" if $h==0 && $m==0 && $s==0;
+sub template_for_field {
+   my ( $self, $field, $fields ) = @_;
+   my $type = $field->{type};
+   my $ft   = $field->{field_type} // '';
+   return '' if $type eq 'wildcard' || $type eq 'unspecified';
+   my $data = {};
+   if ( $type eq 'list' ) {
+      return generate_list_desc( $ft, $field->{children} );
+   }
+   if ( $type eq 'single' && $ft eq 'dom' ) {
+      $data->{ordinal} = num_to_ordinal( $field->{value} );
+      return fill_template( 'dom_single_every', $data );
+   }
+   elsif ( $type eq 'single' && $ft eq 'month' ) {
+      return $month_names{ $field->{value} };
+   }
+   elsif ( $type eq 'single' && $ft eq 'dow' ) {
+      $data->{day} = $day_names{ $field->{value} };
+      return fill_template( 'dow_single', $data );
+   }
+   elsif ( $type eq 'single' && $ft eq 'year' ) {
+      $data->{year} = $field->{value};
+      return fill_template( 'year_in', $data );
+   }
+   elsif ( $type eq 'step' ) {
+      my $step = $field->{children}[1]{value};
+      my $base = $field->{children}[0];
+      if ( $base->{type} eq 'wildcard' ) {
+         $data->{step} = $step;
+         my $tmpl = "every_N_$ft";
+         return fill_template( $tmpl, $data );
+      }
+      else {
+         $data->{step}  = $step;
+         $data->{start} = $base->{children}[0]{value};
+         if ( $base->{type} eq 'single' ) {
+            $data->{start} = $base->{value};
+            return fill_template( 'step_single', $data );
+         }
+         else {
+            $data->{end}  = $base->{children}[1]{value};
+            $data->{hour} = $fields->[2]{value} || 0;
+            return fill_template( 'step_range', $data );
+         }
+      }
+   }
+   elsif ( $type eq 'range' && $ft =~ /^(second|minute|hour)$/ ) {
+      $data->{start} = $field->{children}[0]{value};
+      $data->{end}   = $field->{children}[1]{value};
+      return fill_template( "time_range_$ft", $data );
+   }
+   elsif ( $type eq 'range' && $ft eq 'dom' ) {
+      $data->{start} = num_to_ordinal( $field->{children}[0]{value} );
+      $data->{end}   = num_to_ordinal( $field->{children}[1]{value} );
+      return fill_template( 'dom_range_every', $data );
+   }
+   elsif ( $type eq 'range' && $ft eq 'month' ) {
+      $data->{start} = $month_names{ $field->{children}[0]{value} };
+      $data->{end}   = $month_names{ $field->{children}[1]{value} };
+      return fill_template( 'month_range', $data );
+   }
+   elsif ( $type eq 'range' && $ft eq 'dow' ) {
+      $data->{start} = $day_names{ $field->{children}[0]{value} };
+      $data->{end}   = $day_names{ $field->{children}[1]{value} };
+      return fill_template( 'dow_range', $data );
+   }
+   elsif ( $type eq 'range' && $ft eq 'year' ) {
+      $data->{start} = $field->{children}[0]{value};
+      $data->{end}   = $field->{children}[1]{value};
+      return fill_template( 'year_range', $data );
+   }
+   elsif ( $type eq 'last' && $ft eq 'dom' ) {
+      if ( $field->{value} =~ /L-(\d+)/ ) {
+         $data->{ordinal} = num_to_ordinal($1);
+         return fill_template( 'dom_last_offset', $data );
+      }
+      return fill_template( 'dom_last', $data );
+   }
+   elsif ( $type eq 'lastW' && $ft eq 'dom' ) {
+      return fill_template( 'dom_lw', $data );
+   }
+   elsif ( $type eq 'nth' && $ft eq 'dow' ) {
+      my ( $day, $nth ) = $field->{value} =~ /(\d+)#(\d+)/;
+      $data->{nth} = num_to_ordinal($nth);
+      $data->{day} = $day_names{$day};
+      return fill_template( 'dow_nth', $data );
+   }
+   elsif ( $type eq 'nearest_weekday' && $ft eq 'dom' ) {
+      my ($day) = $field->{value} =~ /(\d+)W/;
+      $data->{ordinal} = num_to_ordinal($day);
+      return fill_template( 'dom_nearest_weekday', $data );
+   }
+   return '';
 }
 1;

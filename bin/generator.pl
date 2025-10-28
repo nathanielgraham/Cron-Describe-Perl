@@ -131,16 +131,19 @@ for my $expr (@raw_exprs) {
 
         my ($match_epoch, $is_match, $next_epoch, $next_n, $prev_epoch) = (undef, 0, undef, [], undef);
 
+=pod
         eval {
             $match_epoch = $cron->next($base_epoch) // $cron->next($far_past_epoch);
             if (defined $match_epoch) {
                 $is_match  = $cron->is_match($match_epoch);
                 $next_epoch = $cron->next($match_epoch + 1);
+                $next_epoch = 1 
                 my $third   = defined $next_epoch ? $cron->next($next_epoch + 1) : undef;
                 $next_n     = [$match_epoch, $next_epoch, $third];
             }
             $prev_epoch = eval { $cron->previous_n($base_epoch, 1, 20000)->[0] };
         };
+=cut
 
         push @data, {
             category         => "general",

@@ -3,8 +3,7 @@ use strict;
 use warnings;
 use parent 'Cron::Toolkit::Pattern::LeafPattern';
 use Carp qw(croak);
-use Cron::Toolkit::Utils qw(num_to_ordinal);
-my %day_names = (1=>'Sunday', 2=>'Monday', 3=>'Tuesday', 4=>'Wednesday', 5=>'Thursday', 6=>'Friday', 7=>'Saturday');
+use Cron::Toolkit::Utils qw(:all);
 
 sub to_english {
     my ($self) = @_;
