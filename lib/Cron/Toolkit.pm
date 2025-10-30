@@ -137,15 +137,19 @@ sub _new {
       type => 'root'
    );
 
+   $self->_build_tree;
+
    $self->{matcher} = Cron::Toolkit::Matcher->new(
-      tree       => $self->{root},
-      utc_offset => $self->utc_offset,
-      owner      => $self,
+      tree        => $self->{root},
+      utc_offset  => $self->utc_offset,
+      begin_epoch => $self->begin_epoch,
+      end_epoch   => $self->end_epoch,
    );
+
+   #print Dumper($self->{matcher});
 
    $self->{composer} = Cron::Toolkit::Composer->new;
 
-   $self->_build_tree;
    return $self;
 }
 

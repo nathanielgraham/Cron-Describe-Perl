@@ -10,6 +10,8 @@ sub new {
         type => $args{type} // die "type required",
         children => [],
     }, $class;
+    $self->{field_type} = $args{field_type} if $args{field_type};
+
     return $self;
 }
 sub add_child {

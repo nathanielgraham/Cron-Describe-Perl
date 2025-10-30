@@ -37,7 +37,7 @@ my @tests = (
         prev_tm => $base->minus_days(1)->with_hour(0)->with_minute(0),
     },
     {
-        expr => '0 0 * * * 3 *',  # Tuesday (Unix DOW 2)
+        expr => '0 0 3-4 * * 3 *',  # Tuesday (Unix DOW 2)
         desc => 'every hour on Tuesday',
         next_tm => $base->plus_days(7)->with_hour(1)->with_minute(0),
         prev_tm => $base->minus_days(7)->with_hour(1)->with_minute(0),
@@ -89,13 +89,13 @@ foreach my $t (@tests) {
     #            "\n  Expected: " . $t->{next_tm}->strftime('%Y-%m-%d %H:%M:%S') . " (epoch $next_expected)";
 
     # previous()
-    my $prev_epoch = $cron->previous($base_epoch);
-    if ($prev_epoch) {
-       print "PREV: " . scalar gmtime($prev_epoch) . " -- $prev_epoch\n";
-    }
-    else {
-       print "not found\n";
-    }
+    #my $prev_epoch = $cron->previous($base_epoch);
+    #if ($prev_epoch) {
+    #   print "PREV: " . scalar gmtime($prev_epoch) . " -- $prev_epoch\n";
+    #}
+    #else {
+    #   print "not found\n";
+    #}
 
     #    or diag "  Got: " . ($next_epoch ? Time::Moment->from_epoch($next_epoch)->strftime('%Y-%m-%d %H:%M:%S') : 'undef') . 
     #my $prev_expected = $t->{prev_tm}->epoch;
